@@ -125,45 +125,19 @@ flowchart TD
 ## Diagramme 4 — Analyse des risques et API Django
 
 ```mermaid
-flowchart TD
-    subgraph DB["Base de données PostGIS (port 5433)"]
-        T1[("electric_network\n60 entités OSM\nEPSG:32198")]
-        T2[("flood_zones\n6 polygones MRNF\nEPSG:32198")]
-        T3[("risk_analysis\nCritique / Elevé / Moyen\nDistance en m")]
-        T4[("alertes\nInfo / Warning / Critical\nAcquittées ou non")]
-    end
+flowchart LR
+    DB1[("electric_network\n60 entités OSM")] --> API1["GET /api/electric/\nGeoJSON"] --> LAY1["Couche carte\nRéseau électrique\nlignes bleues"]
+    DB2[("flood_zones\n6 polygones MRNF")] --> API2["GET /api/floods/\nGeoJSON"] --> LAY2["Couche carte\nZones inondées\npolygones rouges"]
+    DB1 --> API3["GET /api/risk-summary/\nST_Union + ST_Buffer\ncompte par niveau"] --> SIDE["Sidebar\nRésumé des risques"]
+    DB2 --> API3
+    DB1 --> API4["GET /api/infra/pk/risk/\nST_Distance\nzone la plus proche"] --> POP["Info au clic\nType, tension\nDistance en m"]
+    DB2 --> API4
+    DB3[("alertes\nInfo/Warning/Critical")] --> ADM["Django Admin /admin/\nGestion des alertes\nMarquer acquittée"]
 
-    subgraph DJANGO["Django 5.2 — risk_map app"]
-        V1["ElectricNetworkViewSet\n→ /api/electric/\nGeoJSON EPSG:32198"]
-        V2["FloodZoneViewSet\n→ /api/floods/\nGeoJSON"]
-        V3["risk_summary()\n→ /api/risk-summary/\nST_Union + ST_Buffer\ncompte par niveau"]
-        V4["infrastructure_risk(pk)\n→ /api/infra/pk/risk/\nST_Distance vers zone la plus proche"]
-        ADM["Django Admin /admin/\nGestion alertes\nMarquer acquittée"]
-    end
-
-    subgraph LEAFLET["Carte Web — Leaflet 1.9 (port 8000)"]
-        MAP["Fond de carte\n• OSM défaut\n• Esri World Imagery"]
-        LAY1["Couche : Réseau électrique\nlignes bleues + points"]
-        LAY2["Couche : Zones inondées\npolygones rouges transparents"]
-        SIDEBAR["Sidebar\n• Résumé des risques\n• Comptage par niveau\n• Boutons de couches"]
-        POPUP["Info au clic\n• Type / tension\n• Niveau de risque\n• Distance en m"]
-    end
-
-    T1 --> V1
-    T2 --> V2
-    T1 --> V3
-    T2 --> V3
-    T1 --> V4
-    T2 --> V4
-    T3 --> V3
-    T4 --> ADM
-
-    V1 --> LAY1
-    V2 --> LAY2
-    V3 --> SIDEBAR
-    V4 --> POPUP
-    LAY1 --> MAP
+    LAY1 --> MAP["Carte Leaflet\nlocalhost:8000"]
     LAY2 --> MAP
+    SIDE --> MAP
+    POP --> MAP
 ```
 
 ---
