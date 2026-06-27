@@ -40,3 +40,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# CI (token sans scope workflow)
+.github/
