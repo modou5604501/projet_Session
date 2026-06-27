@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoRisk Sentinel — Sainte-Marthe-sur-le-Lac</title>
+
+  <!-- Leaflet 1.9 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    #header {
+      background: #1a3a5c;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      height: 54px;
+    }
+    #header h1 { font-size: 18px; font-weight: 600; }
+    #header .subtitle { font-size: 12px; opacity: 0.75; }
+
+    #layout { display: flex; height: calc(100vh - 54px); }
+
+    #sidebar {
+      width: 300px;
+      background: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      overflow-y: auto;
+      padding: 12px;
+      flex-shrink: 0;
+    }
+
+    #map { flex: 1; }
+
+    .panel {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+    }
+    .panel h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a3a5c;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #e8f0fe;
+      padding-bottom: 4px;
+    }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .risk-critical { background: #fce4e4; color: #c0392b; }
+    .risk-high     { background: #fef3cd; color: #856404; }
+    .risk-medium   { background: #fff3e0; color: #e67e22; }
+    .risk-low      { background: #e8f5e9; color: #27ae60; }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 12px;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-val { font-weight: 700; color: #1a3a5c; }
+
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .layer-toggle input { cursor: pointer; }
+
+    .color-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    #info-box {
+      font-size: 12px;
+      color: #555;
+      min-height: 50px;
+    }
+
+    .loading { color: #999; font-style: italic; }
+    .error   { color: #c0392b; }
+
+    #about {
+      font-size: 11px;
+      color: #888;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>GeoRisk Sentinel</h1>
+    <div class="subtitle">Détection de zones inondables — Sainte-Marthe-sur-le-Lac</div>
+  </div>
+</div>
+
+<div id="layout">
+  <div id="sidebar">
+
+    <!-- Résumé des risques -->
+    <div class="panel">
+      <h3>Résumé des risques</h3>
+      <div id="risk-summary">
+        <div class="loading">Chargement...</div>
+      </div>
+    </div>
+
+    <!-- Couches -->
+    <div class="panel">
+      <h3>Couches cartographiques</h3>
+      <label class="layer-toggle">
+        <input type="checkbox" id="toggle-electric" checked>
+        <span class="color-swatch" style="background:#e74c3c;"></span>
+        Réseau électrique OSM
+      </label>
+      <label class="layer-toggle">
+        <input type="checkbox" id="toggle-floods" checked>
+        <span class="color-swatch" style="background:#3498db;opacity:.7"></span>
+        Zones inondées MRNF
+      </label>
+      <label class="layer-toggle">
+        <input type="checkbox" id="toggle-satellite">
+        <span class="color-swatch" style="background:#2c3e50;"></span>
+        Fond satellite
+      </label>
+    </div>
+
+    <!-- Info sélection -->
+    <div class="panel">
+      <h3>Information sélectionnée</h3>
+      <div id="info-box">
+        <span class="loading">Cliquez sur une entité de la carte.</span>
+      </div>
+    </div>
+
+    <!-- À propos -->
+    <div class="panel">
+      <h3>À propos</h3>
+      <div id="about">
+        <strong>GeoRisk Sentinel</strong><br>
+        Projet de session GMQ580<br>
+        Université de Sherbrooke, été 2026<br><br>
+        Événement de référence : rupture de digue du
+        <strong>27 avril 2019</strong> à Sainte-Marthe-sur-le-Lac
+        (6 000+ logements sinistrés).<br><br>
+        Données : OSM, MRNF, Copernicus DEM, Sentinel-1 SAR.
+      </div>
+    </div>
+
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<script>
+// ── Carte Leaflet ─────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [45.535, -73.945],   // Sainte-Marthe-sur-le-Lac
+  zoom: 13
+});
+
+// Fonds de carte
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+const satellite = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { attribution: '© Esri, Maxar, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, UPR-EGP', maxZoom: 19 }
+);
+
+// Groupes de couches
+let electricLayer = null;
+let floodLayer    = null;
+
+// ── Chargement réseau électrique ──────────────────────────────────────────────
+fetch('/api/electric/?format=json')
+  .then(r => r.json())
+  .then(data => {
+    electricLayer = L.geoJSON(data, {
+      style: f => ({
+        color: '#e74c3c',
+        weight: f.geometry.type === 'Point' ? 4 : 2.5,
+        opacity: 0.9,
+        fillColor: '#c0392b',
+        fillOpacity: 0.7,
+      }),
+      pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+        radius: 5,
+        color: '#e74c3c',
+        fillColor: '#c0392b',
+        fillOpacity: 0.9,
+        weight: 1.5
+      }),
+      onEachFeature: (f, layer) => {
+        layer.on('click', () => showInfo('electric', f.properties));
+      }
+    }).addTo(map);
+  })
+  .catch(e => console.warn('Réseau électrique non disponible:', e));
+
+// ── Chargement zones inondées ─────────────────────────────────────────────────
+fetch('/api/floods/?format=json')
+  .then(r => r.json())
+  .then(data => {
+    floodLayer = L.geoJSON(data, {
+      style: {
+        color:       '#2980b9',
+        weight:      2,
+        opacity:     0.9,
+        fillColor:   '#3498db',
+        fillOpacity: 0.35,
+      },
+      onEachFeature: (f, layer) => {
+        layer.on('click', () => showInfo('flood', f.properties));
+      }
+    }).addTo(map);
+
+    if (floodLayer.getLayers().length > 0) {
+      map.fitBounds(floodLayer.getBounds(), { padding: [30, 30] });
+    }
+  })
+  .catch(e => console.warn('Zones inondées non disponibles:', e));
+
+// ── Résumé des risques ────────────────────────────────────────────────────────
+fetch('/api/risk-summary/')
+  .then(r => r.json())
+  .then(d => {
+    const el = document.getElementById('risk-summary');
+    el.innerHTML = `
+      <div class="stat-row">
+        <span>Total infrastructures</span>
+        <span class="stat-val">${d.total_infrastructures ?? '—'}</span>
+      </div>
+      <div class="stat-row">
+        <span>Critique (zone inondée) <span class="risk-badge risk-critical">CRITIQUE</span></span>
+        <span class="stat-val">${d.critique ?? '—'}</span>
+      </div>
+      <div class="stat-row">
+        <span>Alerte &lt;500 m <span class="risk-badge risk-high">ÉLEVÉ</span></span>
+        <span class="stat-val">${d.alerte_500m ?? '—'}</span>
+      </div>
+      <div class="stat-row">
+        <span>Hors risque <span class="risk-badge risk-low">BAS</span></span>
+        <span class="stat-val">${d.hors_risque ?? '—'}</span>
+      </div>
+      <div class="stat-row" style="font-size:11px;color:#999;border-top:1px solid #e0e0e0;margin-top:5px;padding-top:5px;">
+        Zones inondées MRNF&nbsp;: ${d.source_zones ?? '—'} polygones
+      </div>`;
+  })
+  .catch(() => {
+    document.getElementById('risk-summary').innerHTML =
+      '<span class="error">API non disponible.</span>';
+  });
+
+// ── Info box ──────────────────────────────────────────────────────────────────
+function showInfo(type, props) {
+  const el = document.getElementById('info-box');
+  if (type === 'electric') {
+    el.innerHTML = `
+      <strong>Réseau électrique</strong><br>
+      Type : ${props.type || '—'}<br>
+      Tension : ${props.voltage ? props.voltage + ' V' : '—'}<br>
+      OSM ID : ${props.osm_id || '—'}<br>
+      Criticité : <span class="risk-badge risk-${props.criticality}">${props.criticality}</span>`;
+  } else if (type === 'flood') {
+    el.innerHTML = `
+      <strong>Zone inondée MRNF</strong><br>
+      Source : ${props.source || '—'}<br>
+      Date : ${props.date_detection || '—'}<br>
+      Superficie : ${props.surface_ha ? props.surface_ha.toFixed(1) + ' ha' : '—'}`;
+  }
+}
+
+// ── Contrôles couches ─────────────────────────────────────────────────────────
+document.getElementById('toggle-electric').addEventListener('change', e => {
+  if (electricLayer) e.target.checked ? map.addLayer(electricLayer) : map.removeLayer(electricLayer);
+});
+document.getElementById('toggle-floods').addEventListener('change', e => {
+  if (floodLayer) e.target.checked ? map.addLayer(floodLayer) : map.removeLayer(floodLayer);
+});
+document.getElementById('toggle-satellite').addEventListener('change', e => {
+  if (e.target.checked) { map.removeLayer(osm); map.addLayer(satellite); }
+  else                  { map.removeLayer(satellite); map.addLayer(osm); }
+});
+</script>
+
+</body>
+</html>

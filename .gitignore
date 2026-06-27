@@ -1,0 +1,41 @@
+# Credentials — NE JAMAIS COMMITTER
+.env
+
+# Environnement virtuel
+venv/
+
+# Données brutes (trop lourdes pour GitHub)
+data/raw/
+data/processed/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Django
+src/web/db.sqlite3
+src/web/staticfiles/
+
+# Modèles IA (trop lourds pour GitHub)
+models/*.pt
+models/*.pth
+models/*.ckpt
+
+# Fichiers SAFE extraits (trop lourds)
+data/raw/sentinel1/*.SAFE/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
