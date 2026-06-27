@@ -1,10 +1,16 @@
 # GeoRisk Sentinel
 ## Détection automatique des zones inondées affectant les infrastructures électriques à Sainte-Marthe-sur-le-Lac
 
-**Cours :** GMQ580 — Géomatique Informatique 2  
-**Session :** Été 2026  
-**Étudiant :** Modou Khabane Mbaye  
-**Établissement :** Université de Sherbrooke  
+**Cours :** GMQ580 — Géomatique Informatique 2
+**Session :** Été 2026
+**Établissement :** Université de Sherbrooke
+
+### Équipe
+
+| Nom | Courriel |
+|---|---|
+| Modou Khabane Mbaye | modou.khabane.mbaye@usherbrooke.ca |
+| Rahina Djelila Sarah Bagre | rahina.bagre@usherbrooke.ca |
 
 ---
 
@@ -13,32 +19,34 @@
 1. [Présentation du projet](#1-présentation-du-projet)
 2. [Problématique](#2-problématique)
 3. [Zone d'étude](#3-zone-détude)
-4. [Objectifs](#4-objectifs)
-5. [Architecture technique](#5-architecture-technique)
-6. [Données utilisées](#6-données-utilisées)
-7. [Modèle de données PostGIS](#7-modèle-de-données-postgis)
-8. [Modèle IA — U-Net](#8-modèle-ia--u-net)
-9. [Pipeline de traitement](#9-pipeline-de-traitement)
-10. [Stack technologique](#10-stack-technologique)
-11. [Structure du projet](#11-structure-du-projet)
-12. [Installation et déploiement](#12-installation-et-déploiement)
-13. [État d'avancement](#13-état-davancement)
-14. [Chronogramme](#14-chronogramme)
+4. [Données](#4-données)
+5. [Modèle de données](#5-modèle-de-données)
+6. [Pipeline de traitement et Architecture](#6-pipeline-de-traitement-et-architecture)
+7. [Schéma Mermaid — Draw.io](#7-schéma-mermaid--drawio)
+8. [Bibliothèques principales (stack)](#8-bibliothèques-principales-stack)
+9. [Livrables attendus](#9-livrables-attendus)
+10. [État d'avancement](#10-état-davancement)
+11. [Décisions méthodologiques](#11-décisions-méthodologiques)
+12. [Difficultés rencontrées](#12-difficultés-rencontrées)
+13. [Installation et démarrage](#13-installation-et-démarrage)
+14. [Dépôts GitHub utilisés](#14-dépôts-github-utilisés)
 15. [Références](#15-références)
 
 ---
 
 ## 1. Présentation du projet
 
-**GeoRisk Sentinel** est une plateforme géospatiale intelligente développée dans le cadre du cours GMQ580 (Géomatique Informatique 2). Elle vise à **détecter automatiquement les zones inondées susceptibles d'affecter les infrastructures électriques** dans la municipalité de Sainte-Marthe-sur-le-Lac, en s'appuyant sur :
+**GeoRisk Sentinel** est une plateforme géospatiale intelligente développée dans le cadre du cours GMQ580 (Géomatique Informatique 2). Elle vise à **détecter automatiquement les zones inondées susceptibles d'affecter les infrastructures électriques** dans la municipalité de Sainte-Marthe-sur-le-Lac.
+
+Le projet combine :
 
 - l'analyse spatiale multicritère (SIG)
-- les images satellites Sentinel-1 et Sentinel-2
-- l'intelligence artificielle (modèle U-Net)
+- les images satellites Sentinel-1 SAR
+- la détection de changement et l'intelligence artificielle (modèle U-Net)
 - une base de données spatiale PostGIS
 - une carte web interactive (Django + Leaflet)
 
-Le projet s'inscrit dans une démarche **open source** : tout le code est versionné sur GitHub et l'environnement est conteneurisé avec Docker.
+Le projet est entièrement **open source** : tout le code est versionné sur GitHub et l'environnement est conteneurisé avec Docker.
 
 ---
 
@@ -46,17 +54,32 @@ Le projet s'inscrit dans une démarche **open source** : tout le code est versio
 
 ### Contexte
 
-Les inondations représentent une menace croissante pour les infrastructures critiques, en particulier les réseaux électriques. La municipalité de **Sainte-Marthe-sur-le-Lac** a connu une catastrophe majeure le **27 avril 2019** : la rupture de la digue principale a provoqué l'inondation de plus de **6 000 résidences** et forcé l'évacuation de la totalité de la population.
+Les inondations représentent une menace croissante pour les infrastructures critiques, en particulier les réseaux électriques. La municipalité de **Sainte-Marthe-sur-le-Lac** a connu une catastrophe majeure le **27 avril 2019** : la rupture de la digue principale a provoqué l'inondation de plus de **6 000 résidences** et forcé l'évacuation de la totalité de la population en quelques heures.
 
-Cet événement a mis en évidence l'absence de système de surveillance géospatiale en temps réel capable de :
-- détecter automatiquement les zones inondées
-- identifier les infrastructures électriques à risque
+Cet événement a mis en évidence l'absence d'un système de surveillance géospatiale capable de :
+- détecter automatiquement les zones inondées à partir d'images satellites
+- identifier les infrastructures électriques à risque immédiat
 - générer des alertes préventives
-- produire des cartes de vulnérabilité actualisées
+- produire des cartes de vulnérabilité à partir de données officielles
 
 ### Question de recherche
 
-> Comment développer une plateforme géospatiale intelligente permettant la détection automatique des zones inondées et l'identification des infrastructures électriques vulnérables à Sainte-Marthe-sur-le-Lac, à partir d'images satellites, d'analyses spatiales et de l'intelligence artificielle ?
+> Comment développer une plateforme géospatiale intelligente permettant la détection automatique des zones inondées et l'identification des infrastructures électriques vulnérables à Sainte-Marthe-sur-le-Lac, à partir d'images Sentinel-1 SAR, de données MRNF et d'analyses spatiales PostGIS ?
+
+### Périmètre du projet (ce qui n'est PAS traité)
+
+- Simulation hydrologique avancée (modèle 2D de propagation)
+- Systèmes IoT ou capteurs en temps réel
+- Application mobile
+- Traitement des nuages (Sentinel-2 non utilisé à cause de la couverture nuageuse de 2019)
+- Réentraînement du modèle U-Net (utilisation du modèle pré-entraîné Sen1Floods11)
+
+### Utilisateurs visés
+
+- Municipalité de Sainte-Marthe-sur-le-Lac
+- Gestionnaires du réseau électrique (Hydro-Québec)
+- Services de sécurité civile
+- Chercheurs en géomatique et risques naturels
 
 ---
 
@@ -64,14 +87,14 @@ Cet événement a mis en évidence l'absence de système de surveillance géospa
 
 ### Localisation
 
-**Sainte-Marthe-sur-le-Lac** est une municipalité de la région des Laurentides, située à environ 30 km au nord-ouest de Montréal.
+**Sainte-Marthe-sur-le-Lac** est une municipalité de la région des Laurentides, à 30 km au nord-ouest de Montréal.
 
 Elle est délimitée par :
 - le **Lac des Deux Montagnes** au sud
 - la **Rivière des Mille-Îles** à l'est
-- les municipalités de Saint-Eustache et Deux-Montagnes au nord et à l'est
+- Saint-Eustache et Deux-Montagnes au nord
 
-### Secteurs prioritaires d'analyse
+### Secteurs prioritaires
 
 | Secteur | Description | Risque |
 |---|---|---|
@@ -82,166 +105,85 @@ Elle est délimitée par :
 
 ### Paramètres techniques
 
-- **Système de coordonnées :** EPSG:32198 (NAD83 / Québec Lambert)
-- **Résolution spatiale :** 10 mètres (Sentinel-2) et 20 mètres (Sentinel-1)
-- **Emprise :** Ensemble du territoire municipal de Sainte-Marthe-sur-le-Lac
-- **Référence événement :** Crue et rupture de digue du 27 avril 2019
+| Paramètre | Valeur |
+|---|---|
+| Système de coordonnées | EPSG:32198 (NAD83 / Québec Lambert) |
+| Résolution spatiale | 10 m (Sentinel-1 IW GRD) et 30 m (DEM Copernicus) |
+| Emprise BBOX (WGS84) | (-74.05, 45.48, -73.85, 45.60) |
+| Événement de référence | Rupture de digue du 27 avril 2019 |
+| Échelle d'étude | Urbaine (municipalité entière) |
 
 ### Justification du choix
 
-- Événement d'inondation réel, documenté et bien daté (2019)
-- Données officielles disponibles sur le portail des zones inondables du MRNF
-- Réseau électrique urbain dense → plusieurs infrastructures à cartographier
-- Proximité avec Montréal → richesse des données ouvertes disponibles
+- Événement d'inondation réel, documenté et bien daté
+- Données officielles disponibles (MRNF zones inondées 2017 et 2019)
+- Réseau électrique urbain dense cartographié dans OpenStreetMap
+- Données Sentinel-1 disponibles avant et après la rupture de digue
 
 ---
 
-## 4. Objectifs
+## 4. Données
 
-### Objectif général
+### Sources utilisées
 
-Développer une plateforme géospatiale intelligente capable de détecter automatiquement les zones inondées et d'identifier les infrastructures électriques vulnérables à Sainte-Marthe-sur-le-Lac, à partir d'images satellites et d'analyses SIG.
+| Couche | Source | Format | CRS | Accès | Téléchargé |
+|---|---|---|---|---|---|
+| Zones inondées 2017 et 2019 | MRNF Québec (Données Québec) | GPKG | EPSG:3857 | Gratuit | ✅ 277 Mo |
+| Images radar SAR | Sentinel-1 GRD (ESA/CDSE) | GeoTIFF | EPSG:4326 (GCPs) | Gratuit (compte requis) | ✅ 4 scènes ~6.5 GB |
+| Réseau électrique | OpenStreetMap (Overpass Turbo) | GeoJSON | EPSG:4326 | Gratuit | ✅ 31 Ko |
+| Modèle numérique d'élévation | Copernicus DEM GLO-30 (AWS) | GeoTIFF | EPSG:4326 | Gratuit (public) | ✅ 43.5 Mo |
 
-### Objectifs spécifiques
+### Détail Sentinel-1 — 4 scènes acquises
 
-| # | Objectif | Livrable attendu |
-|---|---|---|
-| O1 | Cartographier les infrastructures électriques | Couche PostGIS vectorielle |
-| O2 | Acquérir et prétraiter les images Sentinel | Rasters GeoTIFF reprojettés |
-| O3 | Entraîner un modèle U-Net de détection des inondations | Modèle PyTorch exporté |
-| O4 | Analyser les croisements spatiaux (zones inondées × réseau électrique) | Requêtes PostGIS |
-| O5 | Développer une carte web interactive | Application Django + Leaflet |
-| O6 | Publier les couches SIG via GeoServer | Services WMS/WFS |
-| O7 | Conteneuriser l'application avec Docker | Fichiers docker-compose |
-| O8 | Produire un rapport technique final | Document PDF |
-
----
-
-## 5. Architecture technique
-
-### Vue d'ensemble
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    GEORISK SENTINEL                      │
-├──────────────┬──────────────┬──────────────┬────────────┤
-│   DONNÉES    │   TRAITEMENT │   STOCKAGE   │    WEB     │
-│              │              │              │            │
-│ Sentinel-1   │   Python     │  PostgreSQL  │  Django    │
-│ Sentinel-2   │   Rasterio   │  + PostGIS   │  Leaflet   │
-│ OSM (réseau  │   GeoPandas  │              │  GeoServer │
-│  électrique) │   U-Net IA   │              │            │
-│ MRNF zones   │              │              │            │
-│ inondables   │              │              │            │
-└──────────────┴──────────────┴──────────────┴────────────┘
-                        │
-               Docker Compose
-                        │
-                   GitHub (OSS)
-```
-
-### Composants principaux
-
-#### Backend — Django
-
-Django constitue le cœur de l'application. Il gère :
-- les interfaces utilisateur (templates HTML)
-- les requêtes à la base de données PostGIS via GeoDjango
-- l'exécution des scripts de traitement Python
-- la génération dynamique des cartes
-- les alertes automatiques
-
-#### Base de données — PostgreSQL + PostGIS
-
-Stockage de toutes les données géospatiales vectorielles et des résultats d'analyse.
-
-#### Traitement raster — Python (Rasterio + GeoPandas)
-
-Prétraitement des images satellites, calcul des indices spectraux (NDWI, SAR ratio), export des zones inondées en vecteur.
-
-#### Intelligence artificielle — U-Net (PyTorch)
-
-Segmentation sémantique des surfaces d'eau à partir des images Sentinel.
-
-#### Carte web — Leaflet
-
-Visualisation interactive des couches géospatiales servies par GeoServer (WMS/WFS).
-
-#### Conteneurisation — Docker + Docker Compose
-
-Tous les services sont isolés dans des conteneurs pour garantir la reproductibilité.
-
----
-
-## 6. Données utilisées
-
-### Sources de données
-
-| Couche | Source | Format | CRS |
+| Fichier | Date | Période | Polarisation |
 |---|---|---|---|
-| Zones inondables officielles | MRNF Québec (zonesinondables.mrnf.gouv.qc.ca) | SHP / GeoJSON | EPSG:32198 |
-| Images radar SAR | Sentinel-1 (ESA Copernicus) | GeoTIFF | EPSG:4326 |
-| Images optiques | Sentinel-2 (ESA Copernicus) | GeoTIFF | EPSG:4326 |
-| Réseau électrique | OpenStreetMap (tags power=*) | GeoJSON | EPSG:4326 |
-| Modèle numérique d'élévation | SRTM / Copernicus DEM | GeoTIFF | EPSG:32198 |
-| Réseau hydrographique | Gouvernement du Québec (données ouvertes) | SHP | EPSG:32198 |
-| Limites municipales | Données ouvertes du Québec | SHP | EPSG:32198 |
-| Données météo historiques | Environnement Canada | CSV | — |
+| S1A_IW_GRDH_1SDV_20190408... | 8 avril 2019 | Avant inondation | VV + VH |
+| S1A_IW_GRDH_1SDH_20190420... | 20 avril 2019 | Avant inondation | HH + HV |
+| S1A_IW_GRDH_1SDV_20190502... | 2 mai 2019 | Après inondation | VV + VH |
+| S1A_IW_GRDH_1SDV_20190514... | 14 mai 2019 | Après inondation | VV + VH |
 
-### Données satellites — détail
+### Données produites (après prétraitement)
 
-**Sentinel-1 (SAR)**
-- Bandes : VV, VH (polarisation double)
-- Résolution : 10 m (mode IW)
-- Utilisation : détection des surfaces d'eau (insensible aux nuages)
-- Période cible : avant/après l'événement d'avril 2019
-
-**Sentinel-2 (optique)**
-- Bandes utilisées : B3 (vert), B4 (rouge), B8 (NIR), B11 (SWIR)
-- Résolution : 10 m (bandes B2-B4, B8)
-- Utilisation : calcul NDWI, validation visuelle
-
-### Portail des zones inondables — MRNF
-
-Source principale pour les données de référence :
-- Zones à risque 0-20 ans (risque élevé)
-- Zones à risque 0-100 ans (risque modéré)
-- Cotes de crues officielles
-- Historique des événements
+| Fichier | Description | Taille |
+|---|---|---|
+| `data/processed/dem_sainte_marthe_32198.tif` | DEM clip + EPSG:32198 (30m) | 1.0 Mo |
+| `data/processed/slope_sainte_marthe.tif` | Pente calculée depuis DEM | 1.0 Mo |
+| `data/processed/aspect_sainte_marthe.tif` | Aspect calculé depuis DEM | 1.0 Mo |
+| `data/processed/sentinel1/s1_sainte_marthe_<date>_32198.tif` | Scènes SAR en dB, EPSG:32198 (10m) | 4 × 16.1 Mo |
+| `data/processed/flood_masks/flood_<date>.tif` | Masques eau (méthode percentile) | 4 × ~100 Ko |
+| `data/processed/flood_masks/flood_change.tif` | Carte de changement avant/après | 192 Ko |
 
 ---
 
-## 7. Modèle de données PostGIS
+## 5. Modèle de données
+
+Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3 pour gérer les données spatiales.
 
 ### Table `electric_network`
 
 | Champ | Type | Description |
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
-| type | VARCHAR | pole, line, transformer, substation |
-| voltage | INT | Tension (kV) |
-| criticality | VARCHAR | low, medium, high |
+| osm_id | BIGINT | Identifiant OpenStreetMap |
+| type | VARCHAR(50) | line, substation, cable, transformer... |
+| voltage | INT | Tension en volts |
+| criticality | VARCHAR(20) | low, medium, high |
 | geom | GEOMETRY(GEOMETRY, 32198) | Géométrie (point ou ligne) |
+
+**Données importées :** 60 entités OSM — lignes, postes et pylônes
 
 ### Table `flood_zones`
 
 | Champ | Type | Description |
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
-| source | VARCHAR | MRNF, Sentinel, modèle IA |
+| source | VARCHAR(50) | MRNF, Sentinel, IA |
 | date_detection | DATE | Date de détection |
 | recurrence | INT | Période de retour (20 ou 100 ans) |
 | surface_ha | FLOAT | Surface en hectares |
-| geom | GEOMETRY(POLYGON, 32198) | Polygone de la zone |
+| geom | GEOMETRY(MULTIPOLYGON, 32198) | Polygones des zones inondées |
 
-### Table `hydro_features`
-
-| Champ | Type | Description |
-|---|---|---|
-| id | SERIAL PRIMARY KEY | Identifiant unique |
-| type | VARCHAR | river, lake, ditch |
-| nom | VARCHAR | Nom du cours d'eau |
-| geom | GEOMETRY(GEOMETRY, 32198) | Géométrie |
+**Données importées :** 6 polygones MRNF (zones inondées 2017 et 2019, clip Sainte-Marthe)
 
 ### Table `risk_analysis`
 
@@ -249,227 +191,265 @@ Source principale pour les données de référence :
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
 | infra_id | INT | Référence à electric_network |
-| flood_zone_id | INT | Référence à flood_zones |
-| niveau_risque | VARCHAR | faible, moyen, élevé, critique |
+| niveau_risque | VARCHAR(20) | low, medium, high, critical |
 | distance_m | FLOAT | Distance à la zone inondée (m) |
-| date_analyse | TIMESTAMP | Horodatage de l'analyse |
+| date_analyse | TIMESTAMP | Horodatage |
 
 ### Table `alertes`
 
 | Champ | Type | Description |
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
-| niveau | VARCHAR | INFO, AVERTISSEMENT, CRITIQUE |
+| niveau | VARCHAR(20) | info, warning, critical |
 | message | TEXT | Contenu de l'alerte |
-| infrastructure | INT | Référence à electric_network |
+| infra_id | INT | Référence à electric_network |
 | date_alerte | TIMESTAMP | Horodatage |
 | acquittee | BOOLEAN | Alerte traitée ou non |
 
 ---
 
-## 8. Modèle IA — U-Net
+## 6. Pipeline de traitement et Architecture
 
-### Architecture
+### Pipeline complet
 
-Le modèle **U-Net** est retenu pour la segmentation sémantique des surfaces d'eau. Il est adapté à :
-- la segmentation d'images satellites à faible nombre d'exemples
-- la détection de frontières fines (berges, digues)
-- l'entraînement sur données SAR et optiques
+```
+[Phase 1 — Acquisition]
+    ├── download_dem.py         → DEM Copernicus GLO-30 (AWS S3, accès public)
+    ├── download_sentinel1.py   → 4 scènes Sentinel-1 GRD via CDSE OData API
+    └── Overpass Turbo (manuel) → Réseau électrique OSM (GeoJSON)
 
-### Données d'entraînement
+[Phase 2 — Prétraitement]
+    ├── preprocess_dem.py
+    │     ├── Clip sur BBOX Sainte-Marthe (shapely)
+    │     ├── Reprojection → EPSG:32198 (rasterio.warp)
+    │     └── Calcul pente et aspect (numpy.gradient)
+    ├── preprocess_sentinel1.py
+    │     ├── Extraction archives SAFE.zip
+    │     ├── Lecture bandes VV/VH via GCPs (210 GCPs/scène)
+    │     ├── Reprojection → EPSG:32198 sur BBOX cible
+    │     └── Calibration dB : 20 × log10(DN / 65 535)
+    └── import_postgis.py
+          ├── OSM GeoJSON → table electric_network (60 entités)
+          └── MRNF GPKG → table flood_zones (6 polygones)
 
-- Dataset **Sen1Floods11** (cloud-to-street, GitHub open source)
-- Images Sentinel-1 SAR annotées pour la détection d'inondations
+[Phase 3 — Détection de zones inondées]
+    └── flood_detection.py
+          ├── Méthode 1 : percentile bas (12e) → masque eau par image
+          ├── Méthode 2 : change detection SAR (après_dB − avant_dB)
+          │     → seuil : −4 dB → 3 233 ha nouvellement inondés
+          └── Carte de changement : flood_change.tif
 
-### Métriques d'évaluation
+[Phase 4 — Analyse spatiale (PostGIS / GeoDjango)]
+    ├── ST_Intersects  → infras dans les zones inondées (critique)
+    ├── ST_Buffer 500m → infras proches des zones (alerte)
+    └── risk_summary   → résumé JSON via API DRF
 
-| Métrique | Description | Seuil cible |
+[Phase 5 — Application web]
+    └── Django 5.2 + GeoDjango
+          ├── API REST : /api/electric/, /api/floods/, /api/risk-summary/
+          ├── Carte Leaflet interactive (fond OSM + satellite Esri)
+          └── Admin Django pour gestion des alertes
+```
+
+### Architecture des services Docker
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GEORISK SENTINEL                          │
+├──────────────────┬──────────────────┬────────────────────────┤
+│  georisk_postgis │ georisk_pgadmin  │    georisk_web         │
+│  (port 5433)     │ (port 5050)      │    (port 8000)         │
+│                  │                  │                        │
+│  PostGIS 15.3    │ pgAdmin 4        │ Django 5.2 + GeoDjango │
+│  ─────────────── │  ─────────────── │ ──────────────────     │
+│  electric_network│  Interface SQL   │ /api/electric/         │
+│  flood_zones     │  graphique       │ /api/floods/           │
+│  risk_analysis   │                  │ /api/risk-summary/     │
+│  alertes         │                  │ /  → carte Leaflet     │
+└──────────────────┴──────────────────┴────────────────────────┘
+```
+
+---
+
+## 7. Schéma Mermaid — Draw.io
+
+Voir le fichier [DIAGRAMME_MERMAID.md](DIAGRAMME_MERMAID.md) pour les diagrammes à coller dans Draw.io.
+
+**Comment utiliser :**
+1. Ouvrir [app.diagrams.net](https://app.diagrams.net)
+2. Menu **Extras** → **Edit Diagram**
+3. Coller le code Mermaid → cliquer **OK**
+
+---
+
+## 8. Bibliothèques principales (stack)
+
+| Domaine | Technologie | Version | Rôle |
+|---|---|---|---|
+| Langage principal | Python | 3.10 | Traitement, IA, backend |
+| Framework web | Django + GeoDjango | 5.2 LTS | Interface, API REST, requêtes spatiales |
+| API REST | Django REST Framework | 3.17 | Sérialisation JSON/GeoJSON |
+| SIG bureau | QGIS | 3.x | Visualisation et validation |
+| Base de données | PostgreSQL + PostGIS | 15 + 3.3 | Stockage spatial (Docker) |
+| Carte web | Leaflet.js | 1.9 | Carte interactive |
+| Traitement raster | Rasterio | 1.4 | Images satellites |
+| Analyse spatiale | GeoPandas | 0.14 | Vecteur SIG |
+| Coordonnées | PyProj | 3.7 | Reprojection CRS |
+| IA / Deep Learning | PyTorch | 2.x + U-Net | Détection inondations (structure prête) |
+| Conteneurisation | Docker + Compose | — | Déploiement reproductible |
+| Versionnement | Git + GitHub | — | Open source |
+
+---
+
+## 9. Livrables attendus
+
+| Livrable | Description | Statut |
 |---|---|---|
-| Accuracy | Précision globale de classification | > 90% |
-| Recall | Capacité à détecter toutes les zones inondées | > 85% |
-| IoU | Qualité de délimitation des polygones | > 0.75 |
-| F1-score | Équilibre précision / rappel | > 0.85 |
+| Carte web interactive | Leaflet + Django sur http://localhost:8000 | ✅ Fonctionnel |
+| Base de données PostGIS | 4 tables, 60 + 6 entités importées | ✅ Fonctionnel |
+| Masques d'inondation | 4 dates × masques eau + carte de changement | ✅ Produits |
+| DEM prétraité | Clip + pente + aspect EPSG:32198 | ✅ Produit |
+| API REST GeoJSON | /api/electric/, /api/floods/, /api/risk-summary/ | ✅ Fonctionnel |
+| Scripts Python | Acquisition, prétraitement, détection, import | ✅ Tous fonctionnels |
+| Docker Compose | PostGIS + pgAdmin + Django | ✅ Fonctionnel |
+| Dépôt GitHub | Code versionné, CI/CD GitHub Actions | ✅ Initialisé |
+| Rapport technique final | Document PDF | ⏳ En cours |
+| Présentation (soutenance) | Slides + démonstration | ⏳ À faire |
 
 ---
 
-## 9. Pipeline de traitement
+## 10. État d'avancement
 
-```
-[1] Acquisition
-     ├── Téléchargement Sentinel-1 / Sentinel-2 (API Copernicus)
-     ├── Téléchargement données OSM (osmium / overpy)
-     └── Téléchargement zones inondables MRNF
-
-[2] Prétraitement
-     ├── Reprojection → EPSG:32198
-     ├── Découpage sur emprise Sainte-Marthe-sur-le-Lac
-     ├── Calibration radiométrique (SAR)
-     └── Calcul NDWI (Sentinel-2)
-
-[3] Détection IA
-     ├── Inférence U-Net sur images SAR
-     ├── Post-traitement (morphologie mathématique)
-     └── Vectorisation → polygones zones inondées
-
-[4] Analyse spatiale (PostGIS)
-     ├── ST_Intersects (zones inondées × réseau électrique)
-     ├── ST_Distance (distance infrastructure → zone inondée)
-     ├── ST_Buffer (zones tampons 50 m, 100 m, 200 m)
-     └── Calcul du niveau de risque multicritère
-
-[5] Publication cartographique
-     ├── Chargement dans PostGIS
-     ├── Publication GeoServer (WMS / WFS)
-     └── Mise à jour Django (carte Leaflet)
-
-[6] Alertes
-     └── Génération automatique si niveau_risque = élevé ou critique
-```
+| Phase | Tâche | Statut | Date |
+|---|---|---|---|
+| Phase 1 | Recherche documentaire et choix des technologies | ✅ Complété | 24 juin 2026 |
+| Phase 1 | Définition zone d'étude (Sainte-Marthe-sur-le-Lac) | ✅ Complété | 24 juin 2026 |
+| Phase 1 | Documentation initiale (README, CHRONOGRAMME, MERMAID) | ✅ Complété | 24 juin 2026 |
+| Phase 2 | Acquisition réseau électrique OSM (Overpass Turbo) | ✅ Complété | 25 juin 2026 |
+| Phase 2 | Acquisition zones inondées MRNF 2017/2019 (GPKG 277 Mo) | ✅ Complété | 25 juin 2026 |
+| Phase 2 | Acquisition DEM Copernicus GLO-30 (AWS S3, 43.5 Mo) | ✅ Complété | 26 juin 2026 |
+| Phase 2 | Acquisition Sentinel-1 SAR x4 (CDSE, ~6.5 GB) | ✅ Complété | 26 juin 2026 |
+| Phase 3 | Configuration Docker PostGIS + tables SQL | ✅ Complété | 27 juin 2026 |
+| Phase 3 | Prétraitement DEM (clip, reprojection, pente, aspect) | ✅ Complété | 27 juin 2026 |
+| Phase 3 | Prétraitement Sentinel-1 (GCPs, calibration dB, clip) | ✅ Complété | 27 juin 2026 |
+| Phase 3 | Importation PostGIS (OSM + MRNF) | ✅ Complété | 27 juin 2026 |
+| Phase 4 | Détection de zones inondées (change detection SAR) | ✅ Complété | 27 juin 2026 |
+| Phase 5 | Application Django + GeoDjango + Leaflet | ✅ Complété | 27 juin 2026 |
+| Phase 5 | API REST (electric, floods, risk-summary) | ✅ Complété | 27 juin 2026 |
+| Phase 6 | Docker Compose complet (PostGIS + pgAdmin + Django) | ✅ Complété | 27 juin 2026 |
+| Phase 6 | Dépôt GitHub (commit initial) | ✅ Complété | 27 juin 2026 |
+| Phase 6 | Validation des données dans QGIS | ⏳ À faire | — |
+| Phase 7 | Rapport technique final | ⏳ À faire | Avant 14 juill. |
+| Phase 7 | Présentation de soutenance | ⏳ À faire | Avant 14 juill. |
 
 ---
 
-## 10. Stack technologique
+## 11. Décisions méthodologiques
 
-| Domaine | Technologie | Rôle |
-|---|---|---|
-| Langage principal | Python 3.11 | Traitement, IA, backend |
-| Framework web | Django 4.2 + GeoDjango | Interface, API, carte |
-| SIG bureau | QGIS 3.x | Visualisation, validation |
-| Base de données | PostgreSQL 15 + PostGIS 3.3 | Stockage spatial |
-| Carte web | Leaflet.js | Carte interactive |
-| Serveur carto | GeoServer 2.24 | Publication WMS/WFS |
-| IA / Deep Learning | PyTorch 2.x + U-Net | Détection inondations |
-| Traitement raster | Rasterio + NumPy | Images satellites |
-| Analyse spatiale | GeoPandas + Shapely | Vecteur SIG |
-| Vision par ordinateur | OpenCV | Post-traitement images |
-| Traitement images | scikit-image | Morphologie |
-| Coordonnées | PyProj | Reprojection CRS |
-| Conteneurisation | Docker + Docker Compose | Déploiement |
-| Versionnement | Git + GitHub | Open source |
+| Décision | Justification |
+|---|---|
+| Sainte-Marthe-sur-le-Lac (pas Sherbrooke) | Événement réel 2019 documenté, données MRNF officielles disponibles |
+| Django (pas FastAPI) | Plus complet pour une app web : admin, templates, GeoDjango natif |
+| Sentinel-1 SAR (pas Sentinel-2) | Insensible aux nuages — indispensable pour avril 2019 (temps couvert) |
+| Modèle U-Net pré-entraîné (pas réentraîné) | Délai serré — inférence sur Sen1Floods11 suffisante pour démonstration |
+| Change detection (pas seuil absolu) | Calibration SAR non résolue → détection relative avant/après fiable |
+| DEM Copernicus (pas LiDAR) | Accès public AWS, 43.5 Mo, sans authentification, 30m suffisant |
+| Port 5433 (pas 5432) | Conflit avec PostgreSQL 16 local déjà installé |
+| PostGIS dans Docker (pas local) | Isolation, reproductibilité, données persistantes via volume |
+| GDAL/GEOS via rasterio.libs | Résout le conflit entre PostgreSQL 16 et les librairies du venv Python |
+| GCPs pour Sentinel-1 | Les fichiers SAFE Sentinel-1 n'ont pas de transform affine natif |
 
 ---
 
-## 11. Structure du projet
+## 12. Difficultés rencontrées
 
-```
-georisk-sentinel/
-│
-├── docker-compose.yml          # Orchestration des services
-├── README.md                   # Ce fichier
-│
-├── data/                       # Données brutes (ignorées par git)
-│   ├── raw/                    # Images satellites originales
-│   ├── processed/              # Données prétraitées
-│   └── vectors/                # Couches vectorielles
-│
-├── src/
-│   ├── acquisition/            # Scripts de téléchargement
-│   │   ├── sentinel_download.py
-│   │   └── osm_extract.py
-│   │
-│   ├── preprocessing/          # Prétraitement raster
-│   │   ├── reproject.py
-│   │   ├── clip.py
-│   │   └── ndwi.py
-│   │
-│   ├── ai_model/               # Modèle U-Net
-│   │   ├── model.py
-│   │   ├── train.py
-│   │   ├── predict.py
-│   │   └── evaluate.py
-│   │
-│   ├── spatial_analysis/       # Analyse spatiale PostGIS
-│   │   ├── risk_scoring.py
-│   │   └── intersect.py
-│   │
-│   └── web/                    # Application Django
-│       ├── manage.py
-│       ├── georisk/            # App principale Django
-│       │   ├── models.py       # Modèles GeoDjango
-│       │   ├── views.py        # Vues et API
-│       │   ├── urls.py
-│       │   └── templates/
-│       │       └── map.html    # Carte Leaflet
-│       └── requirements.txt
-│
-├── sql/                        # Scripts PostGIS
-│   ├── create_tables.sql
-│   └── risk_analysis.sql
-│
-├── notebooks/                  # Jupyter notebooks d'exploration
-│
-└── docs/                       # Documentation
-    ├── rapport_technique.pdf
-    └── diagrammes/
-```
+| Difficulté | Solution appliquée |
+|---|---|
+| Port Docker 5432 occupé par PostgreSQL 16 local | Changement du mapping : `5433:5432` dans docker-compose.yml |
+| Variable système `PROJ_LIB` pointe vers PostgreSQL 16 | Override `PROJ_DATA` + `PROJ_LIB` vers `rasterio.libs/` avant import rasterio |
+| GDAL/GEOS manquants pour Django sur Windows | `GDAL_LIBRARY_PATH` + `GEOS_LIBRARY_PATH` pointés vers DLL hashées de `shapely.libs/` |
+| Sentinel-1 SAFE sans CRS affine (GCPs seulement) | Lecture des 210 GCPs, `from_gcps()` pour la reprojection `reproject()` |
+| Calibration SAR — valeurs hors plage | Formule 20×log10(DN/65535) ; change detection pour s'affranchir du biais absolu |
+| GeoPandas `to_postgis` avec clés étrangères | `TRUNCATE ... CASCADE` + `if_exists="append"` au lieu de `replace` |
+| MRNF GPKG géométries 3D (MultiPolygon Z) | `shapely.force_2d()` avant import |
+| Emojis dans print() — terminal Windows CP1252 | Remplacés par du texte ASCII dans tous les scripts |
+| djangorestframework-gis remplace Django 4.2 par 5.2 | Accepté — Django 5.2 est la version LTS actuelle |
 
 ---
 
-## 12. Installation et déploiement
+## 13. Installation et démarrage
 
 ### Prérequis
 
-- Docker Desktop installé
-- Git installé
-- Compte Copernicus (gratuit) pour l'accès aux images Sentinel
+- Docker Desktop (Engine en cours d'exécution)
+- Python 3.10 avec venv
+- Git
+- Compte Copernicus CDSE (gratuit) pour Sentinel-1
 
 ### Démarrage rapide
 
 ```bash
-# Cloner le dépôt
+# 1. Cloner le dépôt
 git clone https://github.com/<votre-compte>/georisk-sentinel.git
 cd georisk-sentinel
 
-# Lancer tous les services
-docker-compose up -d
+# 2. Créer le fichier de credentials (NE PAS COMMITTER)
+cp .env.example .env
+# Remplir CDSE_USERNAME et CDSE_PASSWORD
 
-# Vérifier que les conteneurs sont actifs
-docker-compose ps
+# 3. Démarrer PostGIS + pgAdmin
+docker-compose up -d postgis pgadmin
+
+# 4. Installer les dépendances Python
+python -m venv venv
+pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
+
+# 5. Importer les données
+python src/preprocessing/import_postgis.py
+
+# 6. Lancer Django
+cd src/web
+python manage.py runserver 0.0.0.0:8000
 ```
 
-### Services démarrés par Docker Compose
+**OU — Script tout-en-un (Windows) :**
+```
+demarrer.bat
+```
 
-| Service | Port | Description |
+### Services et ports
+
+| Service | Port hôte | Description |
 |---|---|---|
-| Django (web) | 8000 | Interface principale + carte |
-| PostgreSQL + PostGIS | 5432 | Base de données spatiale |
-| GeoServer | 8080 | Publication cartographique WMS/WFS |
-| pgAdmin (optionnel) | 5050 | Interface d'administration BD |
+| PostGIS | 5433 | Base de données spatiale (port hôte 5433 → conteneur 5432) |
+| pgAdmin | 5050 | Interface d'administration BD |
+| Django (carte) | 8000 | Application web + API |
 
-### Accès à l'application
+### Accès
 
 ```
-Carte web :     http://localhost:8000
-Admin Django :  http://localhost:8000/admin
-GeoServer :     http://localhost:8080/geoserver
+Carte interactive :   http://localhost:8000
+API réseau élec. :   http://localhost:8000/api/electric/
+API zones inond. :   http://localhost:8000/api/floods/
+Résumé des risques : http://localhost:8000/api/risk-summary/
+pgAdmin :            http://localhost:5050
+  Email    : modou.khabane.mbaye@usherbrooke.ca
+  Password : georisk2019
+  Serveur  : georisk_postgis / port 5432 / db georisk
 ```
 
 ---
 
-## 13. État d'avancement
+## 14. Dépôts GitHub utilisés
 
-| Phase | Tâche | Statut |
-|---|---|---|
-| Phase 1 | Recherche documentaire | ✅ Complété |
-| Phase 1 | Choix des technologies | ✅ Complété |
-| Phase 1 | Définition de la zone d'étude | ✅ Complété |
-| Phase 2 | Acquisition données OSM | 🔄 En cours |
-| Phase 2 | Acquisition images Sentinel | 🔄 En cours |
-| Phase 2 | Acquisition données MRNF | 🔄 En cours |
-| Phase 3 | Prétraitement raster | ⏳ À faire |
-| Phase 3 | Configuration PostGIS | ⏳ À faire |
-| Phase 4 | Entraînement modèle U-Net | ⏳ À faire |
-| Phase 5 | Développement Django | ⏳ À faire |
-| Phase 5 | Intégration Leaflet | ⏳ À faire |
-| Phase 6 | Configuration Docker Compose | ⏳ À faire |
-| Phase 6 | Tests et validation | ⏳ À faire |
-| Phase 7 | Rapport technique final | ⏳ À faire |
-
----
-
-## 14. Chronogramme
-
-Voir le fichier [CHRONOGRAMME.md](CHRONOGRAMME.md) pour le détail des tâches et des dates.
+| Dépôt | Utilisation |
+|---|---|
+| [cloudtostreet/Sen1Floods11](https://github.com/cloudtostreet/Sen1Floods11) | Modèle U-Net pré-entraîné + dataset inondations Sentinel-1 |
+| [postgis/postgis](https://hub.docker.com/r/postgis/postgis) | Image Docker PostGIS 15-3.3 |
+| [dpage/pgadmin4](https://hub.docker.com/r/dpage/pgadmin4) | Image Docker pgAdmin 4 |
+| [Leaflet.js](https://github.com/Leaflet/Leaflet) | Carte web interactive |
+| [djangorestframework-gis](https://github.com/openwisp/django-rest-framework-gis) | Sérialisation GeoJSON pour DRF |
+| [geopandas](https://github.com/geopandas/geopandas) | Analyse géospatiale Python |
 
 ---
 
@@ -477,18 +457,16 @@ Voir le fichier [CHRONOGRAMME.md](CHRONOGRAMME.md) pour le détail des tâches e
 
 - Documentation Django / GeoDjango : https://docs.djangoproject.com
 - Documentation PostGIS : https://postgis.net/documentation
-- Documentation PyTorch : https://pytorch.org/docs
 - Documentation Rasterio : https://rasterio.readthedocs.io
 - Documentation GeoPandas : https://geopandas.org/docs
-- Sentinel Hub (images satellites) : https://www.sentinel-hub.com
-- Portail des zones inondables — MRNF Québec : https://zonesinondables.mrnf.gouv.qc.ca
-- Données ouvertes du Québec : https://www.donneesquebec.ca
+- Portail zones inondables — MRNF Québec : https://zonesinondables.mrnf.gouv.qc.ca
+- Données Québec (zones inondées 2017-2019) : https://www.donneesquebec.ca
 - OpenStreetMap : https://www.openstreetmap.org
+- Copernicus DEM GLO-30 (AWS) : https://registry.opendata.aws/copernicus-dem
+- Copernicus Data Space Ecosystem : https://dataspace.copernicus.eu
 - Sen1Floods11 (dataset IA) : https://github.com/cloudtostreet/Sen1Floods11
-- Pytorch-UNet : https://github.com/milesial/Pytorch-UNet
-- GeoServer : https://geoserver.org
 - Leaflet : https://leafletjs.com
 
 ---
 
-*Projet académique — GMQ580 Géomatique Informatique 2 — Été 2026*
+*Projet académique — GMQ580 Géomatique Informatique 2 — Été 2026 — Université de Sherbrooke*
