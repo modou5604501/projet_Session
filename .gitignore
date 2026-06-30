@@ -7,7 +7,7 @@ venv/
 # Données brutes (trop lourdes pour GitHub)
 data/raw/
 data/processed/
-data/vectors/
+data/vectors/*.gpkg
 
 # Python
 __pycache__/

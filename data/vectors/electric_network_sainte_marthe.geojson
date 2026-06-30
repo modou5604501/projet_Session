@@ -1,0 +1,1613 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-turbo",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2026-06-27T04:30:52Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/947757905",
+        "barrier": "fence",
+        "name": "Poste des Patriotes",
+        "operator": "Hydro-Québec",
+        "operator:wikidata": "Q167840",
+        "power": "substation",
+        "substation": "distribution",
+        "voltage": "315000;25000"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.9386951,
+              45.5490202
+            ],
+            [
+              -73.9384581,
+              45.548169
+            ],
+            [
+              -73.9363394,
+              45.5479747
+            ],
+            [
+              -73.9351101,
+              45.5478619
+            ],
+            [
+              -73.9350966,
+              45.5479208
+            ],
+            [
+              -73.9346763,
+              45.5478923
+            ],
+            [
+              -73.9346488,
+              45.5489409
+            ],
+            [
+              -73.938338,
+              45.5490132
+            ],
+            [
+              -73.9386951,
+              45.5490202
+            ]
+          ]
+        ]
+      },
+      "id": "way/947757905"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1451037118",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "SST115A",
+        "substation": "traction",
+        "utility": "power",
+        "voltage": "25000;1500"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8537094,
+              45.520573
+            ],
+            [
+              -73.853539,
+              45.5204555
+            ],
+            [
+              -73.8534962,
+              45.520486
+            ],
+            [
+              -73.8536666,
+              45.5206035
+            ],
+            [
+              -73.8537094,
+              45.520573
+            ]
+          ]
+        ]
+      },
+      "id": "way/1451037118"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1451037119",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "SST115B",
+        "substation": "traction",
+        "utility": "power",
+        "voltage": "25000;1500"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.8535083,
+              45.520438
+            ],
+            [
+              -73.853338,
+              45.5203205
+            ],
+            [
+              -73.8532952,
+              45.520351
+            ],
+            [
+              -73.8534655,
+              45.5204685
+            ],
+            [
+              -73.8535083,
+              45.520438
+            ]
+          ]
+        ]
+      },
+      "id": "way/1451037119"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1451037199",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "SST116",
+        "substation": "traction",
+        "utility": "power",
+        "voltage": "25000;1500"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.9136242,
+              45.5459365
+            ],
+            [
+              -73.9136462,
+              45.5458954
+            ],
+            [
+              -73.9134287,
+              45.5458382
+            ],
+            [
+              -73.9134067,
+              45.5458791
+            ],
+            [
+              -73.9136242,
+              45.5459365
+            ]
+          ]
+        ]
+      },
+      "id": "way/1451037199"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1517879907",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "PL05A",
+        "substation": "industrial",
+        "utility": "power",
+        "voltage": "25000"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.9345516,
+              45.5490094
+            ],
+            [
+              -73.9345508,
+              45.5489624
+            ],
+            [
+              -73.9343754,
+              45.548964
+            ],
+            [
+              -73.9343763,
+              45.5490109
+            ],
+            [
+              -73.9345516,
+              45.5490094
+            ]
+          ]
+        ]
+      },
+      "id": "way/1517879907"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1517879908",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "PL05B",
+        "substation": "industrial",
+        "utility": "power",
+        "voltage": "25000"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.9343105,
+              45.5490114
+            ],
+            [
+              -73.9343101,
+              45.5489628
+            ],
+            [
+              -73.9341334,
+              45.5489636
+            ],
+            [
+              -73.9341338,
+              45.5490122
+            ],
+            [
+              -73.9343105,
+              45.5490114
+            ]
+          ]
+        ]
+      },
+      "id": "way/1517879908"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1517879909",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "PFH05B",
+        "substation": "compensation",
+        "utility": "power",
+        "voltage": "25000"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.933708,
+              45.5489807
+            ],
+            [
+              -73.9337076,
+              45.5489511
+            ],
+            [
+              -73.9335148,
+              45.5489523
+            ],
+            [
+              -73.9335152,
+              45.5489818
+            ],
+            [
+              -73.933708,
+              45.5489807
+            ]
+          ]
+        ]
+      },
+      "id": "way/1517879909"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1517879910",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "PFH05A",
+        "substation": "compensation",
+        "utility": "power",
+        "voltage": "25000"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.9337803,
+              45.5490198
+            ],
+            [
+              -73.9337802,
+              45.5489898
+            ],
+            [
+              -73.9336223,
+              45.5489901
+            ],
+            [
+              -73.9336224,
+              45.54902
+            ],
+            [
+              -73.9337803,
+              45.5490198
+            ]
+          ]
+        ]
+      },
+      "id": "way/1517879910"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1517879911",
+        "building": "service",
+        "operator": "Pulsar",
+        "owner": "Projet REM s.e.c",
+        "power": "substation",
+        "ref": "SST117",
+        "substation": "traction",
+        "utility": "power",
+        "voltage": "25000;1500"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -73.9339268,
+              45.5491516
+            ],
+            [
+              -73.9339257,
+              45.5490869
+            ],
+            [
+              -73.9335964,
+              45.5490898
+            ],
+            [
+              -73.9335976,
+              45.5491545
+            ],
+            [
+              -73.9339268,
+              45.5491516
+            ]
+          ]
+        ]
+      },
+      "id": "way/1517879911"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/92674800",
+        "cables": "6",
+        "operator": "Hydro-Québec",
+        "power": "line",
+        "ref": "1267;1268",
+        "source": "NRCan-CanVec-7.0",
+        "voltage": "120000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.0115739,
+            45.5009307
+          ],
+          [
+            -74.0114973,
+            45.5011106
+          ],
+          [
+            -74.010652,
+            45.5032335
+          ],
+          [
+            -74.0098356,
+            45.5044579
+          ],
+          [
+            -74.0084178,
+            45.5065721
+          ],
+          [
+            -74.0057926,
+            45.5083909
+          ],
+          [
+            -74.0041376,
+            45.5095182
+          ],
+          [
+            -74.0014586,
+            45.5113636
+          ],
+          [
+            -73.9989699,
+            45.5130756
+          ],
+          [
+            -73.9961668,
+            45.51501
+          ],
+          [
+            -73.9937287,
+            45.5166861
+          ],
+          [
+            -73.9914233,
+            45.5182808
+          ],
+          [
+            -73.9884919,
+            45.5202979
+          ],
+          [
+            -73.98621,
+            45.5219128
+          ],
+          [
+            -73.9836869,
+            45.5236537
+          ],
+          [
+            -73.9816866,
+            45.525016
+          ]
+        ]
+      },
+      "id": "way/92674800"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/92676941",
+        "cables": "6",
+        "operator": "Hydro-Québec",
+        "power": "line",
+        "ref": "1267;1268",
+        "source": "NRCan-CanVec-7.0",
+        "voltage": "120000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.0165814,
+            45.5782189
+          ],
+          [
+            -74.0165418,
+            45.5771712
+          ],
+          [
+            -74.0164779,
+            45.5754779
+          ],
+          [
+            -74.0179456,
+            45.5727578
+          ],
+          [
+            -74.0193787,
+            45.5700528
+          ],
+          [
+            -74.0206028,
+            45.5677632
+          ],
+          [
+            -74.0184376,
+            45.5662198
+          ],
+          [
+            -74.0159354,
+            45.564436
+          ],
+          [
+            -74.0134073,
+            45.5626338
+          ],
+          [
+            -74.0109875,
+            45.5609052
+          ],
+          [
+            -74.0080991,
+            45.558793
+          ],
+          [
+            -74.0052082,
+            45.5566789
+          ],
+          [
+            -74.0026166,
+            45.5547839
+          ],
+          [
+            -73.999921,
+            45.5528127
+          ],
+          [
+            -73.9972458,
+            45.5508825
+          ],
+          [
+            -73.9942956,
+            45.5487539
+          ],
+          [
+            -73.9913096,
+            45.5465992
+          ],
+          [
+            -73.9883684,
+            45.5444768
+          ],
+          [
+            -73.9853866,
+            45.5423251
+          ],
+          [
+            -73.9824546,
+            45.5402092
+          ]
+        ]
+      },
+      "id": "way/92676941"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/92677017",
+        "cables": "6",
+        "operator": "Hydro-Québec",
+        "operator:wikidata": "Q167840",
+        "operator:wikipedia": "fr:Hydro-Québec",
+        "power": "line",
+        "ref": "1267;1268",
+        "source": "Bing",
+        "voltage": "120000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -74.0165814,
+            45.5782189
+          ],
+          [
+            -74.014155,
+            45.5779229
+          ],
+          [
+            -74.0098892,
+            45.5785383
+          ],
+          [
+            -74.0055581,
+            45.5791146
+          ],
+          [
+            -74.0009896,
+            45.5797456
+          ],
+          [
+            -73.9962796,
+            45.5804026
+          ],
+          [
+            -73.9924381,
+            45.5809326
+          ],
+          [
+            -73.9880358,
+            45.5815509
+          ],
+          [
+            -73.9831398,
+            45.5822281
+          ],
+          [
+            -73.9785888,
+            45.5828507
+          ],
+          [
+            -73.9738818,
+            45.5835064
+          ],
+          [
+            -73.9692084,
+            45.5841529
+          ],
+          [
+            -73.9647939,
+            45.584764
+          ],
+          [
+            -73.9602236,
+            45.5853948
+          ],
+          [
+            -73.9557702,
+            45.586013
+          ],
+          [
+            -73.9510059,
+            45.5866727
+          ],
+          [
+            -73.946088,
+            45.587352
+          ],
+          [
+            -73.9411843,
+            45.5880358
+          ],
+          [
+            -73.9369784,
+            45.588613
+          ],
+          [
+            -73.9328168,
+            45.5893322
+          ],
+          [
+            -73.9281201,
+            45.5901299
+          ]
+        ]
+      },
+      "id": "way/92677017"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/174454201",
+        "power": "line",
+        "source": "NRCan-CanVec-10.0",
+        "voltage": "120000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.9727533,
+            45.531175
+          ],
+          [
+            -73.9791901,
+            45.5267372
+          ],
+          [
+            -73.9816866,
+            45.525016
+          ]
+        ]
+      },
+      "id": "way/174454201"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/174488420",
+        "power": "line",
+        "source": "NRCan-CanVec-10.0",
+        "voltage": "120000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.9824546,
+            45.5402092
+          ],
+          [
+            -73.9821436,
+            45.5399657
+          ],
+          [
+            -73.976256,
+            45.5357157
+          ],
+          [
+            -73.9712415,
+            45.5322193
+          ],
+          [
+            -73.9727533,
+            45.531175
+          ]
+        ]
+      },
+      "id": "way/174488420"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/946545535",
+        "power": "minor_line"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.8480426,
+            45.5566168
+          ],
+          [
+            -73.8481615,
+            45.5567208
+          ],
+          [
+            -73.8485165,
+            45.5570584
+          ],
+          [
+            -73.8488516,
+            45.5573758
+          ],
+          [
+            -73.8492116,
+            45.5577191
+          ],
+          [
+            -73.849555,
+            45.5580428
+          ],
+          [
+            -73.8498588,
+            45.5583266
+          ],
+          [
+            -73.8502097,
+            45.5586607
+          ],
+          [
+            -73.8505102,
+            45.558937
+          ],
+          [
+            -73.8508016,
+            45.5592156
+          ],
+          [
+            -73.8510765,
+            45.5594729
+          ],
+          [
+            -73.8513696,
+            45.5597532
+          ],
+          [
+            -73.8516618,
+            45.5600272
+          ]
+        ]
+      },
+      "id": "way/946545535"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1103691741",
+        "power": "line",
+        "voltage": "315000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.9380307,
+            45.548707
+          ],
+          [
+            -73.9400309,
+            45.5485651
+          ]
+        ]
+      },
+      "id": "way/1103691741"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1103691742",
+        "power": "line",
+        "voltage": "315000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.9400309,
+            45.5485651
+          ],
+          [
+            -73.9380212,
+            45.5485015
+          ]
+        ]
+      },
+      "id": "way/1103691742"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1103691743",
+        "circuits": "2",
+        "power": "line",
+        "voltage": "315000"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.9400309,
+            45.5485651
+          ],
+          [
+            -73.9420999,
+            45.5519396
+          ],
+          [
+            -73.9466216,
+            45.5528167
+          ],
+          [
+            -73.9506457,
+            45.5535806
+          ],
+          [
+            -73.9544845,
+            45.5543373
+          ],
+          [
+            -73.957042,
+            45.556838
+          ],
+          [
+            -73.9592746,
+            45.5590746
+          ],
+          [
+            -73.9620748,
+            45.5618199
+          ],
+          [
+            -73.9639945,
+            45.5637451
+          ],
+          [
+            -73.9647586,
+            45.5663707
+          ],
+          [
+            -73.965542,
+            45.5691047
+          ],
+          [
+            -73.9664689,
+            45.5723735
+          ],
+          [
+            -73.9674734,
+            45.5756203
+          ],
+          [
+            -73.9674966,
+            45.5787774
+          ],
+          [
+            -73.9687222,
+            45.5814294
+          ]
+        ]
+      },
+      "id": "way/1103691743"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1487758297",
+        "operator": "Hydro-Québec",
+        "operator:wikidata": "Q167840",
+        "power": "minor_line"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.8975681,
+            45.5786212
+          ],
+          [
+            -73.8973641,
+            45.5786768
+          ],
+          [
+            -73.8964923,
+            45.5790362
+          ],
+          [
+            -73.8956654,
+            45.5782028
+          ]
+        ]
+      },
+      "id": "way/1487758297"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1487758298",
+        "operator": "Hydro-Québec",
+        "operator:wikidata": "Q167840",
+        "power": "minor_line"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.8945227,
+            45.5767817
+          ],
+          [
+            -73.8947275,
+            45.5772655
+          ],
+          [
+            -73.8955017,
+            45.5780605
+          ]
+        ]
+      },
+      "id": "way/1487758298"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/1498553484",
+        "operator": "Hydro-Québec",
+        "operator:wikidata": "Q167840",
+        "power": "minor_line"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -73.8939441,
+            45.5769375
+          ],
+          [
+            -73.8937925,
+            45.5767867
+          ],
+          [
+            -73.8937063,
+            45.576701
+          ],
+          [
+            -73.8934287,
+            45.5764231
+          ],
+          [
+            -73.8931475,
+            45.5761377
+          ],
+          [
+            -73.8928433,
+            45.5758221
+          ]
+        ]
+      },
+      "id": "way/1498553484"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387054",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9989699,
+          45.5130756
+        ]
+      },
+      "id": "node/1795387054"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387055",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9961668,
+          45.51501
+        ]
+      },
+      "id": "node/1795387055"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387056",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9937287,
+          45.5166861
+        ]
+      },
+      "id": "node/1795387056"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387057",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9914233,
+          45.5182808
+        ]
+      },
+      "id": "node/1795387057"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387058",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9884919,
+          45.5202979
+        ]
+      },
+      "id": "node/1795387058"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387059",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.98621,
+          45.5219128
+        ]
+      },
+      "id": "node/1795387059"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387060",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9836869,
+          45.5236537
+        ]
+      },
+      "id": "node/1795387060"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387061",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9816866,
+          45.525016
+        ]
+      },
+      "id": "node/1795387061"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387062",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9824546,
+          45.5402092
+        ]
+      },
+      "id": "node/1795387062"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387063",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9853866,
+          45.5423251
+        ]
+      },
+      "id": "node/1795387063"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387065",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9883684,
+          45.5444768
+        ]
+      },
+      "id": "node/1795387065"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387073",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9913096,
+          45.5465992
+        ]
+      },
+      "id": "node/1795387073"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387075",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9942956,
+          45.5487539
+        ]
+      },
+      "id": "node/1795387075"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387090",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9972458,
+          45.5508825
+        ]
+      },
+      "id": "node/1795387090"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/1795387097",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.999921,
+          45.5528127
+        ]
+      },
+      "id": "node/1795387097"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/8539482237",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9791901,
+          45.5267372
+        ]
+      },
+      "id": "node/8539482237"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562124",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9400309,
+          45.5485651
+        ]
+      },
+      "id": "node/10099562124"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562126",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9420999,
+          45.5519396
+        ]
+      },
+      "id": "node/10099562126"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562127",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9466216,
+          45.5528167
+        ]
+      },
+      "id": "node/10099562127"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562128",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9506457,
+          45.5535806
+        ]
+      },
+      "id": "node/10099562128"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562129",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9544845,
+          45.5543373
+        ]
+      },
+      "id": "node/10099562129"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562130",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.957042,
+          45.556838
+        ]
+      },
+      "id": "node/10099562130"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562131",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9592746,
+          45.5590746
+        ]
+      },
+      "id": "node/10099562131"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562132",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9620748,
+          45.5618199
+        ]
+      },
+      "id": "node/10099562132"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562133",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9639945,
+          45.5637451
+        ]
+      },
+      "id": "node/10099562133"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562134",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9647586,
+          45.5663707
+        ]
+      },
+      "id": "node/10099562134"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562135",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.965542,
+          45.5691047
+        ]
+      },
+      "id": "node/10099562135"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562136",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9664689,
+          45.5723735
+        ]
+      },
+      "id": "node/10099562136"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562137",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9674734,
+          45.5756203
+        ]
+      },
+      "id": "node/10099562137"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/10099562138",
+        "power": "tower"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9674966,
+          45.5787774
+        ]
+      },
+      "id": "node/10099562138"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13639238548",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8975681,
+          45.5786212
+        ]
+      },
+      "id": "node/13639238548"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13639238551",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8956654,
+          45.5782028
+        ]
+      },
+      "id": "node/13639238551"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13639238552",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8945227,
+          45.5767817
+        ]
+      },
+      "id": "node/13639238552"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13639238554",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8955017,
+          45.5780605
+        ]
+      },
+      "id": "node/13639238554"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13723563900",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8939441,
+          45.5769375
+        ]
+      },
+      "id": "node/13723563900"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13723581202",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8934287,
+          45.5764231
+        ]
+      },
+      "id": "node/13723581202"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13723581203",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8931475,
+          45.5761377
+        ]
+      },
+      "id": "node/13723581203"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13723581204",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8928433,
+          45.5758221
+        ]
+      },
+      "id": "node/13723581204"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/13723581205",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.8937925,
+          45.5767867
+        ]
+      },
+      "id": "node/13723581205"
+    }
+  ]
+}
