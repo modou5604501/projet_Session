@@ -1,5 +1,5 @@
 # GeoRisk Sentinel
-## Détection automatique des zones inondées affectant les infrastructures électriques à Sainte-Marthe-sur-le-Lac
+## Optimisation de l'accessibilité aux bornes de recharge électrique à Montréal
 
 **Cours :** GMQ580 — Géomatique Informatique 2
 **Session :** Été 2026
@@ -22,31 +22,27 @@
 4. [Données](#4-données)
 5. [Modèle de données](#5-modèle-de-données)
 6. [Pipeline de traitement et Architecture](#6-pipeline-de-traitement-et-architecture)
-7. [Schéma Mermaid — Draw.io](#7-schéma-mermaid--drawio)
-8. [Bibliothèques principales (stack)](#8-bibliothèques-principales-stack)
-9. [Livrables attendus](#9-livrables-attendus)
-10. [État d'avancement](#10-état-davancement)
-11. [Décisions méthodologiques](#11-décisions-méthodologiques)
-12. [Difficultés rencontrées](#12-difficultés-rencontrées)
-13. [Installation et démarrage](#13-installation-et-démarrage)
-14. [Dépôts GitHub utilisés](#14-dépôts-github-utilisés)
-15. [Références](#15-références)
+7. [Bibliothèques principales (stack)](#7-bibliothèques-principales-stack)
+8. [Livrables attendus](#8-livrables-attendus)
+9. [État d'avancement](#9-état-davancement)
+10. [Décisions méthodologiques](#10-décisions-méthodologiques)
+11. [Installation et démarrage](#11-installation-et-démarrage)
+12. [Références](#12-références)
 
 ---
 
 ## 1. Présentation du projet
 
-**GeoRisk Sentinel** est une plateforme géospatiale intelligente développée dans le cadre du cours GMQ580 (Géomatique Informatique 2). Elle vise à **détecter automatiquement les zones inondées susceptibles d'affecter les infrastructures électriques** dans la municipalité de Sainte-Marthe-sur-le-Lac.
+**GeoRisk Sentinel** est une plateforme géospatiale développée dans le cadre du cours GMQ580 (Géomatique Informatique 2). Elle vise à **identifier les zones sous-desservies en bornes de recharge électrique à Montréal** et à proposer des emplacements optimaux pour de nouvelles installations.
 
 Le projet combine :
 
-- l'analyse spatiale multicritère (SIG)
-- les images satellites Sentinel-1 SAR
-- la détection de changement et l'intelligence artificielle (modèle U-Net)
+- l'analyse spatiale (buffer 500 m, zones de couverture, gaps géographiques)
+- les données ouvertes de la Ville de Montréal et de la STM
 - une base de données spatiale PostGIS
-- une carte web interactive (Django + Leaflet)
+- une carte web interactive mise à jour dynamiquement (Django + Leaflet)
 
-Le projet est entièrement **open source** : tout le code est versionné sur GitHub et l'environnement est conteneurisé avec Docker.
+L'environnement est entièrement conteneurisé avec Docker et le code est versionné sur GitHub.
 
 ---
 
@@ -54,32 +50,30 @@ Le projet est entièrement **open source** : tout le code est versionné sur Git
 
 ### Contexte
 
-Les inondations représentent une menace croissante pour les infrastructures critiques, en particulier les réseaux électriques. La municipalité de **Sainte-Marthe-sur-le-Lac** a connu une catastrophe majeure le **27 avril 2019** : la rupture de la digue principale a provoqué l'inondation de plus de **6 000 résidences** et forcé l'évacuation de la totalité de la population en quelques heures.
+La transition vers les véhicules électriques s'accélère au Québec. Montréal compte plusieurs centaines de bornes de recharge publiques réparties inégalement sur son territoire. Certains arrondissements sont bien desservis, d'autres en manquent cruellement.
 
-Cet événement a mis en évidence l'absence d'un système de surveillance géospatiale capable de :
-- détecter automatiquement les zones inondées à partir d'images satellites
-- identifier les infrastructures électriques à risque immédiat
-- générer des alertes préventives
-- produire des cartes de vulnérabilité à partir de données officielles
+Sans analyse spatiale rigoureuse, il est impossible de savoir :
+- quelles zones sont actuellement couvertes dans un rayon accessible à pied (500 m)
+- quels arrondissements présentent les plus grands vides de couverture
+- où installer en priorité de nouvelles bornes pour maximiser l'accessibilité
 
 ### Question de recherche
 
-> Suite à la rupture de la digue du 27 avril 2019 à Sainte-Marthe-sur-le-Lac, quelles infrastructures critiques (bâtiments résidentiels, axes routiers, services d'urgence) ont été affectées par l'inondation, et dans quelle mesure la détection automatique par satellite Sentinel-1 SAR permet-elle de cartographier, quantifier et suivre cet impact dans le temps ?
+> Où faudrait-il installer de nouvelles bornes de recharge à Montréal afin de maximiser l'accessibilité des usagers tout en réduisant les zones sous-desservies ?
 
 ### Périmètre du projet (ce qui n'est PAS traité)
 
-- Simulation hydrologique avancée (modèle 2D de propagation)
-- Systèmes IoT ou capteurs en temps réel
-- Application mobile
-- Traitement des nuages (Sentinel-2 non utilisé à cause de la couverture nuageuse de 2019)
-- Réentraînement du modèle U-Net (utilisation du modèle pré-entraîné Sen1Floods11)
+- Optimisation par algorithme (modèle de localisation-allocation)
+- Données temps réel (disponibilité des bornes en direct)
+- Analyse de la demande future (projections de ventes de VE)
+- Réseau privé (stationnements d'immeubles, entreprises)
 
 ### Utilisateurs visés
 
-- Municipalité de Sainte-Marthe-sur-le-Lac
-- Gestionnaires du réseau électrique (Hydro-Québec)
-- Services de sécurité civile
-- Chercheurs en géomatique et risques naturels
+- Ville de Montréal (planification urbaine)
+- Arrondissements souhaitant investir en mobilité durable
+- Citoyens cherchant une borne accessible
+- Chercheurs en géomatique et mobilité
 
 ---
 
@@ -87,38 +81,23 @@ Cet événement a mis en évidence l'absence d'un système de surveillance géos
 
 ### Localisation
 
-**Sainte-Marthe-sur-le-Lac** est une municipalité de la région des Laurentides, à 30 km au nord-ouest de Montréal.
-
-Elle est délimitée par :
-- le **Lac des Deux Montagnes** au sud
-- la **Rivière des Mille-Îles** à l'est
-- Saint-Eustache et Deux-Montagnes au nord
-
-### Secteurs prioritaires
-
-| Secteur | Description | Risque |
-|---|---|---|
-| Sud (22e Av. → lac) | Zone directement inondée en 2019 | Très élevé |
-| Parc de la Frayère | Zone tampon naturelle en bordure du lac | Élevé |
-| Parc Roland-Laliberté | Secteur résidentiel proche de l'eau | Élevé |
-| Réseau d'avenues (17e–32e) | Infrastructure urbaine et électrique dense | Moyen à élevé |
+**Montréal** — métropole du Québec, territoire de l'agglomération incluant 19 arrondissements et les villes liées.
 
 ### Paramètres techniques
 
 | Paramètre | Valeur |
 |---|---|
-| Système de coordonnées | EPSG:32198 (NAD83 / Québec Lambert) |
-| Résolution spatiale | 10 m (Sentinel-1 IW GRD) et 30 m (DEM Copernicus) |
-| Emprise BBOX (WGS84) | (-74.05, 45.48, -73.85, 45.60) |
-| Événement de référence | Rupture de digue du 27 avril 2019 |
-| Échelle d'étude | Urbaine (municipalité entière) |
+| Système de coordonnées (stockage) | EPSG:4326 (WGS84) |
+| Système de coordonnées (analyse buffer) | EPSG:32188 (NAD83 / MTM zone 8) |
+| Rayon de couverture | 500 m autour de chaque borne |
+| Échelle d'étude | Métropolitaine (arrondissement) |
 
 ### Justification du choix
 
-- Événement d'inondation réel, documenté et bien daté
-- Données officielles disponibles (MRNF zones inondées 2017 et 2019)
-- Réseau électrique urbain dense cartographié dans OpenStreetMap
-- Données Sentinel-1 disponibles avant et après la rupture de digue
+- Données ouvertes disponibles et à jour (Données Québec, STM)
+- Problématique concrète et d'actualité (transition énergétique)
+- Résultats visualisables et interprétables sur un tableau de bord web
+- Possibilité de mise à jour dynamique à chaque nouvelle installation
 
 ---
 
@@ -126,99 +105,69 @@ Elle est délimitée par :
 
 ### Sources utilisées
 
-| Couche | Source | Format | CRS | Accès | Disponibilité |
+| Couche | Source | Format | CRS | Licence | Fichier |
 |---|---|---|---|---|---|
-| Zones inondées 2017 et 2019 | MRNF Québec (Données Québec) | GPKG | EPSG:3857 | Gratuit | Téléchargé localement (277 Mo — exclu du repo) |
-| Images radar SAR | Sentinel-1 GRD (ESA/CDSE) | GeoTIFF | EPSG:4326 (GCPs) | Gratuit (compte CDSE requis) | Téléchargé localement (~6.5 GB — exclu du repo) |
-| Réseau électrique haute tension | OpenStreetMap (Overpass Turbo) | GeoJSON | EPSG:4326 | Gratuit | ✅ Dans le repo : `data/vectors/electric_network_sainte_marthe.geojson` |
-| Bâtiments résidentiels | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
-| Routes et rues | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
-| Écoles | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
-| Casernes de pompiers | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
-| Modèle numérique d'élévation | Copernicus DEM GLO-30 (AWS) | GeoTIFF | EPSG:4326 | Gratuit (public) | Téléchargé localement (43.5 Mo — exclu du repo) |
+| Bornes de recharge publiques | Ville de Montréal — Données Québec | GeoJSON | WGS84 | CC-BY 4.0 | `data/vectors/bornes_recharge_montreal.geojson` |
+| Statistiques d'utilisation 2025 | Ville de Montréal — Données Québec | CSV | — | CC-BY 4.0 | `data/vectors/chargeurs_statistiques_2025.csv` |
+| Arrondissements de Montréal | Ville de Montréal — Données Québec | GeoJSON | WGS84 | CC-BY 4.0 | `data/vectors/arrondissements_montreal.geojson` |
+| Tracés et arrêts bus/métro (STM) | STM — Données Québec | SHP (ZIP) | NAD83 MTM8 | CC-BY 4.0 | `data/vectors/stm/` |
 
-### Comment obtenir les données volumineuses
+### Notes importantes
 
-Les fichiers dépassant 100 Mo sont exclus du dépôt GitHub via `.gitignore`. Voici comment les obtenir :
+- Les données STM sont en **NAD83 / MTM zone 8** → à reprojeter en WGS84 avant import PostGIS
+- Les données STM sont mises à jour **trimestriellement**
+- Les bornes de recharge sont mises à jour **en continu** par la Ville de Montréal
 
-| Données | Commande / Source |
-|---|---|
-| Zones inondées MRNF | [Données Québec](https://www.donneesquebec.ca) → rechercher "Territoire inondé en 2017 et 2019" → télécharger le GPKG |
-| DEM Copernicus | `python src/acquisition/download_dem.py` (téléchargement automatique depuis AWS S3 public) |
-| Images Sentinel-1 | `python src/acquisition/download_sentinel1.py` (nécessite un compte CDSE gratuit et les variables `.env`) |
+### Citations obligatoires (CC-BY 4.0)
 
-### Détail Sentinel-1 — 4 scènes acquises
-
-| Fichier | Date | Période | Polarisation |
-|---|---|---|---|
-| S1A_IW_GRDH_1SDV_20190408... | 8 avril 2019 | Avant inondation | VV + VH |
-| S1A_IW_GRDH_1SDH_20190420... | 20 avril 2019 | Avant inondation | HH + HV |
-| S1A_IW_GRDH_1SDV_20190502... | 2 mai 2019 | Après inondation | VV + VH |
-| S1A_IW_GRDH_1SDV_20190514... | 14 mai 2019 | Après inondation | VV + VH |
-
-### Données produites (après prétraitement)
-
-| Fichier | Description | Taille |
-|---|---|---|
-| `data/processed/dem_sainte_marthe_32198.tif` | DEM clip + EPSG:32198 (30m) | 1.0 Mo |
-| `data/processed/slope_sainte_marthe.tif` | Pente calculée depuis DEM | 1.0 Mo |
-| `data/processed/aspect_sainte_marthe.tif` | Aspect calculé depuis DEM | 1.0 Mo |
-| `data/processed/sentinel1/s1_sainte_marthe_<date>_32198.tif` | Scènes SAR en dB, EPSG:32198 (10m) | 4 × 16.1 Mo |
-| `data/processed/flood_masks/flood_<date>.tif` | Masques eau (méthode percentile) | 4 × ~100 Ko |
-| `data/processed/flood_masks/flood_change.tif` | Carte de changement avant/après | 192 Ko |
+- Ville de Montréal. *Bornes de recharge publiques*, Données Québec.
+- Ville de Montréal. *Limites administratives de l'agglomération de Montréal*, Données Québec, mis à jour le 30 juin 2026.
+- SOCIÉTÉ DE TRANSPORT DE MONTRÉAL. *Tracés des lignes de bus et de métro*, Données Québec, 2016, mis à jour le 06 juillet 2026.
 
 ---
 
 ## 5. Modèle de données
 
-Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3 pour gérer les données spatiales.
+Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 
-### Table `electric_network`
-
-| Champ | Type | Description |
-|---|---|---|
-| id | SERIAL PRIMARY KEY | Identifiant unique |
-| osm_id | BIGINT | Identifiant OpenStreetMap |
-| type | VARCHAR(50) | line, substation, cable, transformer... |
-| voltage | INT | Tension en volts |
-| criticality | VARCHAR(20) | low, medium, high |
-| geom | GEOMETRY(GEOMETRY, 32198) | Géométrie (point ou ligne) |
-
-**Données importées :** 60 entités OSM — lignes, postes et pylônes
-
-### Table `flood_zones`
+### Table `bornes_recharge`
 
 | Champ | Type | Description |
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
-| source | VARCHAR(50) | MRNF, Sentinel, IA |
-| date_detection | DATE | Date de détection |
-| recurrence | INT | Période de retour (20 ou 100 ans) |
-| surface_ha | FLOAT | Surface en hectares |
-| geom | GEOMETRY(MULTIPOLYGON, 32198) | Polygones des zones inondées |
+| nom | VARCHAR(200) | Nom de la borne |
+| type | VARCHAR(50) | Niveau 2, Niveau 3 (DC rapide) |
+| arrondissement | VARCHAR(100) | Arrondissement de Montréal |
+| nb_prises | INT | Nombre de prises disponibles |
+| geom | GEOMETRY(POINT, 4326) | Localisation WGS84 |
 
-**Données importées :** 6 polygones MRNF (zones inondées 2017 et 2019, clip Sainte-Marthe)
-
-### Table `risk_analysis`
+### Table `zones_couverture`
 
 | Champ | Type | Description |
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
-| infra_id | INT | Référence à electric_network |
-| niveau_risque | VARCHAR(20) | low, medium, high, critical |
-| distance_m | FLOAT | Distance à la zone inondée (m) |
-| date_analyse | TIMESTAMP | Horodatage |
+| borne_id | INT | Référence à bornes_recharge |
+| rayon_m | INT | Rayon du buffer (défaut : 500 m) |
+| geom | GEOMETRY(POLYGON, 4326) | Zone de couverture |
 
-### Table `alertes`
+### Table `arrondissements`
 
 | Champ | Type | Description |
 |---|---|---|
 | id | SERIAL PRIMARY KEY | Identifiant unique |
-| niveau | VARCHAR(20) | info, warning, critical |
-| message | TEXT | Contenu de l'alerte |
-| infra_id | INT | Référence à electric_network |
-| date_alerte | TIMESTAMP | Horodatage |
-| acquittee | BOOLEAN | Alerte traitée ou non |
+| nom | VARCHAR(100) | Nom de l'arrondissement |
+| nb_bornes | INT | Nombre de bornes (calculé) |
+| pct_couverture | FLOAT | % du territoire couvert à 500 m |
+| geom | GEOMETRY(MULTIPOLYGON, 4326) | Polygone arrondissement |
+
+### Table `stations_metro`
+
+| Champ | Type | Description |
+|---|---|---|
+| id | SERIAL PRIMARY KEY | Identifiant unique |
+| nom | VARCHAR(100) | Nom de la station |
+| ligne | VARCHAR(10) | Ligne de métro (verte, orange, jaune, bleue) |
+| geom | GEOMETRY(POINT, 4326) | Localisation WGS84 |
 
 ---
 
@@ -228,189 +177,139 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3 pour gérer les don
 
 ```
 [Phase 1 — Acquisition]
-    ├── download_dem.py         → DEM Copernicus GLO-30 (AWS S3, accès public)
-    ├── download_sentinel1.py   → 4 scènes Sentinel-1 GRD via CDSE OData API
-    └── Overpass Turbo (manuel) → Réseau électrique OSM (GeoJSON)
+    ├── bornes_recharge_montreal.geojson  → Données Québec (Ville de Montréal)
+    ├── arrondissements_montreal.geojson  → Données Québec (Ville de Montréal)
+    ├── chargeurs_statistiques_2025.csv   → Données Québec (Ville de Montréal)
+    └── stm_traces_arrets.zip             → Données Québec (STM)
 
 [Phase 2 — Prétraitement]
-    ├── preprocess_dem.py
-    │     ├── Clip sur BBOX Sainte-Marthe (shapely)
-    │     ├── Reprojection → EPSG:32198 (rasterio.warp)
-    │     └── Calcul pente et aspect (numpy.gradient)
-    ├── preprocess_sentinel1.py
-    │     ├── Extraction archives SAFE.zip
-    │     ├── Lecture bandes VV/VH via GCPs (210 GCPs/scène)
-    │     ├── Reprojection → EPSG:32198 sur BBOX cible
-    │     └── Calibration dB : 20 × log10(DN / 65 535)
+    ├── Reprojection STM : NAD83 MTM8 → WGS84 (EPSG:4326)
     └── import_postgis.py
-          ├── OSM GeoJSON → table electric_network (60 entités)
-          └── MRNF GPKG → table flood_zones (6 polygones)
+          ├── bornes_recharge_montreal.geojson → table bornes_recharge
+          ├── arrondissements_montreal.geojson → table arrondissements
+          └── stations métro (STM SHP filtré)  → table stations_metro
 
-[Phase 3 — Détection de zones inondées]
-    └── flood_detection.py
-          ├── Méthode 1 : percentile bas (12e) → masque eau par image
-          ├── Méthode 2 : change detection SAR (après_dB − avant_dB)
-          │     → seuil : −4 dB → 3 233 ha nouvellement inondés
-          └── Carte de changement : flood_change.tif
+[Phase 3 — Analyse spatiale (PostGIS)]
+    ├── ST_Buffer(500m) → zones de couverture par borne
+    ├── ST_Union        → zone couverte totale par arrondissement
+    ├── ST_Difference   → zones NON couvertes (sous-desservies)
+    └── Calcul % couverture par arrondissement
 
-[Phase 4 — Analyse spatiale (PostGIS / GeoDjango)]
-    ├── ST_Intersects  → infras dans les zones inondées (critique)
-    ├── ST_Buffer 500m → infras proches des zones (alerte)
-    └── risk_summary   → résumé JSON via API DRF
-
-[Phase 5 — Application web]
-    └── Django 5.2 + GeoDjango
-          ├── API REST : /api/electric/, /api/floods/, /api/risk-summary/
-          ├── Carte Leaflet interactive (fond OSM + satellite Esri)
-          └── Admin Django pour gestion des alertes
+[Phase 4 — Application web (Django + Leaflet)]
+    ├── API REST : /api/bornes/, /api/couverture/, /api/arrondissements/
+    ├── Carte Leaflet interactive :
+    │     ├── Couche 1 : bornes existantes (points verts)
+    │     ├── Couche 2 : zones couvertes à 500m (bleu transparent)
+    │     ├── Couche 3 : zones sous-desservies (rouge)
+    │     └── Couche 4 : stations de métro (icônes M)
+    ├── Panneau stats par arrondissement (% couverture, nb bornes)
+    └── Django Admin : ajout de nouvelles bornes → mise à jour automatique
 ```
 
 ### Architecture des services Docker
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    GEORISK SENTINEL                          │
-├──────────────────┬──────────────────┬────────────────────────┤
-│  georisk_postgis │ georisk_pgadmin  │    georisk_web         │
-│  (port 5433)     │ (port 5050)      │    (port 8000)         │
-│                  │                  │                        │
-│  PostGIS 15.3    │ pgAdmin 4        │ Django 5.2 + GeoDjango │
-│  ─────────────── │  ─────────────── │ ──────────────────     │
-│  electric_network│  Interface SQL   │ /api/electric/         │
-│  flood_zones     │  graphique       │ /api/floods/           │
-│  risk_analysis   │                  │ /api/risk-summary/     │
-│  alertes         │                  │ /  → carte Leaflet     │
-└──────────────────┴──────────────────┴────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    GEORISK SENTINEL                              │
+├──────────────────┬──────────────────┬──────────────────────────┤
+│  georisk_postgis │ georisk_pgadmin  │    georisk_web            │
+│  (port 5433)     │ (port 5050)      │    (port 8000)            │
+│                  │                  │                            │
+│  PostGIS 15.3    │ pgAdmin 4        │ Django 5.2 + GeoDjango    │
+│  ─────────────── │ ─────────────── │ ──────────────────────    │
+│  bornes_recharge │ Interface SQL    │ /api/bornes/              │
+│  zones_couverture│ graphique        │ /api/couverture/          │
+│  arrondissements │                  │ /api/arrondissements/     │
+│  stations_metro  │                  │ /  → carte Leaflet        │
+└──────────────────┴──────────────────┴──────────────────────────┘
 ```
 
 ---
 
-## 7. Schéma Mermaid — Draw.io
-
-Voir le fichier [DIAGRAMME_MERMAID.md](DIAGRAMME_MERMAID.md) pour les diagrammes à coller dans Draw.io.
-
-**Comment utiliser :**
-1. Ouvrir [app.diagrams.net](https://app.diagrams.net)
-2. Menu **Extras** → **Edit Diagram**
-3. Coller le code Mermaid → cliquer **OK**
-
----
-
-## 8. Bibliothèques principales (stack)
+## 7. Bibliothèques principales (stack)
 
 | Domaine | Technologie | Version | Rôle |
 |---|---|---|---|
-| Langage principal | Python | 3.10 | Traitement, IA, backend |
+| Langage principal | Python | 3.10 | Traitement et backend |
 | Framework web | Django + GeoDjango | 5.2 LTS | Interface, API REST, requêtes spatiales |
 | API REST | Django REST Framework | 3.17 | Sérialisation JSON/GeoJSON |
-| SIG bureau | QGIS | 3.x | Visualisation et validation |
 | Base de données | PostgreSQL + PostGIS | 15 + 3.3 | Stockage spatial (Docker) |
 | Carte web | Leaflet.js | 1.9 | Carte interactive |
-| Traitement raster | Rasterio | 1.4 | Images satellites |
-| Analyse spatiale | GeoPandas | 0.14 | Vecteur SIG |
+| Analyse spatiale | GeoPandas | 0.14 | Import et traitement vecteur |
 | Coordonnées | PyProj | 3.7 | Reprojection CRS |
-| IA / Deep Learning | PyTorch | 2.x + U-Net | Détection inondations (structure prête) |
 | Conteneurisation | Docker + Compose | — | Déploiement reproductible |
 | Versionnement | Git + GitHub | — | Open source |
 
 ---
 
-## 9. Livrables attendus
+## 8. Livrables attendus
 
 | Livrable | Description | Statut |
 |---|---|---|
-| Scripts d'acquisition | download_dem.py, download_sentinel1.py | ✅ Écrits et dans le repo |
-| Scripts de prétraitement | preprocess_dem.py, preprocess_sentinel1.py, import_postgis.py | ✅ Écrits et dans le repo |
-| Script détection IA | flood_detection.py (change detection SAR) | ✅ Écrit et dans le repo |
-| Données OSM | Réseau électrique, bâtiments, routes (GeoJSON) | ✅ Acquis et validés dans QGIS |
-| Données MRNF | Zones inondées 2017/2019 (GPKG 277 Mo) | ✅ Téléchargées et validées dans QGIS |
-| flood_change.tif | Carte de changement avant/après inondation | ✅ Produit (192 Ko) |
-| DEM prétraité | Clip + pente + aspect EPSG:32198 | ✅ Produit localement |
-| Structure Django | Projet + app risk_map + templates Leaflet | ✅ Code écrit — ⏳ Tests à effectuer |
-| API REST GeoJSON | /api/electric/, /api/floods/, /api/risk-summary/ | ✅ Code écrit — ⏳ Tests à effectuer |
-| Base de données PostGIS | Tables SQL définies, docker-compose.yml prêt | ✅ Fichiers écrits — ⏳ Import à faire |
-| Docker Compose | PostGIS + pgAdmin + Django | ✅ Fichier écrit — ⏳ Tests à effectuer |
-| Dépôt GitHub | Code versionné (phases 1 et 2 publiées) | ✅ En ligne |
-| Rapport technique final | Document PDF | ⏳ En cours de rédaction |
+| Données bornes de recharge | GeoJSON Données Québec | ✅ Téléchargé |
+| Données arrondissements | GeoJSON WGS84 Données Québec | ✅ Téléchargé |
+| Données STM (métro) | SHP Données Québec | ✅ Téléchargé |
+| Statistiques utilisation 2025 | CSV Données Québec | ✅ Téléchargé |
+| Script import PostGIS | import_postgis.py | ⏳ À écrire |
+| Script analyse buffer | buffer_analysis.py | ⏳ À écrire |
+| Script zones sous-desservies | gap_analysis.py | ⏳ À écrire |
+| Modèles Django | models.py mis à jour | ⏳ À faire |
+| API REST GeoJSON | /api/bornes/, /api/couverture/ | ⏳ À faire |
+| Carte Leaflet | Dashboard interactif | ⏳ À faire |
+| Docker Compose | PostGIS + pgAdmin + Django | ✅ Fichier existant (à adapter) |
+| Rapport technique final | Document PDF | ⏳ En cours |
 | Présentation (soutenance) | Slides + démonstration | ⏳ À faire |
 
 ---
 
-## 10. État d'avancement
+## 9. État d'avancement
 
 | Phase | Tâche | Statut | Date |
 |---|---|---|---|
-| Phase 1 | Recherche documentaire et choix des technologies | ✅ Complété | 24 juin 2026 |
-| Phase 1 | Définition zone d'étude (Sainte-Marthe-sur-le-Lac) | ✅ Complété | 24 juin 2026 |
-| Phase 1 | Documentation initiale (README, CHRONOGRAMME, MERMAID) | ✅ Complété | 24 juin 2026 |
-| Phase 2 | Acquisition réseau électrique haute tension OSM (60 entités) | ✅ Complété | 25 juin 2026 |
-| Phase 2 | Acquisition zones inondées MRNF 2017/2019 (GPKG 277 Mo) | ✅ Complété | 25 juin 2026 |
-| Phase 2 | Acquisition DEM Copernicus GLO-30 (AWS S3, 43.5 Mo) | ✅ Complété | 26 juin 2026 |
-| Phase 2 | Acquisition Sentinel-1 SAR x4 (CDSE, ~6.5 GB) | ✅ Complété | 26 juin 2026 |
-| Phase 2 | Acquisition réseau électrique complet OSM via QuickOSM (888 entités) | ✅ Complété | 7 juillet 2026 |
-| Phase 2 | Acquisition bâtiments résidentiels OSM (QuickOSM) | ✅ Complété | 7 juillet 2026 |
-| Phase 2 | Acquisition réseau routier OSM (QuickOSM) | ✅ Complété | 7 juillet 2026 |
-| Phase 2 | Validation de toutes les données dans QGIS | ✅ Complété | 7 juillet 2026 |
-| Phase 3 | Écriture scripts prétraitement DEM et Sentinel-1 | ✅ Scripts écrits | 27 juin 2026 |
-| Phase 3 | Écriture script import PostGIS | ✅ Script écrit | 27 juin 2026 |
-| Phase 3 | Définition tables SQL (docker-compose + sql/) | ✅ Fichiers écrits | 27 juin 2026 |
-| Phase 3 | Exécution prétraitement DEM (résultats locaux) | ✅ Complété | 27 juin 2026 |
-| Phase 3 | Exécution prétraitement Sentinel-1 (résultats locaux) | ✅ Complété | 27 juin 2026 |
+| Phase 1 | Définition du sujet (bornes de recharge Montréal) | ✅ Complété | 7 juillet 2026 |
+| Phase 1 | Validation du sujet par le professeur | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Téléchargement bornes de recharge (GeoJSON) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Téléchargement statistiques utilisation 2025 (CSV) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Téléchargement arrondissements Montréal WGS84 (GeoJSON) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Téléchargement tracés STM bus+métro (SHP) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Documentation des sources (SOURCES.md) | ✅ Complété | 7 juillet 2026 |
+| Phase 3 | Reprojection STM NAD83→WGS84 | ⏳ À faire | Avant 9 juill. |
+| Phase 3 | Script import PostGIS (toutes les couches) | ⏳ À faire | Avant 9 juill. |
 | Phase 3 | Démarrage Docker PostGIS + import données | ⏳ À faire | Avant 9 juill. |
-| Phase 4 | Détection zones inondées — change detection SAR (flood_change.tif) | ✅ Complété | 27 juin 2026 |
-| Phase 4 | Analyse spatiale ST_Intersects PostGIS | ⏳ À faire | Avant 9 juill. |
-| Phase 5 | Structure projet Django + GeoDjango + templates Leaflet | ✅ Code écrit | 27 juin 2026 |
-| Phase 5 | API REST (code views.py, serializers.py) | ✅ Code écrit | 27 juin 2026 |
-| Phase 5 | Tests et validation de l'application web | ⏳ À faire | Avant 12 juill. |
-| Phase 6 | Docker Compose (fichier écrit, services configurés) | ✅ Fichier écrit | 27 juin 2026 |
-| Phase 6 | Tests Docker Compose end-to-end | ⏳ À faire | Avant 12 juill. |
-| Phase 6 | Dépôt GitHub (phases 1 et 2 publiées) | ✅ Complété | 27 juin 2026 |
+| Phase 4 | Script analyse buffer 500m (PostGIS) | ⏳ À faire | Avant 11 juill. |
+| Phase 4 | Script zones sous-desservies (gap analysis) | ⏳ À faire | Avant 11 juill. |
+| Phase 5 | Mise à jour modèles Django (nouvelles tables) | ⏳ À faire | Avant 11 juill. |
+| Phase 5 | API REST GeoJSON (bornes, couverture, arrondissements) | ⏳ À faire | Avant 12 juill. |
+| Phase 5 | Carte Leaflet (4 couches + panneau stats) | ⏳ À faire | Avant 12 juill. |
+| Phase 5 | Tests et validation de l'application web | ⏳ À faire | Avant 13 juill. |
+| Phase 6 | Push GitHub complet | ⏳ À faire | Avant 13 juill. |
 | Phase 6 | Rapport technique final | ⏳ En cours | Avant 14 juill. |
 | Phase 6 | Présentation de soutenance | ⏳ À faire | Avant 14 juill. |
 
 ---
 
-## 11. Décisions méthodologiques
+## 10. Décisions méthodologiques
 
 | Décision | Justification |
 |---|---|
-| Sainte-Marthe-sur-le-Lac (pas Sherbrooke) | Événement réel 2019 documenté, données MRNF officielles disponibles |
-| Django (pas FastAPI) | Plus complet pour une app web : admin, templates, GeoDjango natif |
-| Sentinel-1 SAR (pas Sentinel-2) | Insensible aux nuages — indispensable pour avril 2019 (temps couvert) |
-| Modèle U-Net pré-entraîné (pas réentraîné) | Délai serré — inférence sur Sen1Floods11 suffisante pour démonstration |
-| Change detection (pas seuil absolu) | Calibration SAR non résolue → détection relative avant/après fiable |
-| DEM Copernicus (pas LiDAR) | Accès public AWS, 43.5 Mo, sans authentification, 30m suffisant |
-| Port 5433 (pas 5432) | Conflit avec PostgreSQL 16 local déjà installé |
-| PostGIS dans Docker (pas local) | Isolation, reproductibilité, données persistantes via volume |
-| GDAL/GEOS via rasterio.libs | Résout le conflit entre PostgreSQL 16 et les librairies du venv Python |
-| GCPs pour Sentinel-1 | Les fichiers SAFE Sentinel-1 n'ont pas de transform affine natif |
+| Montréal (pas Sainte-Marthe-sur-le-Lac) | Réseau électrique local non disponible en open data — pivot vers sujet avec données ouvertes complètes |
+| Buffer 500 m | Distance de marche acceptable pour un usager (norme urbanisme actif) |
+| WGS84 pour stockage | Compatible Leaflet nativement, évite les conversions à la volée |
+| MTM8 pour les calculs de buffer | Projection métrique locale = distances en mètres précises |
+| Django Admin pour les mises à jour | Permet d'ajouter une borne sans toucher au code → dashboard se met à jour automatiquement |
+| GeoJSON pour bornes + arrondissements | Format web natif, pas de conversion nécessaire |
+| STM SHP (pas QuickOSM) | Données officielles STM plus fiables que l'extraction OSM manuelle |
+| Port 5433 (pas 5432) | Conflit avec PostgreSQL local déjà installé |
 
 ---
 
-## 12. Difficultés rencontrées
-
-| Difficulté | Solution appliquée |
-|---|---|
-| Port Docker 5432 occupé par PostgreSQL 16 local | Changement du mapping : `5433:5432` dans docker-compose.yml |
-| Variable système `PROJ_LIB` pointe vers PostgreSQL 16 | Override `PROJ_DATA` + `PROJ_LIB` vers `rasterio.libs/` avant import rasterio |
-| GDAL/GEOS manquants pour Django sur Windows | `GDAL_LIBRARY_PATH` + `GEOS_LIBRARY_PATH` pointés vers DLL hashées de `shapely.libs/` |
-| Sentinel-1 SAFE sans CRS affine (GCPs seulement) | Lecture des 210 GCPs, `from_gcps()` pour la reprojection `reproject()` |
-| Calibration SAR — valeurs hors plage | Formule 20×log10(DN/65535) ; change detection pour s'affranchir du biais absolu |
-| GeoPandas `to_postgis` avec clés étrangères | `TRUNCATE ... CASCADE` + `if_exists="append"` au lieu de `replace` |
-| MRNF GPKG géométries 3D (MultiPolygon Z) | `shapely.force_2d()` avant import |
-| Emojis dans print() — terminal Windows CP1252 | Remplacés par du texte ASCII dans tous les scripts |
-| djangorestframework-gis remplace Django 4.2 par 5.2 | Accepté — Django 5.2 est la version LTS actuelle |
-
----
-
-## 13. Installation et démarrage
+## 11. Installation et démarrage
 
 ### Prérequis
 
 - Docker Desktop (Engine en cours d'exécution)
 - Python 3.10 avec venv
 - Git
-- Compte Copernicus CDSE (gratuit) pour Sentinel-1
 
 ### Démarrage rapide
 
@@ -419,21 +318,17 @@ Voir le fichier [DIAGRAMME_MERMAID.md](DIAGRAMME_MERMAID.md) pour les diagrammes
 git clone https://github.com/<votre-compte>/georisk-sentinel.git
 cd georisk-sentinel
 
-# 2. Créer le fichier de credentials (NE PAS COMMITTER)
-cp .env.example .env
-# Remplir CDSE_USERNAME et CDSE_PASSWORD
-
-# 3. Démarrer PostGIS + pgAdmin
+# 2. Démarrer PostGIS + pgAdmin
 docker-compose up -d postgis pgadmin
 
-# 4. Installer les dépendances Python
+# 3. Installer les dépendances Python
 python -m venv venv
-pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
+pip install -r requirements.txt
 
-# 5. Importer les données
+# 4. Importer les données
 python src/preprocessing/import_postgis.py
 
-# 6. Lancer Django
+# 5. Lancer le serveur Django
 cd src/web
 python manage.py runserver 0.0.0.0:8000
 ```
@@ -445,71 +340,33 @@ demarrer.bat
 
 ### Services et ports
 
-| Service | Port hôte | Description |
+| Service | Port | Description |
 |---|---|---|
-| PostGIS | 5433 | Base de données spatiale (port hôte 5433 → conteneur 5432) |
+| PostGIS | 5433 | Base de données spatiale |
 | pgAdmin | 5050 | Interface d'administration BD |
-| Django (carte) | 8000 | Application web + API |
+| Django | 8000 | Application web + API |
 
 ### Accès
 
 ```
-Carte interactive :   http://localhost:8000
-API réseau élec. :   http://localhost:8000/api/electric/
-API zones inond. :   http://localhost:8000/api/floods/
-Résumé des risques : http://localhost:8000/api/risk-summary/
-pgAdmin :            http://localhost:5050
-  Email    : modou.khabane.mbaye@usherbrooke.ca
-  Password : georisk2019
-  Serveur  : georisk_postgis / port 5432 / db georisk
+Carte interactive :        http://localhost:8000
+API bornes :               http://localhost:8000/api/bornes/
+API zones couverture :     http://localhost:8000/api/couverture/
+API arrondissements :      http://localhost:8000/api/arrondissements/
+pgAdmin :                  http://localhost:5050
 ```
 
 ---
 
-## 14. Dépôts GitHub utilisés
+## 12. Références
 
-| Dépôt | Utilisation |
-|---|---|
-| [cloudtostreet/Sen1Floods11](https://github.com/cloudtostreet/Sen1Floods11) | Modèle U-Net pré-entraîné + dataset inondations Sentinel-1 |
-| [postgis/postgis](https://hub.docker.com/r/postgis/postgis) | Image Docker PostGIS 15-3.3 |
-| [dpage/pgadmin4](https://hub.docker.com/r/dpage/pgadmin4) | Image Docker pgAdmin 4 |
-| [Leaflet.js](https://github.com/Leaflet/Leaflet) | Carte web interactive |
-| [djangorestframework-gis](https://github.com/openwisp/django-rest-framework-gis) | Sérialisation GeoJSON pour DRF |
-| [geopandas](https://github.com/geopandas/geopandas) | Analyse géospatiale Python |
-
----
-
-## 15. Suivi et mises à jour du tableau de bord
-
-L'architecture Django + PostGIS permet le **suivi dans le temps** et les mises à jour dynamiques :
-
-| Fonctionnalité | Mécanisme |
-|---|---|
-| Nouvelle image SAR | Relancer `flood_detection.py` → nouvelle carte inondation |
-| Nouvelle zone inondée | Django Admin → ajouter entrée dans `flood_zones` |
-| Mise à jour bâtiments | Relancer `import_postgis.py` → données OSM actualisées |
-| Historique des événements | Champ `date_detection` dans toutes les tables |
-| Dashboard automatique | API Django sert toujours les données les plus récentes |
-
-**Exemple de suivi multi-événements :**
-- Événement 1 : 27 avril 2019 → 3 233 ha, X bâtiments
-- Événement futur → comparaison automatique sur le tableau de bord
-
----
-
-## 16. Références
-
+- Ville de Montréal — Données ouvertes : https://donnees.montreal.ca
+- Données Québec : https://www.donneesquebec.ca
+- STM — Données ouvertes : https://www.stm.info/fr/a-propos/developers
 - Documentation Django / GeoDjango : https://docs.djangoproject.com
 - Documentation PostGIS : https://postgis.net/documentation
-- Documentation Rasterio : https://rasterio.readthedocs.io
 - Documentation GeoPandas : https://geopandas.org/docs
-- Portail zones inondables — MRNF Québec : https://zonesinondables.mrnf.gouv.qc.ca
-- Données Québec (zones inondées 2017-2019) : https://www.donneesquebec.ca
-- OpenStreetMap : https://www.openstreetmap.org
-- Copernicus DEM GLO-30 (AWS) : https://registry.opendata.aws/copernicus-dem
-- Copernicus Data Space Ecosystem : https://dataspace.copernicus.eu
-- Sen1Floods11 (dataset IA) : https://github.com/cloudtostreet/Sen1Floods11
-- Leaflet : https://leafletjs.com
+- Leaflet.js : https://leafletjs.com
 
 ---
 

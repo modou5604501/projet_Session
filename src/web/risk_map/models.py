@@ -1,79 +1,57 @@
-"""
-Modèles GeoDjango — GeoRisk Sentinel
-Correspond aux tables créées dans sql/01_create_tables.sql
-"""
-
 from django.contrib.gis.db import models
 
 
-class ElectricNetwork(models.Model):
-    osm_id      = models.BigIntegerField(null=True, blank=True)
-    type        = models.CharField(max_length=50, null=True, blank=True)
-    voltage     = models.IntegerField(null=True, blank=True)
-    criticality = models.CharField(max_length=20, default="medium")
-    geom        = models.GeometryField(srid=32198)
+class BorneRecharge(models.Model):
+    nom            = models.CharField(max_length=200, null=True, blank=True)
+    type           = models.CharField(max_length=50, null=True, blank=True)
+    arrondissement = models.CharField(max_length=100, null=True, blank=True)
+    nb_prises      = models.IntegerField(default=1)
+    geom           = models.PointField(srid=4326)
 
     class Meta:
-        db_table = "electric_network"
+        db_table = "bornes_recharge"
         managed  = False
 
     def __str__(self):
-        return f"{self.type or 'infra'} [{self.osm_id}]"
+        return f"{self.nom or 'Borne'} — {self.arrondissement or '?'}"
 
 
-class FloodZone(models.Model):
-    source          = models.CharField(max_length=50, null=True)
-    date_detection  = models.DateField(null=True, blank=True)
-    recurrence      = models.IntegerField(null=True, blank=True)
-    surface_ha      = models.FloatField(null=True, blank=True)
-    geom            = models.MultiPolygonField(srid=32198, null=True)
+class ZoneCouverture(models.Model):
+    borne   = models.ForeignKey(BorneRecharge, on_delete=models.CASCADE,
+                                db_column="borne_id")
+    rayon_m = models.IntegerField(default=500)
+    geom    = models.PolygonField(srid=4326)
 
     class Meta:
-        db_table = "flood_zones"
+        db_table = "zones_couverture"
         managed  = False
 
     def __str__(self):
-        return f"Zone inondee {self.id} ({self.surface_ha:.1f} ha)" if self.surface_ha else f"Zone {self.id}"
+        return f"Buffer {self.rayon_m}m — borne {self.borne_id}"
 
 
-class RiskAnalysis(models.Model):
-    RISK_CHOICES = [
-        ("low",      "Faible"),
-        ("medium",   "Moyen"),
-        ("high",     "Eleve"),
-        ("critical", "Critique"),
-    ]
-    infra         = models.ForeignKey(ElectricNetwork, on_delete=models.CASCADE,
-                                      db_column="infra_id", null=True)
-    niveau_risque = models.CharField(max_length=20, choices=RISK_CHOICES)
-    distance_m    = models.FloatField(null=True)
-    date_analyse  = models.DateTimeField(auto_now_add=True)
+class Arrondissement(models.Model):
+    nom            = models.CharField(max_length=100)
+    nb_bornes      = models.IntegerField(default=0)
+    pct_couverture = models.FloatField(default=0)
+    geom           = models.MultiPolygonField(srid=4326)
 
     class Meta:
-        db_table = "risk_analysis"
+        db_table = "arrondissements"
         managed  = False
 
     def __str__(self):
-        return f"Risque {self.niveau_risque} infra {self.infra_id}"
+        return self.nom
 
 
-class Alerte(models.Model):
-    LEVEL_CHOICES = [
-        ("info",     "Information"),
-        ("warning",  "Avertissement"),
-        ("critical", "Critique"),
-    ]
-    niveau      = models.CharField(max_length=20, choices=LEVEL_CHOICES)
-    message     = models.TextField()
-    infra       = models.ForeignKey(ElectricNetwork, on_delete=models.SET_NULL,
-                                    db_column="infra_id", null=True, blank=True)
-    date_alerte = models.DateTimeField(auto_now_add=True)
-    acquittee   = models.BooleanField(default=False)
+class StationMetro(models.Model):
+    nom   = models.CharField(max_length=100)
+    ligne = models.CharField(max_length=10, null=True, blank=True)
+    geom  = models.PointField(srid=4326)
 
     class Meta:
-        db_table = "alertes"
+        db_table = "stations_metro"
         managed  = False
-        ordering = ["-date_alerte"]
 
     def __str__(self):
-        return f"[{self.niveau}] {self.message[:50]}"
+        return f"{self.nom} ({self.ligne})"

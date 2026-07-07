@@ -1,49 +1,46 @@
 -- GeoRisk Sentinel — Création des tables PostGIS
--- Zone d'étude : Sainte-Marthe-sur-le-Lac
+-- Projet : Bornes de recharge électrique à Montréal
 
--- Extension PostGIS
 CREATE EXTENSION IF NOT EXISTS postgis;
 CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
--- Table réseau électrique
-CREATE TABLE IF NOT EXISTS electric_network (
-    id SERIAL PRIMARY KEY,
-    osm_id BIGINT,
-    type VARCHAR(50),
-    voltage INT,
-    criticality VARCHAR(20) DEFAULT 'medium',
-    geom GEOMETRY(GEOMETRY, 32198)
+-- Bornes de recharge existantes
+CREATE TABLE IF NOT EXISTS bornes_recharge (
+    id              SERIAL PRIMARY KEY,
+    nom             VARCHAR(200),
+    type            VARCHAR(50),
+    arrondissement  VARCHAR(100),
+    nb_prises       INT DEFAULT 1,
+    geom            GEOMETRY(POINT, 4326)
 );
 
--- Table zones inondées
-CREATE TABLE IF NOT EXISTS flood_zones (
-    id SERIAL PRIMARY KEY,
-    source VARCHAR(50),
-    date_detection DATE,
-    recurrence INT,
-    surface_ha FLOAT,
-    geom GEOMETRY(MULTIPOLYGON, 32198)
+-- Zones de couverture (buffer 500m autour de chaque borne)
+CREATE TABLE IF NOT EXISTS zones_couverture (
+    id       SERIAL PRIMARY KEY,
+    borne_id INT REFERENCES bornes_recharge(id) ON DELETE CASCADE,
+    rayon_m  INT DEFAULT 500,
+    geom     GEOMETRY(POLYGON, 4326)
 );
 
--- Table analyse des risques
-CREATE TABLE IF NOT EXISTS risk_analysis (
-    id SERIAL PRIMARY KEY,
-    infra_id INT REFERENCES electric_network(id),
-    niveau_risque VARCHAR(20),
-    distance_m FLOAT,
-    date_analyse TIMESTAMP DEFAULT NOW()
+-- Arrondissements de Montréal
+CREATE TABLE IF NOT EXISTS arrondissements (
+    id              SERIAL PRIMARY KEY,
+    nom             VARCHAR(100),
+    nb_bornes       INT DEFAULT 0,
+    pct_couverture  FLOAT DEFAULT 0,
+    geom            GEOMETRY(MULTIPOLYGON, 4326)
 );
 
--- Table alertes
-CREATE TABLE IF NOT EXISTS alertes (
-    id SERIAL PRIMARY KEY,
-    niveau VARCHAR(20),
-    message TEXT,
-    infra_id INT REFERENCES electric_network(id),
-    date_alerte TIMESTAMP DEFAULT NOW(),
-    acquittee BOOLEAN DEFAULT FALSE
+-- Stations de métro STM
+CREATE TABLE IF NOT EXISTS stations_metro (
+    id    SERIAL PRIMARY KEY,
+    nom   VARCHAR(100),
+    ligne VARCHAR(10),
+    geom  GEOMETRY(POINT, 4326)
 );
 
 -- Index spatiaux
-CREATE INDEX IF NOT EXISTS idx_electric_geom ON electric_network USING GIST(geom);
-CREATE INDEX IF NOT EXISTS idx_flood_geom ON flood_zones USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_bornes_geom     ON bornes_recharge  USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_couverture_geom ON zones_couverture USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_arrond_geom     ON arrondissements  USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_metro_geom      ON stations_metro   USING GIST(geom);

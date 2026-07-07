@@ -1,33 +1,31 @@
-"""
-Sérialiseurs DRF pour l'API GeoJSON — GeoRisk Sentinel
-"""
-
-from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
-from .models import ElectricNetwork, FloodZone, RiskAnalysis, Alerte
+from rest_framework import serializers
+from .models import BorneRecharge, ZoneCouverture, Arrondissement, StationMetro
 
 
-class ElectricNetworkSerializer(GeoFeatureModelSerializer):
+class BorneRechargeSerializer(GeoFeatureModelSerializer):
     class Meta:
-        model = ElectricNetwork
+        model     = BorneRecharge
         geo_field = "geom"
-        fields = ["id", "osm_id", "type", "voltage", "criticality"]
+        fields    = ["id", "nom", "type", "arrondissement", "nb_prises"]
 
 
-class FloodZoneSerializer(GeoFeatureModelSerializer):
+class ZoneCouvertureSerializer(GeoFeatureModelSerializer):
     class Meta:
-        model = FloodZone
+        model     = ZoneCouverture
         geo_field = "geom"
-        fields = ["id", "source", "date_detection", "recurrence", "surface_ha"]
+        fields    = ["id", "borne_id", "rayon_m"]
 
 
-class RiskAnalysisSerializer(serializers.ModelSerializer):
+class ArrondissementSerializer(GeoFeatureModelSerializer):
     class Meta:
-        model = RiskAnalysis
-        fields = ["id", "infra_id", "niveau_risque", "distance_m", "date_analyse"]
+        model     = Arrondissement
+        geo_field = "geom"
+        fields    = ["id", "nom", "nb_bornes", "pct_couverture"]
 
 
-class AlerteSerializer(serializers.ModelSerializer):
+class StationMetroSerializer(GeoFeatureModelSerializer):
     class Meta:
-        model = Alerte
-        fields = ["id", "niveau", "message", "infra_id", "date_alerte", "acquittee"]
+        model     = StationMetro
+        geo_field = "geom"
+        fields    = ["id", "nom", "ligne"]

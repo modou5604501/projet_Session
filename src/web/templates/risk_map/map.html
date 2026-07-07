@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GeoRisk Sentinel — Sainte-Marthe-sur-le-Lac</title>
+  <title>GeoRisk Sentinel — Bornes de recharge Montréal</title>
 
-  <!-- Leaflet 1.9 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -54,18 +53,6 @@
       padding-bottom: 4px;
     }
 
-    .risk-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .risk-critical { background: #fce4e4; color: #c0392b; }
-    .risk-high     { background: #fef3cd; color: #856404; }
-    .risk-medium   { background: #fff3e0; color: #e67e22; }
-    .risk-low      { background: #e8f5e9; color: #27ae60; }
-
     .stat-row {
       display: flex;
       justify-content: space-between;
@@ -76,6 +63,17 @@
     }
     .stat-row:last-child { border-bottom: none; }
     .stat-val { font-weight: 700; color: #1a3a5c; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-red    { background: #fce4e4; color: #c0392b; }
+    .badge-green  { background: #e8f5e9; color: #27ae60; }
+    .badge-blue   { background: #e3f2fd; color: #1565c0; }
 
     .layer-toggle {
       display: flex;
@@ -94,20 +92,28 @@
       flex-shrink: 0;
     }
 
-    #info-box {
-      font-size: 12px;
-      color: #555;
-      min-height: 50px;
-    }
+    #info-box { font-size: 12px; color: #555; min-height: 50px; }
+    .loading  { color: #999; font-style: italic; }
+    .error    { color: #c0392b; }
 
-    .loading { color: #999; font-style: italic; }
-    .error   { color: #c0392b; }
-
-    #about {
+    #arrond-list { max-height: 180px; overflow-y: auto; }
+    .arrond-row {
+      display: flex;
+      justify-content: space-between;
       font-size: 11px;
-      color: #888;
-      line-height: 1.5;
+      padding: 3px 0;
+      border-bottom: 1px solid #f5f5f5;
     }
+    .pct-bar {
+      display: inline-block;
+      height: 6px;
+      background: #3498db;
+      border-radius: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    #about { font-size: 11px; color: #888; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -115,39 +121,53 @@
 <div id="header">
   <div>
     <h1>GeoRisk Sentinel</h1>
-    <div class="subtitle">Détection de zones inondables — Sainte-Marthe-sur-le-Lac</div>
+    <div class="subtitle">Accessibilité aux bornes de recharge — Montréal</div>
   </div>
 </div>
 
 <div id="layout">
   <div id="sidebar">
 
-    <!-- Résumé des risques -->
+    <!-- Résumé couverture -->
     <div class="panel">
-      <h3>Résumé des risques</h3>
-      <div id="risk-summary">
-        <div class="loading">Chargement...</div>
-      </div>
+      <h3>Résumé de couverture</h3>
+      <div id="coverage-summary"><div class="loading">Chargement...</div></div>
     </div>
 
     <!-- Couches -->
     <div class="panel">
       <h3>Couches cartographiques</h3>
       <label class="layer-toggle">
-        <input type="checkbox" id="toggle-electric" checked>
-        <span class="color-swatch" style="background:#e74c3c;"></span>
-        Réseau électrique OSM
+        <input type="checkbox" id="toggle-bornes" checked>
+        <span class="color-swatch" style="background:#27ae60;"></span>
+        Bornes existantes
       </label>
       <label class="layer-toggle">
-        <input type="checkbox" id="toggle-floods" checked>
-        <span class="color-swatch" style="background:#3498db;opacity:.7"></span>
-        Zones inondées MRNF
+        <input type="checkbox" id="toggle-couverture" checked>
+        <span class="color-swatch" style="background:#3498db;opacity:.6"></span>
+        Zone couverte 500 m
+      </label>
+      <label class="layer-toggle">
+        <input type="checkbox" id="toggle-metro" checked>
+        <span class="color-swatch" style="background:#e67e22;"></span>
+        Stations de métro
+      </label>
+      <label class="layer-toggle">
+        <input type="checkbox" id="toggle-arrond">
+        <span class="color-swatch" style="background:#8e44ad;opacity:.4"></span>
+        Arrondissements
       </label>
       <label class="layer-toggle">
         <input type="checkbox" id="toggle-satellite">
         <span class="color-swatch" style="background:#2c3e50;"></span>
         Fond satellite
       </label>
+    </div>
+
+    <!-- Couverture par arrondissement -->
+    <div class="panel">
+      <h3>Par arrondissement</h3>
+      <div id="arrond-list"><div class="loading">Chargement...</div></div>
     </div>
 
     <!-- Info sélection -->
@@ -165,10 +185,8 @@
         <strong>GeoRisk Sentinel</strong><br>
         Projet de session GMQ580<br>
         Université de Sherbrooke, été 2026<br><br>
-        Événement de référence : rupture de digue du
-        <strong>27 avril 2019</strong> à Sainte-Marthe-sur-le-Lac
-        (6 000+ logements sinistrés).<br><br>
-        Données : OSM, MRNF, Copernicus DEM, Sentinel-1 SAR.
+        Données : Ville de Montréal, STM (Données Québec)<br>
+        Licences : CC-BY 4.0
       </div>
     </div>
 
@@ -178,13 +196,9 @@
 </div>
 
 <script>
-// ── Carte Leaflet ─────────────────────────────────────────────────────────────
-const map = L.map('map', {
-  center: [45.535, -73.945],   // Sainte-Marthe-sur-le-Lac
-  zoom: 13
-});
+// Carte centrée sur Montréal
+const map = L.map('map', { center: [45.53, -73.62], zoom: 11 });
 
-// Fonds de carte
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap contributors'
@@ -192,118 +206,142 @@ const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 const satellite = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  { attribution: '© Esri, Maxar, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, UPR-EGP', maxZoom: 19 }
+  { attribution: '© Esri', maxZoom: 19 }
 );
 
-// Groupes de couches
-let electricLayer = null;
-let floodLayer    = null;
+let bornesLayer, couvertureLayer, metroLayer, arrondLayer;
 
-// ── Chargement réseau électrique ──────────────────────────────────────────────
-fetch('/api/electric/?format=json')
+// Bornes de recharge (points verts)
+fetch('/api/bornes/?format=json')
   .then(r => r.json())
   .then(data => {
-    electricLayer = L.geoJSON(data, {
-      style: f => ({
-        color: '#e74c3c',
-        weight: f.geometry.type === 'Point' ? 4 : 2.5,
-        opacity: 0.9,
-        fillColor: '#c0392b',
-        fillOpacity: 0.7,
-      }),
+    bornesLayer = L.geoJSON(data, {
       pointToLayer: (f, latlng) => L.circleMarker(latlng, {
-        radius: 5,
-        color: '#e74c3c',
-        fillColor: '#c0392b',
-        fillOpacity: 0.9,
-        weight: 1.5
+        radius: 5, color: '#1e8449', fillColor: '#27ae60',
+        fillOpacity: 0.9, weight: 1.5
       }),
       onEachFeature: (f, layer) => {
-        layer.on('click', () => showInfo('electric', f.properties));
+        layer.on('click', () => showInfo('borne', f.properties));
       }
     }).addTo(map);
   })
-  .catch(e => console.warn('Réseau électrique non disponible:', e));
+  .catch(e => console.warn('Bornes non disponibles:', e));
 
-// ── Chargement zones inondées ─────────────────────────────────────────────────
-fetch('/api/floods/?format=json')
+// Zones de couverture 500m (bleu transparent)
+fetch('/api/couverture/?format=json')
   .then(r => r.json())
   .then(data => {
-    floodLayer = L.geoJSON(data, {
-      style: {
-        color:       '#2980b9',
-        weight:      2,
-        opacity:     0.9,
-        fillColor:   '#3498db',
-        fillOpacity: 0.35,
-      },
+    couvertureLayer = L.geoJSON(data, {
+      style: { color: '#1565c0', weight: 1, fillColor: '#3498db', fillOpacity: 0.2 }
+    }).addTo(map);
+  })
+  .catch(e => console.warn('Zones couverture non disponibles:', e));
+
+// Stations de métro (orange)
+fetch('/api/metro/?format=json')
+  .then(r => r.json())
+  .then(data => {
+    metroLayer = L.geoJSON(data, {
+      pointToLayer: (f, latlng) => L.circleMarker(latlng, {
+        radius: 7, color: '#ca6f1e', fillColor: '#e67e22',
+        fillOpacity: 0.9, weight: 2
+      }),
       onEachFeature: (f, layer) => {
-        layer.on('click', () => showInfo('flood', f.properties));
+        layer.bindTooltip(`<strong>M</strong> ${f.properties.nom}`, { permanent: false });
+        layer.on('click', () => showInfo('metro', f.properties));
       }
     }).addTo(map);
-
-    if (floodLayer.getLayers().length > 0) {
-      map.fitBounds(floodLayer.getBounds(), { padding: [30, 30] });
-    }
   })
-  .catch(e => console.warn('Zones inondées non disponibles:', e));
+  .catch(e => console.warn('Metro non disponible:', e));
 
-// ── Résumé des risques ────────────────────────────────────────────────────────
-fetch('/api/risk-summary/')
+// Arrondissements (contours violets)
+fetch('/api/arrondissements/?format=json')
+  .then(r => r.json())
+  .then(data => {
+    arrondLayer = L.geoJSON(data, {
+      style: { color: '#6c3483', weight: 1.5, fillOpacity: 0, dashArray: '4' },
+      onEachFeature: (f, layer) => {
+        layer.on('click', () => showInfo('arrond', f.properties));
+      }
+    });
+  })
+  .catch(e => console.warn('Arrondissements non disponibles:', e));
+
+// Résumé de couverture
+fetch('/api/coverage-summary/')
   .then(r => r.json())
   .then(d => {
-    const el = document.getElementById('risk-summary');
-    el.innerHTML = `
+    document.getElementById('coverage-summary').innerHTML = `
       <div class="stat-row">
-        <span>Total infrastructures</span>
-        <span class="stat-val">${d.total_infrastructures ?? '—'}</span>
+        <span>Total bornes</span>
+        <span class="stat-val">${d.total_bornes ?? '—'}</span>
       </div>
       <div class="stat-row">
-        <span>Critique (zone inondée) <span class="risk-badge risk-critical">CRITIQUE</span></span>
-        <span class="stat-val">${d.critique ?? '—'}</span>
+        <span>Arrondissements</span>
+        <span class="stat-val">${d.total_arrondissements ?? '—'}</span>
       </div>
       <div class="stat-row">
-        <span>Alerte &lt;500 m <span class="risk-badge risk-high">ÉLEVÉ</span></span>
-        <span class="stat-val">${d.alerte_500m ?? '—'}</span>
-      </div>
-      <div class="stat-row">
-        <span>Hors risque <span class="risk-badge risk-low">BAS</span></span>
-        <span class="stat-val">${d.hors_risque ?? '—'}</span>
-      </div>
-      <div class="stat-row" style="font-size:11px;color:#999;border-top:1px solid #e0e0e0;margin-top:5px;padding-top:5px;">
-        Zones inondées MRNF&nbsp;: ${d.source_zones ?? '—'} polygones
+        <span>Sous-desservis (&lt;30%) <span class="badge badge-red">FAIBLE</span></span>
+        <span class="stat-val">${d.sous_desservis ?? '—'}</span>
       </div>`;
+
+    // Liste arrondissements
+    const list = document.getElementById('arrond-list');
+    if (d.arrondissements && d.arrondissements.length > 0) {
+      list.innerHTML = d.arrondissements.map(a => `
+        <div class="arrond-row">
+          <span>${a.nom}</span>
+          <span>
+            ${a.nb_bornes} bornes
+            <span class="pct-bar" style="width:${Math.min(a.pct_couverture || 0, 100)}px"></span>
+            ${(a.pct_couverture || 0).toFixed(0)}%
+          </span>
+        </div>`).join('');
+    } else {
+      list.innerHTML = '<span class="loading">Données non disponibles.</span>';
+    }
   })
   .catch(() => {
-    document.getElementById('risk-summary').innerHTML =
+    document.getElementById('coverage-summary').innerHTML =
       '<span class="error">API non disponible.</span>';
   });
 
-// ── Info box ──────────────────────────────────────────────────────────────────
+// Info box
 function showInfo(type, props) {
   const el = document.getElementById('info-box');
-  if (type === 'electric') {
+  if (type === 'borne') {
     el.innerHTML = `
-      <strong>Réseau électrique</strong><br>
+      <strong>Borne de recharge</strong><br>
+      Nom : ${props.nom || '—'}<br>
       Type : ${props.type || '—'}<br>
-      Tension : ${props.voltage ? props.voltage + ' V' : '—'}<br>
-      OSM ID : ${props.osm_id || '—'}<br>
-      Criticité : <span class="risk-badge risk-${props.criticality}">${props.criticality}</span>`;
-  } else if (type === 'flood') {
+      Arrondissement : ${props.arrondissement || '—'}<br>
+      Prises : ${props.nb_prises || 1}`;
+  } else if (type === 'metro') {
     el.innerHTML = `
-      <strong>Zone inondée MRNF</strong><br>
-      Source : ${props.source || '—'}<br>
-      Date : ${props.date_detection || '—'}<br>
-      Superficie : ${props.surface_ha ? props.surface_ha.toFixed(1) + ' ha' : '—'}`;
+      <strong>Station de métro</strong><br>
+      Nom : ${props.nom || '—'}<br>
+      Ligne : ${props.ligne || '—'}`;
+  } else if (type === 'arrond') {
+    el.innerHTML = `
+      <strong>Arrondissement</strong><br>
+      ${props.nom || '—'}<br>
+      Bornes : ${props.nb_bornes || 0}<br>
+      Couverture : ${(props.pct_couverture || 0).toFixed(1)}%`;
   }
 }
 
-// ── Contrôles couches ─────────────────────────────────────────────────────────
-document.getElementById('toggle-electric').addEventListener('change', e => {
-  if (electricLayer) e.target.checked ? map.addLayer(electricLayer) : map.removeLayer(electricLayer);
+// Contrôles couches
+document.getElementById('toggle-bornes').addEventListener('change', e => {
+  if (bornesLayer) e.target.checked ? map.addLayer(bornesLayer) : map.removeLayer(bornesLayer);
 });
-document.getElementById('toggle-floods').addEventListener('change', e => {
-  if (floodLayer) e.target.checked ? map.addLayer(floodLayer) : map.removeLayer(floodLayer);
+document.getElementById('toggle-couverture').addEventListener('change', e => {
+  if (couvertureLayer) e.target.checked ? map.addLayer(couvertureLayer) : map.removeLayer(couvertureLayer);
+});
+document.getElementById('toggle-metro').addEventListener('change', e => {
+  if (metroLayer) e.target.checked ? map.addLayer(metroLayer) : map.removeLayer(metroLayer);
+});
+document.getElementById('toggle-arrond').addEventListener('change', e => {
+  if (arrondLayer) e.target.checked ? map.addLayer(arrondLayer) : map.removeLayer(arrondLayer);
 });
 document.getElementById('toggle-satellite').addEventListener('change', e => {
   if (e.target.checked) { map.removeLayer(osm); map.addLayer(satellite); }
