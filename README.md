@@ -126,12 +126,25 @@ Elle est délimitée par :
 
 ### Sources utilisées
 
-| Couche | Source | Format | CRS | Accès | Téléchargé |
+| Couche | Source | Format | CRS | Accès | Disponibilité |
 |---|---|---|---|---|---|
-| Zones inondées 2017 et 2019 | MRNF Québec (Données Québec) | GPKG | EPSG:3857 | Gratuit | ✅ 277 Mo |
-| Images radar SAR | Sentinel-1 GRD (ESA/CDSE) | GeoTIFF | EPSG:4326 (GCPs) | Gratuit (compte requis) | ✅ 4 scènes ~6.5 GB |
-| Réseau électrique | OpenStreetMap (Overpass Turbo) | GeoJSON | EPSG:4326 | Gratuit | ✅ 31 Ko |
-| Modèle numérique d'élévation | Copernicus DEM GLO-30 (AWS) | GeoTIFF | EPSG:4326 | Gratuit (public) | ✅ 43.5 Mo |
+| Zones inondées 2017 et 2019 | MRNF Québec (Données Québec) | GPKG | EPSG:3857 | Gratuit | Téléchargé localement (277 Mo — exclu du repo) |
+| Images radar SAR | Sentinel-1 GRD (ESA/CDSE) | GeoTIFF | EPSG:4326 (GCPs) | Gratuit (compte CDSE requis) | Téléchargé localement (~6.5 GB — exclu du repo) |
+| Réseau électrique haute tension | OpenStreetMap (Overpass Turbo) | GeoJSON | EPSG:4326 | Gratuit | ✅ Dans le repo : `data/vectors/electric_network_sainte_marthe.geojson` |
+| Réseau électrique complet | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 (888 entités) |
+| Bâtiments résidentiels | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
+| Routes et rues | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
+| Modèle numérique d'élévation | Copernicus DEM GLO-30 (AWS) | GeoTIFF | EPSG:4326 | Gratuit (public) | Téléchargé localement (43.5 Mo — exclu du repo) |
+
+### Comment obtenir les données volumineuses
+
+Les fichiers dépassant 100 Mo sont exclus du dépôt GitHub via `.gitignore`. Voici comment les obtenir :
+
+| Données | Commande / Source |
+|---|---|
+| Zones inondées MRNF | [Données Québec](https://www.donneesquebec.ca) → rechercher "Territoire inondé en 2017 et 2019" → télécharger le GPKG |
+| DEM Copernicus | `python src/acquisition/download_dem.py` (téléchargement automatique depuis AWS S3 public) |
+| Images Sentinel-1 | `python src/acquisition/download_sentinel1.py` (nécessite un compte CDSE gratuit et les variables `.env`) |
 
 ### Détail Sentinel-1 — 4 scènes acquises
 
@@ -305,15 +318,19 @@ Voir le fichier [DIAGRAMME_MERMAID.md](DIAGRAMME_MERMAID.md) pour les diagrammes
 
 | Livrable | Description | Statut |
 |---|---|---|
-| Carte web interactive | Leaflet + Django sur http://localhost:8000 | ✅ Fonctionnel |
-| Base de données PostGIS | 4 tables, 60 + 6 entités importées | ✅ Fonctionnel |
-| Masques d'inondation | 4 dates × masques eau + carte de changement | ✅ Produits |
-| DEM prétraité | Clip + pente + aspect EPSG:32198 | ✅ Produit |
-| API REST GeoJSON | /api/electric/, /api/floods/, /api/risk-summary/ | ✅ Fonctionnel |
-| Scripts Python | Acquisition, prétraitement, détection, import | ✅ Tous fonctionnels |
-| Docker Compose | PostGIS + pgAdmin + Django | ✅ Fonctionnel |
-| Dépôt GitHub | Code versionné, CI/CD GitHub Actions | ✅ Initialisé |
-| Rapport technique final | Document PDF | ⏳ En cours |
+| Scripts d'acquisition | download_dem.py, download_sentinel1.py | ✅ Écrits et dans le repo |
+| Scripts de prétraitement | preprocess_dem.py, preprocess_sentinel1.py, import_postgis.py | ✅ Écrits et dans le repo |
+| Script détection IA | flood_detection.py (change detection SAR) | ✅ Écrit et dans le repo |
+| Données OSM | Réseau électrique, bâtiments, routes (GeoJSON) | ✅ Acquis et validés dans QGIS |
+| Données MRNF | Zones inondées 2017/2019 (GPKG 277 Mo) | ✅ Téléchargées et validées dans QGIS |
+| flood_change.tif | Carte de changement avant/après inondation | ✅ Produit (192 Ko) |
+| DEM prétraité | Clip + pente + aspect EPSG:32198 | ✅ Produit localement |
+| Structure Django | Projet + app risk_map + templates Leaflet | ✅ Code écrit — ⏳ Tests à effectuer |
+| API REST GeoJSON | /api/electric/, /api/floods/, /api/risk-summary/ | ✅ Code écrit — ⏳ Tests à effectuer |
+| Base de données PostGIS | Tables SQL définies, docker-compose.yml prêt | ✅ Fichiers écrits — ⏳ Import à faire |
+| Docker Compose | PostGIS + pgAdmin + Django | ✅ Fichier écrit — ⏳ Tests à effectuer |
+| Dépôt GitHub | Code versionné (phases 1 et 2 publiées) | ✅ En ligne |
+| Rapport technique final | Document PDF | ⏳ En cours de rédaction |
 | Présentation (soutenance) | Slides + démonstration | ⏳ À faire |
 
 ---
@@ -325,22 +342,30 @@ Voir le fichier [DIAGRAMME_MERMAID.md](DIAGRAMME_MERMAID.md) pour les diagrammes
 | Phase 1 | Recherche documentaire et choix des technologies | ✅ Complété | 24 juin 2026 |
 | Phase 1 | Définition zone d'étude (Sainte-Marthe-sur-le-Lac) | ✅ Complété | 24 juin 2026 |
 | Phase 1 | Documentation initiale (README, CHRONOGRAMME, MERMAID) | ✅ Complété | 24 juin 2026 |
-| Phase 2 | Acquisition réseau électrique OSM (Overpass Turbo) | ✅ Complété | 25 juin 2026 |
+| Phase 2 | Acquisition réseau électrique haute tension OSM (60 entités) | ✅ Complété | 25 juin 2026 |
 | Phase 2 | Acquisition zones inondées MRNF 2017/2019 (GPKG 277 Mo) | ✅ Complété | 25 juin 2026 |
 | Phase 2 | Acquisition DEM Copernicus GLO-30 (AWS S3, 43.5 Mo) | ✅ Complété | 26 juin 2026 |
 | Phase 2 | Acquisition Sentinel-1 SAR x4 (CDSE, ~6.5 GB) | ✅ Complété | 26 juin 2026 |
-| Phase 3 | Configuration Docker PostGIS + tables SQL | ✅ Complété | 27 juin 2026 |
-| Phase 3 | Prétraitement DEM (clip, reprojection, pente, aspect) | ✅ Complété | 27 juin 2026 |
-| Phase 3 | Prétraitement Sentinel-1 (GCPs, calibration dB, clip) | ✅ Complété | 27 juin 2026 |
-| Phase 3 | Importation PostGIS (OSM + MRNF) | ✅ Complété | 27 juin 2026 |
-| Phase 4 | Détection de zones inondées (change detection SAR) | ✅ Complété | 27 juin 2026 |
-| Phase 5 | Application Django + GeoDjango + Leaflet | ✅ Complété | 27 juin 2026 |
-| Phase 5 | API REST (electric, floods, risk-summary) | ✅ Complété | 27 juin 2026 |
-| Phase 6 | Docker Compose complet (PostGIS + pgAdmin + Django) | ✅ Complété | 27 juin 2026 |
-| Phase 6 | Dépôt GitHub (commit initial) | ✅ Complété | 27 juin 2026 |
-| Phase 6 | Validation des données dans QGIS | ⏳ À faire | — |
-| Phase 7 | Rapport technique final | ⏳ À faire | Avant 14 juill. |
-| Phase 7 | Présentation de soutenance | ⏳ À faire | Avant 14 juill. |
+| Phase 2 | Acquisition réseau électrique complet OSM via QuickOSM (888 entités) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Acquisition bâtiments résidentiels OSM (QuickOSM) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Acquisition réseau routier OSM (QuickOSM) | ✅ Complété | 7 juillet 2026 |
+| Phase 2 | Validation de toutes les données dans QGIS | ✅ Complété | 7 juillet 2026 |
+| Phase 3 | Écriture scripts prétraitement DEM et Sentinel-1 | ✅ Scripts écrits | 27 juin 2026 |
+| Phase 3 | Écriture script import PostGIS | ✅ Script écrit | 27 juin 2026 |
+| Phase 3 | Définition tables SQL (docker-compose + sql/) | ✅ Fichiers écrits | 27 juin 2026 |
+| Phase 3 | Exécution prétraitement DEM (résultats locaux) | ✅ Complété | 27 juin 2026 |
+| Phase 3 | Exécution prétraitement Sentinel-1 (résultats locaux) | ✅ Complété | 27 juin 2026 |
+| Phase 3 | Démarrage Docker PostGIS + import données | ⏳ À faire | Avant 9 juill. |
+| Phase 4 | Détection zones inondées — change detection SAR (flood_change.tif) | ✅ Complété | 27 juin 2026 |
+| Phase 4 | Analyse spatiale ST_Intersects PostGIS | ⏳ À faire | Avant 9 juill. |
+| Phase 5 | Structure projet Django + GeoDjango + templates Leaflet | ✅ Code écrit | 27 juin 2026 |
+| Phase 5 | API REST (code views.py, serializers.py) | ✅ Code écrit | 27 juin 2026 |
+| Phase 5 | Tests et validation de l'application web | ⏳ À faire | Avant 12 juill. |
+| Phase 6 | Docker Compose (fichier écrit, services configurés) | ✅ Fichier écrit | 27 juin 2026 |
+| Phase 6 | Tests Docker Compose end-to-end | ⏳ À faire | Avant 12 juill. |
+| Phase 6 | Dépôt GitHub (phases 1 et 2 publiées) | ✅ Complété | 27 juin 2026 |
+| Phase 6 | Rapport technique final | ⏳ En cours | Avant 14 juill. |
+| Phase 6 | Présentation de soutenance | ⏳ À faire | Avant 14 juill. |
 
 ---
 
