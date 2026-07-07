@@ -103,24 +103,35 @@ Sans analyse spatiale rigoureuse, il est impossible de savoir :
 
 ## 4. Données
 
-### Sources utilisées
+> Toutes les données utilisées dans ce projet sont **disponibles directement dans ce dépôt** dans le dossier [`data/vectors/`](data/vectors/). Les fichiers GeoJSON sont visualisables interactivement sur GitHub (carte automatique).
 
-| Couche | Source | Format | CRS | Licence | Fichier |
+### Données disponibles dans le dépôt
+
+| Couche | Fichier (cliquable) | Format | CRS | Licence | Mise à jour |
 |---|---|---|---|---|---|
-| Bornes de recharge publiques | Ville de Montréal — Données Québec | GeoJSON | WGS84 | CC-BY 4.0 | `data/vectors/bornes_recharge_montreal.geojson` |
-| Statistiques d'utilisation 2025 | Ville de Montréal — Données Québec | CSV | — | CC-BY 4.0 | `data/vectors/chargeurs_statistiques_2025.csv` |
-| Arrondissements de Montréal | Ville de Montréal — Données Québec | GeoJSON | WGS84 | CC-BY 4.0 | `data/vectors/arrondissements_montreal.geojson` |
-| Tracés et arrêts bus/métro (STM) | STM — Données Québec | SHP (ZIP) | NAD83 MTM8 | CC-BY 4.0 | `data/vectors/stm/` |
+| Bornes de recharge publiques | [`data/vectors/bornes_recharge_montreal.geojson`](data/vectors/bornes_recharge_montreal.geojson) | GeoJSON | WGS84 | CC-BY 4.0 | Continue |
+| Statistiques d'utilisation 2025 | [`data/vectors/chargeurs_statistiques_2025.csv`](data/vectors/chargeurs_statistiques_2025.csv) | CSV | — | CC-BY 4.0 | Annuelle |
+| Arrondissements de Montréal | [`data/vectors/arrondissements_montreal.geojson`](data/vectors/arrondissements_montreal.geojson) | GeoJSON | WGS84 | CC-BY 4.0 | 2026-06-30 |
+| Arrêts et stations STM (bus + métro) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | SHP | NAD83 MTM8 | CC-BY 4.0 | Trimestrielle |
 
-### Notes importantes
+### Contenu des fichiers
 
-- Les données STM sont en **NAD83 / MTM zone 8** → à reprojeter en WGS84 avant import PostGIS
-- Les données STM sont mises à jour **trimestriellement**
-- Les bornes de recharge sont mises à jour **en continu** par la Ville de Montréal
+**`bornes_recharge_montreal.geojson`** — localisation de toutes les bornes de recharge publiques de Montréal (coordonnées GPS, adresse, type de borne, arrondissement)
+
+**`chargeurs_statistiques_2025.csv`** — statistiques mensuelles par borne : nombre de recharges, kWh consommés, taux d'utilisation (~79-80%), moyenne d'usagers/jour
+
+**`arrondissements_montreal.geojson`** — polygones des 19 arrondissements et villes liées de l'agglomération de Montréal (WGS84, source officielle Ville de Montréal)
+
+**`stm_sig/stm_arrets_sig.shp`** — 8 789 arrêts STM dont les stations de métro (identifiées par `stop_url` contenant "metro"), projection NAD83 MTM8
+
+### Notes techniques
+
+- Les données STM sont en **NAD83 / MTM zone 8** (EPSG:32188) → reprojetées en WGS84 lors de l'import PostGIS
+- Le script [`src/preprocessing/import_postgis.py`](src/preprocessing/import_postgis.py) gère l'import automatique de toutes les couches
 
 ### Citations obligatoires (CC-BY 4.0)
 
-- Ville de Montréal. *Bornes de recharge publiques*, Données Québec.
+- Ville de Montréal. *Bornes de recharge publiques*, Données Québec. Consulté le 7 juillet 2026.
 - Ville de Montréal. *Limites administratives de l'agglomération de Montréal*, Données Québec, mis à jour le 30 juin 2026.
 - SOCIÉTÉ DE TRANSPORT DE MONTRÉAL. *Tracés des lignes de bus et de métro*, Données Québec, 2016, mis à jour le 06 juillet 2026.
 
