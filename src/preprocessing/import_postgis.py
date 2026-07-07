@@ -69,39 +69,24 @@ def import_arrondissements(engine):
 
 
 def import_metro(engine):
-    stm_dir = os.path.join(DATA_DIR, "stm")
-    shp_candidates = [
-        os.path.join(stm_dir, f)
-        for f in os.listdir(stm_dir) if f.endswith(".shp") and "arret" in f.lower()
-    ] if os.path.isdir(stm_dir) else []
-
-    if not shp_candidates:
+    # Fichier arrêts STM (extrait dans stm_sig/)
+    shp = os.path.join(DATA_DIR, "stm_sig", "stm_arrets_sig.shp")
+    if not os.path.exists(shp):
         print("Fichier STM arrêts introuvable — import métro ignoré")
         return
 
-    gdf = gpd.read_file(shp_candidates[0])
+    gdf = gpd.read_file(shp)
     gdf = gdf.to_crs(epsg=4326)
 
-    # Filtrer uniquement les arrêts de métro
-    col_lower = {c: c.lower() for c in gdf.columns}
-    gdf = gdf.rename(columns=col_lower)
+    # Filtrer stations de métro : stop_url contient "metro" + loc_type=0 (station principale)
+    metro_mask = (
+        gdf["stop_url"].fillna("").str.contains("metro", case=False) &
+        (gdf["loc_type"] == 0)
+    )
+    gdf = gdf[metro_mask].copy()
 
-    metro_mask = None
-    for c in ["route_type", "type", "mode"]:
-        if c in gdf.columns:
-            metro_mask = gdf[c].astype(str).str.contains("1|metro|métro", case=False, na=False)
-            break
-
-    if metro_mask is not None:
-        gdf = gdf[metro_mask]
-
-    for c in ["stop_name", "nom_arret", "nom"]:
-        if c in gdf.columns:
-            gdf = gdf.rename(columns={c: "nom"})
-            break
-
-    keep = ["geometry", "nom"] if "nom" in gdf.columns else ["geometry"]
-    gdf = gdf[keep].copy()
+    gdf = gdf.rename(columns={"stop_name": "nom"})
+    gdf = gdf[["nom", "geometry"]].copy()
     gdf["ligne"] = None
 
     gdf.to_postgis("stations_metro", engine, if_exists="replace",
