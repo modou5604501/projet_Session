@@ -64,7 +64,7 @@ Cet événement a mis en évidence l'absence d'un système de surveillance géos
 
 ### Question de recherche
 
-> Comment développer une plateforme géospatiale intelligente permettant la détection automatique des zones inondées et l'identification des infrastructures électriques vulnérables à Sainte-Marthe-sur-le-Lac, à partir d'images Sentinel-1 SAR, de données MRNF et d'analyses spatiales PostGIS ?
+> Suite à la rupture de la digue du 27 avril 2019 à Sainte-Marthe-sur-le-Lac, quelles infrastructures critiques (bâtiments résidentiels, axes routiers, services d'urgence) ont été affectées par l'inondation, et dans quelle mesure la détection automatique par satellite Sentinel-1 SAR permet-elle de cartographier, quantifier et suivre cet impact dans le temps ?
 
 ### Périmètre du projet (ce qui n'est PAS traité)
 
@@ -131,9 +131,10 @@ Elle est délimitée par :
 | Zones inondées 2017 et 2019 | MRNF Québec (Données Québec) | GPKG | EPSG:3857 | Gratuit | Téléchargé localement (277 Mo — exclu du repo) |
 | Images radar SAR | Sentinel-1 GRD (ESA/CDSE) | GeoTIFF | EPSG:4326 (GCPs) | Gratuit (compte CDSE requis) | Téléchargé localement (~6.5 GB — exclu du repo) |
 | Réseau électrique haute tension | OpenStreetMap (Overpass Turbo) | GeoJSON | EPSG:4326 | Gratuit | ✅ Dans le repo : `data/vectors/electric_network_sainte_marthe.geojson` |
-| Réseau électrique complet | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 (888 entités) |
 | Bâtiments résidentiels | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
 | Routes et rues | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
+| Écoles | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
+| Casernes de pompiers | OpenStreetMap (QuickOSM/QGIS) | GeoJSON | EPSG:4326 | Gratuit | ✅ Acquis le 7 juillet 2026 |
 | Modèle numérique d'élévation | Copernicus DEM GLO-30 (AWS) | GeoTIFF | EPSG:4326 | Gratuit (public) | Téléchargé localement (43.5 Mo — exclu du repo) |
 
 ### Comment obtenir les données volumineuses
@@ -478,7 +479,25 @@ pgAdmin :            http://localhost:5050
 
 ---
 
-## 15. Références
+## 15. Suivi et mises à jour du tableau de bord
+
+L'architecture Django + PostGIS permet le **suivi dans le temps** et les mises à jour dynamiques :
+
+| Fonctionnalité | Mécanisme |
+|---|---|
+| Nouvelle image SAR | Relancer `flood_detection.py` → nouvelle carte inondation |
+| Nouvelle zone inondée | Django Admin → ajouter entrée dans `flood_zones` |
+| Mise à jour bâtiments | Relancer `import_postgis.py` → données OSM actualisées |
+| Historique des événements | Champ `date_detection` dans toutes les tables |
+| Dashboard automatique | API Django sert toujours les données les plus récentes |
+
+**Exemple de suivi multi-événements :**
+- Événement 1 : 27 avril 2019 → 3 233 ha, X bâtiments
+- Événement futur → comparaison automatique sur le tableau de bord
+
+---
+
+## 16. Références
 
 - Documentation Django / GeoDjango : https://docs.djangoproject.com
 - Documentation PostGIS : https://postgis.net/documentation
