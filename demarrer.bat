@@ -1,37 +1,44 @@
 @echo off
 REM ============================================================
-REM  GeoRisk Sentinel — Script de démarrage (Windows)
-REM  Lance PostGIS + pgAdmin + Django en un clic
-REM  Prérequis : Docker Desktop en cours d'exécution
+REM  GeoRisk Sentinel — Script de demarrage (Windows)
+REM  Projet : Bornes de recharge electrique - Montreal
+REM  Prerequis : Docker Desktop en cours d'execution
 REM ============================================================
 
 echo.
 echo ============================================================
-echo  GeoRisk Sentinel — Sainte-Marthe-sur-le-Lac
+echo  GeoRisk Sentinel - Bornes de recharge Montreal
 echo  Demarrage de l'infrastructure...
 echo ============================================================
 echo.
 
-REM Démarrer les services Docker
+REM Demarrer PostGIS + pgAdmin
 docker-compose up -d postgis pgadmin
 
 echo.
-echo Attente demarrage PostGIS (10 s)...
-timeout /t 10 /nobreak > nul
+echo Attente demarrage PostGIS (15 s)...
+timeout /t 15 /nobreak > nul
 
-REM Lancer Django en local (avec les variables d'environnement)
-set PROJ_LIB=C:\Users\KHABA\venv\Lib\site-packages\rasterio\proj_data
-set PROJ_DATA=C:\Users\KHABA\venv\Lib\site-packages\rasterio\proj_data
-set POSTGRES_PORT=5433
+REM Importer les donnees dans PostGIS
+echo.
+echo Import des donnees Montreal dans PostGIS...
+C:\Users\KHABA\venv\Scripts\python.exe src\preprocessing\import_postgis.py
+
+echo.
+echo Analyse de couverture (buffer 500m)...
+C:\Users\KHABA\venv\Scripts\python.exe src\preprocessing\buffer_analysis.py
 
 echo.
 echo Demarrage du serveur web Django...
 echo.
+set POSTGRES_PORT=5433
 cd src\web
 C:\Users\KHABA\venv\Scripts\python.exe manage.py runserver 0.0.0.0:8000
 
-REM URLs utiles :
-REM   Carte : http://localhost:8000
-REM   API   : http://localhost:8000/api/
-REM   Admin : http://localhost:8000/admin/
-REM   pgAdmin : http://localhost:5050
+REM URLs :
+REM   Carte interactive  : http://localhost:8000
+REM   API bornes         : http://localhost:8000/api/bornes/
+REM   API couverture     : http://localhost:8000/api/couverture/
+REM   API arrondissements: http://localhost:8000/api/arrondissements/
+REM   Django Admin       : http://localhost:8000/admin/
+REM   pgAdmin            : http://localhost:5050
