@@ -261,15 +261,24 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Données arrondissements | [`data/vectors/arrondissements_montreal.geojson`](data/vectors/arrondissements_montreal.geojson) | ✅ Dans le repo |
 | Données STM (métro + bus) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | ✅ Dans le repo |
 | Statistiques utilisation 2025 | [`data/vectors/chargeurs_statistiques_2025.csv`](data/vectors/chargeurs_statistiques_2025.csv) | ✅ Dans le repo |
+| Zones sous-desservies (résultat gap analysis) | [`data/vectors/zones_sous_desservies.geojson`](data/vectors/zones_sous_desservies.geojson) | ✅ Dans le repo |
+| Script téléchargement données | [`src/acquisition/download_bornes.py`](src/acquisition/download_bornes.py) | ✅ Écrit |
 | Script import PostGIS | [`src/preprocessing/import_postgis.py`](src/preprocessing/import_postgis.py) | ✅ Écrit |
 | Script analyse buffer 500m | [`src/preprocessing/buffer_analysis.py`](src/preprocessing/buffer_analysis.py) | ✅ Écrit |
 | Script zones sous-desservies | [`src/preprocessing/gap_analysis.py`](src/preprocessing/gap_analysis.py) | ✅ Écrit |
+| Script mise à jour automatique | [`src/preprocessing/refresh_data.py`](src/preprocessing/refresh_data.py) | ✅ Écrit |
 | Modèles Django (4 tables) | [`src/web/risk_map/models.py`](src/web/risk_map/models.py) | ✅ Écrit |
-| API REST GeoJSON | [`src/web/risk_map/views.py`](src/web/risk_map/views.py) | ✅ Écrit |
-| Carte Leaflet interactive | [`src/web/templates/risk_map/map.html`](src/web/templates/risk_map/map.html) | ✅ Écrite |
+| API REST GeoJSON + endpoints refresh | [`src/web/risk_map/views.py`](src/web/risk_map/views.py) | ✅ Écrit |
+| Scheduler hebdomadaire (APScheduler) | [`src/web/risk_map/scheduler.py`](src/web/risk_map/scheduler.py) | ✅ Écrit |
+| Dashboard dark theme Leaflet (PWA) | [`src/web/templates/risk_map/map.html`](src/web/templates/risk_map/map.html) | ✅ Écrit |
+| Capture d'écran du dashboard | [`docs/images/dashboard.png`](docs/images/dashboard.png) | ✅ Dans le repo |
 | Docker Compose (PostGIS + pgAdmin + Django) | [`docker-compose.yml`](docker-compose.yml) | ✅ Configuré |
+| Configuration déploiement Railway | [`railway.json`](railway.json) + [`nixpacks.toml`](nixpacks.toml) | ✅ Prêt |
+| Guide de déploiement Railway | [`DEPLOIEMENT.md`](DEPLOIEMENT.md) | ✅ Rédigé |
 | Rapport technique final | [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md) | ✅ Rédigé |
 | Présentation orale | [`PRESENTATION_ORALE.md`](PRESENTATION_ORALE.md) | ✅ Rédigée |
+| Chronogramme mis à jour | [`CHRONOGRAMME.md`](CHRONOGRAMME.md) | ✅ Rédigé |
+| Diagrammes Mermaid | [`DIAGRAMME_MERMAID.md`](DIAGRAMME_MERMAID.md) | ✅ Rédigé |
 
 ---
 

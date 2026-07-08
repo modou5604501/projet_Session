@@ -1,5 +1,5 @@
 # GeoRisk Sentinel — Dépendances Python
-# Installation : pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
+# Installation : pip install -r requirements.txt
 
 # === Géospatial ===
 geopandas==0.14.4
@@ -21,10 +21,11 @@ django-cors-headers==4.9.0
 django-filter==25.2
 asgiref==3.11.1
 sqlparse==0.5.5
+apscheduler==3.11.3
 
-# === Intelligence artificielle ===
-torch>=2.3.0
-# segmentation-models-pytorch>=0.3  # décommenter pour l'inférence U-Net
+# === Production (Railway) ===
+gunicorn==21.2.0
+whitenoise==6.7.0
 
 # === Utilitaires ===
 numpy>=1.24
