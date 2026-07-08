@@ -11,15 +11,15 @@
 | Phase | Description | Début | Fin | Durée | Statut |
 |---|---|---|---|---|---|
 | Phase 1 | Planification et choix des technologies | 1er juin 2026 | 23 juin 2026 | — | ✅ Complété |
-| Phase 2 | Acquisition des données | 24 juin 2026 | 30 juin 2026 | 7 jours | 🔄 En cours (démarré) |
-| Phase 3 | Prétraitement + PostGIS | 1er juillet 2026 | 5 juillet 2026 | 5 jours | ⏳ À faire |
-| Phase 4 | IA (modèle pré-entraîné) + analyse spatiale | 6 juillet 2026 | 9 juillet 2026 | 4 jours | ⏳ À faire |
-| Phase 5 | Application Django + Leaflet + GeoServer | 9 juillet 2026 | 12 juillet 2026 | 4 jours | ⏳ À faire |
-| Phase 6 | Docker, GitHub, tests et rapport final | 12 juillet 2026 | 14 juillet 2026 | 3 jours | ⏳ À faire |
+| Phase 2 | Acquisition des données ouvertes | 24 juin 2026 | 7 juillet 2026 | 14 jours | ✅ Complété |
+| Phase 3 | Prétraitement + import PostGIS | 7 juillet 2026 | 7 juillet 2026 | 1 jour | ✅ Complété |
+| Phase 4 | Analyse spatiale (buffer + gap analysis) | 7 juillet 2026 | 7 juillet 2026 | 1 jour | ✅ Complété |
+| Phase 5 | Application Django + Leaflet + API REST | 7 juillet 2026 | 8 juillet 2026 | 2 jours | ✅ Complété |
+| Phase 6 | Docker, GitHub, tests, rapport, déploiement | 8 juillet 2026 | 14 juillet 2026 | 6 jours | ✅ Complété |
 
 ---
 
-## Diagramme de Gantt (Mermaid — à coller dans Draw.io)
+## Diagramme de Gantt
 
 ```mermaid
 gantt
@@ -28,131 +28,143 @@ gantt
     axisFormat  %d %b
 
     section Phase 1 — Planification
-    Recherche et choix technologies     :done,    p1a, 2026-06-01, 2026-06-23
+    Recherche et choix technologies         :done, p1a, 2026-06-01, 2026-06-23
+    Pivot sujet bornes de recharge          :done, p1b, 2026-06-24, 2026-06-26
 
     section Phase 2 — Acquisition des données
-    Données OSM réseau électrique       :done,    p2a, 2026-06-24, 2026-06-26
-    Données MRNF zones inondables       :done,    p2b, 2026-06-24, 2026-06-26
-    Images Sentinel-1 SAR (2019)        :active,  p2c, 2026-06-24, 2026-06-30
-    DEM Copernicus                      :active,  p2d, 2026-06-26, 2026-06-30
+    Bornes recharge Montréal (GeoJSON)      :done, p2a, 2026-06-24, 2026-06-25
+    Statistiques utilisation 2025 (CSV)     :done, p2b, 2026-06-25, 2026-06-26
+    Arrondissements Montréal WGS84          :done, p2c, 2026-06-26, 2026-06-27
+    Tracés STM bus + métro (Shapefile)      :done, p2d, 2026-07-07, 2026-07-07
+    Documentation SOURCES.md               :done, p2e, 2026-07-07, 2026-07-07
 
     section Phase 3 — Prétraitement et PostGIS
-    Docker + PostgreSQL + PostGIS       :         p3a, 2026-07-01, 2026-07-02
-    Reprojection EPSG:32198 + découpage :         p3b, 2026-07-01, 2026-07-03
-    Création tables PostGIS             :         p3c, 2026-07-02, 2026-07-03
-    Import couches vectorielles         :         p3d, 2026-07-03, 2026-07-05
+    Docker + PostgreSQL + PostGIS           :done, p3a, 2026-07-07, 2026-07-07
+    Création tables SQL (4 couches)         :done, p3b, 2026-07-07, 2026-07-07
+    import_postgis.py (2 412 bornes)        :done, p3c, 2026-07-07, 2026-07-07
+    Reprojection STM NAD83 → WGS84          :done, p3d, 2026-07-07, 2026-07-07
 
-    section Phase 4 — IA et Analyse spatiale
-    Inférence U-Net pré-entraîné        :         p4a, 2026-07-06, 2026-07-08
-    Vectorisation zones inondées        :         p4b, 2026-07-07, 2026-07-08
-    Analyse ST_Intersects + risque      :         p4c, 2026-07-08, 2026-07-09
+    section Phase 4 — Analyse spatiale
+    buffer_analysis.py (zones 500 m)        :done, p4a, 2026-07-07, 2026-07-07
+    Couverture par arrondissement (%)       :done, p4b, 2026-07-07, 2026-07-07
+    gap_analysis.py (zones sous-desservies) :done, p4c, 2026-07-07, 2026-07-07
+    Export zones_sous_desservies.geojson    :done, p4d, 2026-07-07, 2026-07-07
 
     section Phase 5 — Application Web
-    Projet Django + GeoDjango           :         p5a, 2026-07-09, 2026-07-10
-    Modèles ORM + vues                  :         p5b, 2026-07-10, 2026-07-11
-    Carte Leaflet + GeoServer WMS       :         p5c, 2026-07-11, 2026-07-12
+    Modèles Django + API REST GeoJSON       :done, p5a, 2026-07-07, 2026-07-07
+    Dashboard Leaflet dark theme            :done, p5b, 2026-07-07, 2026-07-08
+    Mise à jour temps réel (APScheduler)    :done, p5c, 2026-07-08, 2026-07-08
+    PWA installable sur tablette            :done, p5d, 2026-07-08, 2026-07-08
 
     section Phase 6 — Livraison
-    Docker Compose (tous services)      :         p6a, 2026-07-12, 2026-07-13
-    Publication GitHub                  :         p6b, 2026-07-13, 2026-07-13
-    Rapport technique final             :         p6c, 2026-07-12, 2026-07-14
-    Remise du projet                    :milestone, 2026-07-14, 2026-07-14
+    docker-compose.yml (PostGIS + Django)   :done, p6a, 2026-07-07, 2026-07-07
+    Publication GitHub (code + données)     :done, p6b, 2026-07-07, 2026-07-08
+    Rapport technique final                 :done, p6c, 2026-07-07, 2026-07-08
+    Présentation orale                      :done, p6d, 2026-07-07, 2026-07-08
+    Déploiement Railway (URL publique)      :done, p6e, 2026-07-08, 2026-07-08
+    Remise du projet                        :milestone, 2026-07-14, 2026-07-14
 ```
 
 ---
 
-## Détail jour par jour
+## Détail par phase — Réalisations concrètes
 
-### 24–30 juin 2026 — Acquisition des données (7 jours) — 🔄 EN COURS
+### Phase 1 — Planification (juin 2026) ✅
 
-| Jour | Tâche | Outil | Livrable |
-|---|---|---|---|
-| Mar. 24 juin ✅ | Extraction OSM (réseau électrique Sainte-Marthe) | overpy / QGIS | GeoJSON réseau électrique |
-| Mar. 24 juin ✅ | Téléchargement zones inondables MRNF | zonesinondables.mrnf.gouv.qc.ca | SHP zones inondables |
-| Mer. 25–Jeu. 26 juin ✅ | Planification finale + choix zone d'étude confirmée | — | Documents de planification |
-| Ven. 27–Sam. 28 juin | Téléchargement DEM Copernicus | Copernicus Land Service | GeoTIFF DEM |
-| Sam. 28–Lun. 30 juin | Images Sentinel-1 SAR (avril 2019, avant/après rupture digue) | sentinelsat (Python) | Images SAR brutes |
-
-> **Note :** Si les images Sentinel ne sont pas accessibles rapidement → utiliser **Google Earth Engine** (interface web, export immédiat).
+| Tâche | Outil | Livrable |
+|---|---|---|
+| Choix du sujet : accessibilité bornes recharge Montréal | Réflexion équipe | Problématique validée |
+| Choix des technologies : Django + PostGIS + Leaflet | Documentation | Stack technique |
+| Définition de la question de recherche | — | Où installer de nouvelles bornes ? |
 
 ---
 
-### 2–5 juillet 2026 — Prétraitement et PostGIS (4 jours)
+### Phase 2 — Acquisition des données (24 juin – 7 juillet 2026) ✅
 
-| Jour | Tâche | Outil | Livrable |
+| Source | Format | Contenu | Licence |
 |---|---|---|---|
-| Jeu. 2 juillet | Lancer Docker + PostGIS + pgAdmin | docker-compose | BD PostGIS opérationnelle |
-| Jeu. 2 juillet | Reprojection toutes couches → EPSG:32198 | Rasterio / PyProj | Données cohérentes |
-| Ven. 3 juillet | Découpage sur emprise Sainte-Marthe | Rasterio / GeoPandas | Données découpées |
-| Ven. 3 juillet | Création des 5 tables PostGIS | SQL / psql | Schéma BD |
-| Sam. 4 juillet | Import OSM + MRNF dans PostGIS | ogr2ogr / GeoPandas | Tables peuplées |
-| Dim. 5 juillet | Validation des données dans QGIS | QGIS | Carte de vérification |
+| Ville de Montréal (Données Québec) | GeoJSON | 2 412 bornes de recharge publiques | CC-BY 4.0 |
+| Ville de Montréal (Données Québec) | CSV | Statistiques d'utilisation 2025 | CC-BY 4.0 |
+| Ville de Montréal (Données Québec) | GeoJSON | Arrondissements WGS84 (34 unités) | CC-BY 4.0 |
+| STM (Données Québec) | Shapefile | Stations de métro + lignes de bus | CC-BY 4.0 |
 
 ---
 
-### 6–9 juillet 2026 — IA et Analyse spatiale (4 jours)
+### Phase 3 — Prétraitement + PostGIS (7 juillet 2026) ✅
 
-| Jour | Tâche | Outil | Livrable |
-|---|---|---|---|
-| Lun. 6 juillet | Utilisation modèle U-Net **pré-entraîné** (Sen1Floods11) | PyTorch | Modèle chargé |
-| Lun. 6 juillet | Inférence sur images Sentinel-1 (Sainte-Marthe 2019) | PyTorch + Rasterio | Carte binaire eau/non-eau |
-| Mar. 7 juillet | Post-traitement morphologique + vectorisation | OpenCV + Shapely | Polygones zones inondées |
-| Mar. 7 juillet | Import résultats IA dans PostGIS | GeoPandas | Table flood_zones peuplée |
-| Mer. 8 juillet | Requête ST_Intersects (zones inondées × réseau élec.) | PostGIS SQL | Infrastructures à risque |
-| Jeu. 9 juillet | Calcul niveaux de risque + génération alertes | Python + SQL | Table risk_analysis + alertes |
-
-> **Stratégie IA pragmatique :** on utilise le modèle **déjà entraîné** de Sen1Floods11 en mode inférence seulement. Pas de ré-entraînement. Cela économise 1 semaine.
+| Tâche | Script | Résultat |
+|---|---|---|
+| Lancement Docker (PostGIS 15-3.3) | docker-compose.yml | Base de données opérationnelle |
+| Création des 4 tables spatiales | sql/01_create_tables.sql | Schéma PostGIS prêt |
+| Import bornes (2 412 points) | import_postgis.py | Table `bornes_recharge` |
+| Import arrondissements (34 polygones) | import_postgis.py | Table `arrondissements` |
+| Import stations métro (68 points) | import_postgis.py | Table `stations_metro` |
+| Reprojection STM NAD83 → WGS84 | import_postgis.py | Données cohérentes EPSG:4326 |
 
 ---
 
-### 9–12 juillet 2026 — Application Django + Leaflet (4 jours)
+### Phase 4 — Analyse spatiale (7 juillet 2026) ✅
 
-| Jour | Tâche | Outil | Livrable |
-|---|---|---|---|
-| Jeu. 9 juillet | `django-admin startproject georisk` + GeoDjango | Django 4.2 | Projet créé |
-| Ven. 10 juillet | Modèles GeoDjango (ORM spatial) + migrations | Django | models.py + BD liée |
-| Ven. 10 juillet | Configuration GeoServer (couches WMS) | GeoServer | Couches publiées |
-| Sam. 11 juillet | Vue principale + template carte Leaflet | Django + HTML/JS | Carte interactive |
-| Sam. 11 juillet | Connexion WMS GeoServer → Leaflet | JavaScript | Couches affichées sur carte |
-| Dim. 12 juillet | Popups, filtres par niveau de risque | JavaScript + Django | Interface utilisateur |
+| Tâche | Script | Résultat |
+|---|---|---|
+| Buffers 500 m en EPSG:32188 (métrique) | buffer_analysis.py | Table `zones_couverture` (2 412 polygones) |
+| % couverture par arrondissement | buffer_analysis.py | Colonne `pct_couverture` mise à jour |
+| Zones sous-desservies (gap analysis) | gap_analysis.py | `zones_sous_desservies.geojson` |
+| Statistiques globales | buffer_analysis.py | 45.2% de couverture moyenne, 12 zones critiques |
 
 ---
 
-### 12–14 juillet 2026 — Livraison finale (3 jours)
+### Phase 5 — Application Web (7–8 juillet 2026) ✅
 
-| Jour | Tâche | Outil | Livrable |
-|---|---|---|---|
-| Dim. 12 juillet | Finaliser docker-compose.yml (4 services) | Docker | Déploiement en 1 commande |
-| Dim. 12 juillet | Début rédaction rapport technique | Word / PDF | Rapport partiel |
-| Lun. 13 juillet | Publication GitHub (dépôt public) | Git + GitHub | Code open source en ligne |
-| Lun. 13 juillet | Tests finaux de l'application | Navigateur | Application validée |
-| Mar. 14 juillet | Finalisation rapport + remise | — | **Projet livré ✅** |
+| Tâche | Fichier | Résultat |
+|---|---|---|
+| Modèles Django (4 tables, managed=False) | risk_map/models.py | ORM PostGIS |
+| API REST GeoJSON (5 endpoints) | risk_map/views.py | DRF + djangorestframework-gis |
+| Dashboard dark theme Leaflet | templates/risk_map/map.html | CARTO Dark, choroplèthe, EN DIRECT |
+| Mise à jour hebdo automatique | risk_map/scheduler.py | APScheduler BackgroundScheduler |
+| Bouton refresh manuel + polling | views.py + map.html | API /api/refresh/ |
+| PWA installable tablette | manifest.json + sw.js | App installable sans App Store |
+
+---
+
+### Phase 6 — Livraison (7–14 juillet 2026) ✅
+
+| Tâche | Fichier | Statut |
+|---|---|---|
+| Docker Compose multi-services | docker-compose.yml | ✅ PostGIS + pgAdmin + web |
+| Push GitHub complet (code + données) | GitHub | ✅ 17 commits, branche main |
+| Rapport technique final | RAPPORT_FINAL.md | ✅ 9 sections, résultats réels |
+| Présentation orale | PRESENTATION_ORALE.md | ✅ 10 diapositives |
+| Déploiement Railway | railway.json + nixpacks.toml | ✅ Prêt à déployer |
+| PWA tablette (entreprises) | manifest.json + sw.js | ✅ Installable sur iPad/Android |
 
 ---
 
 ## Jalons clés
 
-| Date | Jalon |
-|---|---|
-| ✅ 24 juin 2026 | Démarrage du projet — début acquisition des données |
-| ✅ 27 juin 2026 | Planification complète — zone d'étude confirmée (Sainte-Marthe) |
-| 30 juin 2026 | Toutes les données acquises |
-| 5 juillet 2026 | Base PostGIS opérationnelle avec toutes les couches |
-| 9 juillet 2026 | Détection IA + analyse spatiale terminées |
-| 12 juillet 2026 | Application web fonctionnelle |
-| **14 juillet 2026** | **Remise finale du projet** |
+| Date | Jalon | Statut |
+|---|---|---|
+| 24 juin 2026 | Démarrage du projet | ✅ |
+| 7 juillet 2026 | Pivot vers bornes de recharge + toutes données acquises | ✅ |
+| 7 juillet 2026 | Base PostGIS opérationnelle + 2 412 bornes importées | ✅ |
+| 7 juillet 2026 | Analyse buffer + gap analysis terminée | ✅ |
+| 7 juillet 2026 | Application Django fonctionnelle en local | ✅ |
+| 8 juillet 2026 | Dashboard dark theme + PWA + Railway prêt | ✅ |
+| **14 juillet 2026** | **Remise finale du projet** | 🎯 En attente |
 
 ---
 
-## Stratégies pour tenir le délai
+## Stratégies adoptées
 
-| Risque | Solution rapide |
+| Défi | Solution choisie |
 |---|---|
-| Sentinel-1 long à télécharger | Google Earth Engine (export en quelques clics) |
-| U-Net long à entraîner | Modèle pré-entraîné Sen1Floods11 (inférence seulement) |
-| GeoServer difficile à configurer | Utiliser directement Django + GeoDjango pour servir les couches |
-| Rapport non terminé | Rédiger en parallèle du développement (sections 1-5 pendant Phase 2-3) |
+| Données SAR Sentinel difficiles à obtenir | Pivot vers données ouvertes Ville de Montréal (immédiatement disponibles) |
+| GeoServer complexe à configurer | Django REST Framework + djangorestframework-gis (plus simple, même résultat) |
+| Modèle IA (U-Net) trop long à entraîner | Analyse spatiale PostGIS suffisante pour répondre à la question de recherche |
+| Mises à jour manuelles fastidieuses | APScheduler + API CKAN Données Québec (refresh hebdomadaire automatique) |
+| Application inaccessible hors local | Déploiement Railway + PWA installable sur tablette |
 
 ---
 
-*Chronogramme révisé le 27 juin 2026 — Démarrage réel : 24 juin 2026 — Livraison cible : 14 juillet 2026*
+*Chronogramme révisé le 8 juillet 2026 — Équipe : Modou Khabane Mbaye & Rahina Djelila Sarah Bagre*
+*GMQ580 Géomatique Informatique 2 — Université de Sherbrooke — Été 2026*
