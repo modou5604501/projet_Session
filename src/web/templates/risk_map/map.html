@@ -114,6 +114,22 @@
     }
 
     #about { font-size: 11px; color: #888; line-height: 1.5; }
+
+    #btn-refresh {
+      width: 100%;
+      padding: 8px;
+      background: #1a3a5c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    #btn-refresh:hover { background: #154a7a; }
+    #btn-refresh:disabled { background: #999; cursor: not-allowed; }
+    #refresh-msg { font-size: 11px; color: #555; margin-top: 6px; min-height: 16px; }
   </style>
 </head>
 <body>
@@ -176,6 +192,17 @@
       <div id="info-box">
         <span class="loading">Cliquez sur une entité de la carte.</span>
       </div>
+    </div>
+
+    <!-- Mise à jour données -->
+    <div class="panel">
+      <h3>Données en temps réel</h3>
+      <div id="about" style="margin-bottom:6px;">
+        Synchronise les bornes depuis Données Québec (Ville de Montréal).
+        Mise à jour automatique : <strong>hebdomadaire</strong>.
+      </div>
+      <button id="btn-refresh" onclick="refreshData()">⟳ Mettre à jour maintenant</button>
+      <div id="refresh-msg"></div>
     </div>
 
     <!-- À propos -->
@@ -328,6 +355,55 @@ function showInfo(type, props) {
       Bornes : ${props.nb_bornes || 0}<br>
       Couverture : ${(props.pct_couverture || 0).toFixed(1)}%`;
   }
+}
+
+// Mise à jour temps réel
+function refreshData() {
+  const btn = document.getElementById('btn-refresh');
+  const msg = document.getElementById('refresh-msg');
+  btn.disabled = true;
+  btn.textContent = '⟳ Mise à jour en cours...';
+  msg.textContent = 'Téléchargement depuis Données Québec...';
+
+  fetch('/api/refresh/', { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
+    .then(r => r.json())
+    .then(d => {
+      msg.textContent = d.message || 'Démarré.';
+      pollRefreshStatus();
+    })
+    .catch(() => {
+      msg.textContent = 'Erreur de connexion.';
+      btn.disabled = false;
+      btn.textContent = '⟳ Mettre à jour maintenant';
+    });
+}
+
+function pollRefreshStatus() {
+  const btn = document.getElementById('btn-refresh');
+  const msg = document.getElementById('refresh-msg');
+  const interval = setInterval(() => {
+    fetch('/api/refresh/status/')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.running) {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.textContent = '⟳ Mettre à jour maintenant';
+          if (d.last_result && d.last_result.status === 'ok') {
+            msg.textContent = `✅ ${d.last_result.bornes} bornes mises à jour. Rechargez la page.`;
+          } else if (d.last_result && d.last_result.status === 'error') {
+            msg.textContent = `⚠️ ${d.last_result.message}`;
+          } else {
+            msg.textContent = 'Mise à jour terminée.';
+          }
+        }
+      });
+  }, 3000);
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : '';
 }
 
 // Contrôles couches
