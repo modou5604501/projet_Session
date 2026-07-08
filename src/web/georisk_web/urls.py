@@ -20,5 +20,7 @@ urlpatterns = [
     path("api/query/rayon/",             views.query_bornes_rayon,    name="query-rayon"),
     path("api/query/metro-sans-borne/",  views.query_metro_sans_borne, name="query-metro"),
     path("api/query/arrond-peu-equipes/", views.query_arrond_peu_equipes, name="query-arrond"),
+    path("api/gaps/",                    views.gaps_geojson,          name="gaps"),
+    path("api/equity/",                  views.equity_analysis,       name="equity"),
     path("sw.js",                        views.serve_sw,              name="service-worker"),
 ]

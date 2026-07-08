@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 import threading
@@ -16,6 +17,41 @@ from .serializers import (
     ArrondissementSerializer,
     StationMetroSerializer,
 )
+
+# Revenu médian des ménages par arrondissement — StatCan Recensement 2021 (approx.)
+# Source : Commande personnalisée du recensement 2021, Données Québec / Ville de Montréal
+_INCOME_DATA = {
+    "Ahuntsic-Cartierville":                          62_000,
+    "Anjou":                                          62_000,
+    "Côte-des-Neiges–Notre-Dame-de-Grâce":           53_000,
+    "Côte-des-Neiges-Notre-Dame-de-Grâce":           53_000,
+    "Lachine":                                        55_000,
+    "LaSalle":                                        57_000,
+    "Le Plateau-Mont-Royal":                          70_000,
+    "Plateau-Mont-Royal":                             70_000,
+    "Le Sud-Ouest":                                   58_000,
+    "Sud-Ouest":                                      58_000,
+    "L'Île-Bizard–Sainte-Geneviève":                 82_000,
+    "Île-Bizard-Sainte-Geneviève":                   82_000,
+    "Mercier–Hochelaga-Maisonneuve":                  50_000,
+    "Mercier-Hochelaga-Maisonneuve":                  50_000,
+    "Montréal-Nord":                                  37_000,
+    "Outremont":                                      90_000,
+    "Pierrefonds-Roxboro":                            72_000,
+    "Rivière-des-Prairies–Pointe-aux-Trembles":       53_000,
+    "Rivière-des-Prairies-Pointe-aux-Trembles":       53_000,
+    "Rosemont–La Petite-Patrie":                      65_000,
+    "Rosemont-La Petite-Patrie":                      65_000,
+    "Saint-Laurent":                                  60_000,
+    "Saint-Léonard":                                  55_000,
+    "Verdun":                                         62_000,
+    "Ville-Marie":                                    65_000,
+    "Villeray–Saint-Michel–Parc-Extension":           48_000,
+    "Villeray-Saint-Michel-Parc Extension":           48_000,
+    "Villeray-Saint-Michel-Parc-Extension":           48_000,
+}
+
+_gaps_cache = None
 
 PREPROCESSING_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "preprocessing")
@@ -225,3 +261,40 @@ def query_arrond_peu_equipes(request):
         rows = [dict(zip(cols, row)) for row in cur.fetchall()]
 
     return Response({"arrondissements": rows, "count": len(rows), "seuil": seuil})
+
+
+@api_view(["GET"])
+def gaps_geojson(request):
+    """Zones géographiques sans couverture (output de gap_analysis.py)."""
+    global _gaps_cache
+    if _gaps_cache is None:
+        path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "vectors",
+                         "zones_sous_desservies.geojson")
+        )
+        if not os.path.exists(path):
+            return Response({"type": "FeatureCollection", "features": []})
+        with open(path, encoding="utf-8") as f:
+            _gaps_cache = json.load(f)
+    return Response(_gaps_cache)
+
+
+@api_view(["GET"])
+def equity_analysis(request):
+    """Corrélation couverture ↔ revenu médian par arrondissement (StatCan Recensement 2021)."""
+    arronds = list(Arrondissement.objects.all().values("nom", "nb_bornes", "pct_couverture"))
+    result = []
+    for a in arronds:
+        revenu = _INCOME_DATA.get(a["nom"])
+        if revenu:
+            result.append({
+                "nom":            a["nom"],
+                "nb_bornes":      a["nb_bornes"],
+                "pct_couverture": round(float(a["pct_couverture"] or 0), 1),
+                "revenu_median":  revenu,
+            })
+    result.sort(key=lambda x: x["revenu_median"])
+    return Response({
+        "arrondissements": result,
+        "source":          "StatCan, Recensement 2021 — revenu médian des ménages (approx.)",
+    })

@@ -268,6 +268,24 @@
     /* Mode clic actif */
     body.waiting-click #map { cursor: crosshair !important; }
 
+    /* ═══════════════ PANNEAU ÉQUITÉ ═══════════════ */
+    #fp-equity {
+      top: 12px; right: 12px; width: 345px; display: none;
+      max-height: calc(100% - 24px); overflow-y: auto;
+    }
+    #fp-equity::-webkit-scrollbar { width: 4px; }
+    #fp-equity::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .eq-intro  { font-size: 10.5px; color: var(--dim); margin-bottom: 8px; line-height: 1.55; }
+    .eq-stats  { font-size: 10.5px; color: var(--text); margin-top: 8px; line-height: 1.7; }
+    .eq-interp {
+      margin-top: 8px; padding: 8px 10px; border-radius: 6px;
+      font-size: 11px; line-height: 1.55; display: none;
+      background: rgba(0,212,255,.06); border: 1px solid rgba(0,212,255,.2);
+    }
+    .eq-dot { cursor: pointer; }
+    .eq-dot circle { transition: r .12s; }
+    .eq-dot:hover circle { r: 8; }
+
     /* Tooltip arrondissements */
     .arrond-tt {
       background: rgba(10,20,40,.92) !important;
@@ -376,6 +394,7 @@
     </button>
     <button class="nb" title="À propos du projet" onclick="showAbout()">ℹ</button>
     <button class="nb" title="Requêtes spatiales (PostGIS)" id="nb-queries" onclick="toggleQueries()">🔍</button>
+    <button class="nb" title="Analyse d'équité socio-économique" id="nb-equity" onclick="showEquity()">📈</button>
   </nav>
 
   <!-- Carte -->
@@ -400,6 +419,10 @@
       <label class="lr">
         <input type="checkbox" id="tog-arrond" checked>
         <span class="sq" style="background:#8866cc;opacity:.5;"></span> Arrondissements
+      </label>
+      <label class="lr">
+        <input type="checkbox" id="tog-gaps" checked>
+        <span class="sq" style="background:#ff2d55;opacity:.5;border-radius:2px;"></span> Zones non couvertes
       </label>
       <div class="fp-title" style="margin-top:10px;">Fond</div>
       <div class="bm-row">
@@ -496,6 +519,24 @@
       <div id="alerts-body">
         <div class="info-row" style="color:var(--dim);font-style:italic;">Chargement…</div>
       </div>
+    </div>
+
+    <!-- Analyse d'équité socio-économique -->
+    <div class="fp" id="fp-equity">
+      <div class="fp-title">
+        📈 Équité d'accès — Revenu vs Couverture
+        <button class="fp-close" onclick="closePanel('fp-equity')">✕</button>
+      </div>
+      <p class="eq-intro">
+        Corrélation entre le <strong>revenu médian des ménages</strong> (StatCan, Recensement 2021)
+        et le taux de couverture en bornes de recharge par arrondissement. Chaque point = un arrondissement.
+        Cliquez pour zoomer.
+      </p>
+      <svg id="eq-chart" viewBox="0 0 345 230" style="width:100%;overflow:visible;"></svg>
+      <div id="eq-stats" class="eq-stats">
+        <span style="color:var(--dim);font-style:italic;">⟳ Chargement…</span>
+      </div>
+      <div id="eq-interp" class="eq-interp"></div>
     </div>
   </div>
 </div>
@@ -697,9 +738,14 @@ function showArrond(p) {
   }, 50);
 }
 function showAbout() {
-  open_info('GeoRisk Sentinel',
-    'Projet de session GMQ580<br>Université de Sherbrooke, été 2026<br><br>' +
-    '<span style="color:var(--dim)">Données : Ville de Montréal, STM<br>Licence : CC-BY 4.0</span>');
+  open_info('ℹ GeoRisk Sentinel',
+    '<strong style="color:var(--accent)">GMQ580 — Université de Sherbrooke, été 2026</strong><br><br>' +
+    '<strong>Question de recherche :</strong><br>' +
+    '<span style="color:var(--dim);font-size:11px;">Où installer de nouvelles bornes de recharge à Montréal ' +
+    'pour maximiser l\'accessibilité et réduire les zones sous-desservies ?</span><br><br>' +
+    '<strong>Approche :</strong> Analyse spatiale PostGIS · Choroplèthe de couverture · ' +
+    'Détection de zones gap · Corrélation équité-revenu<br><br>' +
+    '<span style="color:var(--dim)">Données : Ville de Montréal, STM, StatCan 2021<br>Licence : CC-BY 4.0</span>');
 }
 function open_info(name, body) {
   const el = document.getElementById('fp-info');
@@ -767,6 +813,17 @@ function zoomArrond(nom) {
   });
 }
 
+/* Zones sans couverture (gap_analysis output) */
+let gapsLayer;
+fetch('/api/gaps/')
+  .then(r => r.json())
+  .then(d => {
+    if (!d.features || !d.features.length) return;
+    gapsLayer = L.geoJSON(d, {
+      style: { color: '#ff2d55', weight: 1, fillColor: '#ff2d55', fillOpacity: .13, dashArray: '5 3' }
+    }).addTo(map);
+  }).catch(() => {});
+
 /* ─── TOGGLES COUCHES ─── */
 document.getElementById('tog-bornes').addEventListener('change', e => {
   if (bornesLayer) e.target.checked ? map.addLayer(bornesLayer) : map.removeLayer(bornesLayer);
@@ -779,6 +836,9 @@ document.getElementById('tog-metro').addEventListener('change', e => {
 });
 document.getElementById('tog-arrond').addEventListener('change', e => {
   if (arrondLayer) e.target.checked ? map.addLayer(arrondLayer) : map.removeLayer(arrondLayer);
+});
+document.getElementById('tog-gaps').addEventListener('change', e => {
+  if (gapsLayer) e.target.checked ? map.addLayer(gapsLayer) : map.removeLayer(gapsLayer);
 });
 
 /* ─── SLIDER SEUIL ─── */
@@ -877,7 +937,7 @@ document.addEventListener('keydown', e => {
     case 'A': showAlerts();  break;
     case 'L': toggleLeg();   break;
     case 'ESCAPE':
-      ['fp-info','fp-alerts','fp-filter'].forEach(id => {
+      ['fp-info','fp-alerts','fp-filter','fp-equity'].forEach(id => {
         document.getElementById(id).style.display = 'none';
       });
       break;
@@ -1054,6 +1114,145 @@ function runQ4() {
         `<div class="q-count">${d.count} arrondissement${d.count>1?'s':''} ≤ ${seuil} bornes</div>`;
     })
     .catch(() => { rs.innerHTML = '<div class="q-warn">⚠ Erreur de requête.</div>'; });
+}
+
+/* ══════════════════════════════════════════════════════
+   ANALYSE D'ÉQUITÉ SOCIO-ÉCONOMIQUE
+   ══════════════════════════════════════════════════════ */
+let _equityLoaded = false;
+
+function showEquity() {
+  const el = document.getElementById('fp-equity');
+  if (el.style.display === 'block') { el.style.display = 'none'; return; }
+  popPanel(el);
+  if (_equityLoaded) return;
+  _equityLoaded = true;
+  fetch('/api/equity/')
+    .then(r => r.json())
+    .then(d => buildEquityChart(d.arrondissements, d.source))
+    .catch(() => {
+      document.getElementById('eq-stats').innerHTML =
+        '<span style="color:var(--red)">⚠ Données non disponibles (serveur arrêté ?).</span>';
+    });
+}
+
+function buildEquityChart(data, source) {
+  if (!data || !data.length) return;
+
+  const W = 345, H = 230;
+  const m = { t: 20, r: 12, b: 40, l: 50 };
+  const pw = W - m.l - m.r;   // 283
+  const ph = H - m.t - m.b;   // 170
+
+  const incomes = data.map(a => a.revenu_median);
+  const covs    = data.map(a => a.pct_couverture);
+  const minI = 32000, maxI = 95000;
+  const maxC = Math.max(...covs, 65);
+
+  function sx(v) { return m.l + (v - minI) / (maxI - minI) * pw; }
+  function sy(v) { return m.t + ph - (v / maxC) * ph; }
+
+  /* Pearson r */
+  const n     = data.length;
+  const meanI = incomes.reduce((s, v) => s + v, 0) / n;
+  const meanC = covs.reduce((s, v) => s + v, 0) / n;
+  const num   = data.reduce((s, a) => s + (a.revenu_median - meanI) * (a.pct_couverture - meanC), 0);
+  const stdI  = Math.sqrt(data.reduce((s, a) => s + (a.revenu_median - meanI) ** 2, 0));
+  const stdC  = Math.sqrt(data.reduce((s, a) => s + (a.pct_couverture - meanC) ** 2, 0));
+  const r     = (stdI && stdC) ? num / (stdI * stdC) : 0;
+
+  /* Droite de régression */
+  const sumI  = incomes.reduce((s, v) => s + v, 0);
+  const sumC  = covs.reduce((s, v) => s + v, 0);
+  const sumI2 = incomes.reduce((s, v) => s + v * v, 0);
+  const sumIC = data.reduce((s, a) => s + a.revenu_median * a.pct_couverture, 0);
+  const slope = (n * sumIC - sumI * sumC) / (n * sumI2 - sumI * sumI);
+  const inter = (sumC - slope * sumI) / n;
+  const trendY1 = slope * minI + inter, trendY2 = slope * maxI + inter;
+
+  /* Seuil critique 30% */
+  const yL30  = sy(30);
+  /* Médiane de revenu ≈ 60 000 $ */
+  const xLmed = sx(60000);
+
+  /* Ticks */
+  const xTicks = [35, 50, 65, 80].map(v => {
+    const x = sx(v * 1000);
+    return `<line x1="${x.toFixed(1)}" y1="${(m.t+ph).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(m.t+ph+4).toFixed(1)}" stroke="#1e3a5f"/>
+            <text x="${x.toFixed(1)}" y="${(m.t+ph+15).toFixed(1)}" fill="#6a8aaa" font-size="8" text-anchor="middle">${v}k$</text>`;
+  }).join('');
+
+  const yTicks = [0, 20, 40, 60, 80].filter(v => v <= maxC + 5).map(v => {
+    const y = sy(v);
+    return `<line x1="${(m.l-4).toFixed(1)}" y1="${y.toFixed(1)}" x2="${m.l}" y2="${y.toFixed(1)}" stroke="#1e3a5f"/>
+            <text x="${(m.l-6).toFixed(1)}" y="${(y+3).toFixed(1)}" fill="#6a8aaa" font-size="8" text-anchor="end">${v}%</text>`;
+  }).join('');
+
+  /* Points */
+  const dots = data.map(a => {
+    const x  = sx(a.revenu_median);
+    const y  = sy(a.pct_couverture);
+    const c  = a.pct_couverture >= 60 ? '#00ff88' : a.pct_couverture >= 30 ? '#ffd700' : a.pct_couverture >= 15 ? '#ff8c00' : '#ff2d55';
+    const sn = a.nom.replace(/[–-].*/, '').replace(/^(Le |La |L'|Les )/, '').substring(0, 10);
+    return `<g class="eq-dot" onclick="zoomArrond('${a.nom.replace(/'/g, "\\'")}')">
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="${c}" fill-opacity=".88"
+              stroke="rgba(0,0,0,.35)" stroke-width=".8"/>
+      <title>${a.nom}
+Revenu médian : ${a.revenu_median.toLocaleString('fr-CA')} $
+Couverture : ${a.pct_couverture}%
+Bornes : ${a.nb_bornes}</title>
+    </g>`;
+  }).join('');
+
+  document.getElementById('eq-chart').innerHTML = `
+    <rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="rgba(5,14,28,.55)" rx="3"/>
+    <line x1="${m.l}" y1="${yL30.toFixed(1)}" x2="${(m.l+pw).toFixed(1)}" y2="${yL30.toFixed(1)}"
+          stroke="#ff8c00" stroke-width=".8" stroke-dasharray="4 2" opacity=".65"/>
+    <text x="${(m.l+4).toFixed(1)}" y="${(yL30-3).toFixed(1)}" fill="#ff8c00" font-size="7.5" opacity=".8">seuil 30%</text>
+    <line x1="${xLmed.toFixed(1)}" y1="${m.t}" x2="${xLmed.toFixed(1)}" y2="${(m.t+ph).toFixed(1)}"
+          stroke="#6a8aaa" stroke-width=".6" stroke-dasharray="3 2" opacity=".45"/>
+    <text x="${(xLmed+3).toFixed(1)}" y="${(m.t+9).toFixed(1)}" fill="#6a8aaa" font-size="7.5" opacity=".65">méd. 60k$</text>
+    <line x1="${m.l}" y1="${(m.t+ph).toFixed(1)}" x2="${(m.l+pw).toFixed(1)}" y2="${(m.t+ph).toFixed(1)}" stroke="#1e3a5f" stroke-width="1"/>
+    <line x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${(m.t+ph).toFixed(1)}" stroke="#1e3a5f" stroke-width="1"/>
+    <text x="${(m.l+pw/2).toFixed(1)}" y="${(H-3).toFixed(1)}" fill="#6a8aaa" font-size="9" text-anchor="middle">Revenu médian ($)</text>
+    <text x="11" y="${(m.t+ph/2).toFixed(1)}" fill="#6a8aaa" font-size="9" text-anchor="middle"
+          transform="rotate(-90,11,${(m.t+ph/2).toFixed(1)})">Couverture (%)</text>
+    ${xTicks}${yTicks}
+    <line x1="${sx(minI).toFixed(1)}" y1="${sy(trendY1).toFixed(1)}"
+          x2="${sx(maxI).toFixed(1)}" y2="${sy(trendY2).toFixed(1)}"
+          stroke="#00d4ff" stroke-width="1.3" stroke-dasharray="5 3" opacity=".5"/>
+    ${dots}
+  `;
+
+  const absR = Math.abs(r);
+  const force = absR < 0.2 ? 'faible' : absR < 0.45 ? 'modérée' : 'forte';
+  const dir   = r > 0.15 ? 'positive' : r < -0.15 ? 'négative' : 'nulle';
+
+  document.getElementById('eq-stats').innerHTML =
+    `<span style="color:var(--dim);font-size:9.5px">${source}</span><br>` +
+    `r de Pearson = <strong style="color:var(--accent)">${r.toFixed(2)}</strong>` +
+    ` — corrélation <strong>${force}</strong> ${dir}` +
+    ` · survol des points pour détails`;
+
+  const interpEl = document.getElementById('eq-interp');
+  interpEl.style.display = 'block';
+  if (r > 0.25) {
+    interpEl.style.borderColor = 'rgba(255,45,85,.35)';
+    interpEl.innerHTML =
+      '⚠ <strong>Inéquité détectée :</strong> les arrondissements à revenu élevé bénéficient ' +
+      'd\'une meilleure couverture. Les populations à faible revenu ont un accès ' +
+      'proportionnellement inférieur aux bornes de recharge.';
+  } else if (r < -0.25) {
+    interpEl.style.borderColor = 'rgba(0,255,136,.3)';
+    interpEl.innerHTML =
+      '✅ <strong>Équité favorable :</strong> la couverture n\'est pas concentrée dans les zones aisées — ' +
+      'les arrondissements à faible revenu ont un accès relativement équivalent.';
+  } else {
+    interpEl.style.borderColor = 'rgba(0,212,255,.2)';
+    interpEl.innerHTML =
+      '↔ <strong>Équité relative :</strong> aucune corrélation significative entre revenu et couverture. ' +
+      'La distribution des bornes n\'est pas clairement biaisée par le niveau socio-économique.';
+  }
 }
 
 // ── Service Worker (PWA) ──
