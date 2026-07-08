@@ -207,14 +207,16 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
     └── Calcul % couverture par arrondissement
 
 [Phase 4 — Application web (Django + Leaflet)]
-    ├── API REST : /api/bornes/, /api/couverture/, /api/arrondissements/
-    ├── Carte Leaflet interactive :
-    │     ├── Couche 1 : bornes existantes (points verts)
+    ├── API REST : /api/bornes/, /api/couverture/, /api/arrondissements/, /api/metro/
+    ├── Dashboard dark theme (CARTO Dark Matter) :
+    │     ├── Couche 1 : bornes existantes (points cyan)
     │     ├── Couche 2 : zones couvertes à 500m (bleu transparent)
-    │     ├── Couche 3 : zones sous-desservies (rouge)
-    │     └── Couche 4 : stations de métro (icônes M)
-    ├── Panneau stats par arrondissement (% couverture, nb bornes)
-    └── Django Admin : ajout de nouvelles bornes → mise à jour automatique
+    │     ├── Couche 3 : stations de métro STM (points orange)
+    │     └── Couche 4 : arrondissements (choroplèthe vert/jaune/orange/rouge)
+    ├── Barre de stats EN DIRECT : bornes | zones critiques | couverture moy. | horloge
+    ├── Slider "Seuil de sous-desserte" : simulation dynamique sur la carte
+    ├── Mise à jour temps réel : APScheduler hebdomadaire + bouton manuel (API CKAN)
+    └── PWA installable sur tablette (manifest.json + service worker)
 ```
 
 ### Architecture des services Docker

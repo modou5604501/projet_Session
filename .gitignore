@@ -26,14 +26,6 @@ __pycache__/
 src/web/db.sqlite3
 src/web/staticfiles/
 
-# Modèles IA (trop lourds pour GitHub)
-models/*.pt
-models/*.pth
-models/*.ckpt
-
-# Fichiers SAFE extraits (trop lourds)
-data/raw/sentinel1/*.SAFE/
-
 # OS
 .DS_Store
 Thumbs.db
