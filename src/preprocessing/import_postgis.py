@@ -4,7 +4,6 @@ Couches : bornes de recharge, arrondissements, stations de métro STM.
 """
 
 import os
-import json
 import geopandas as gpd
 from sqlalchemy import create_engine, text
 
@@ -20,28 +19,36 @@ def get_engine():
     return create_engine(DB_URL)
 
 
+def _truncate(engine, table, cascade=False):
+    suffix = " CASCADE" if cascade else ""
+    with engine.connect() as conn:
+        conn.execute(text(f"TRUNCATE {table}{suffix}"))
+        conn.commit()
+
+
 def import_bornes(engine):
     path = os.path.join(DATA_DIR, "bornes_recharge_montreal.geojson")
     gdf = gpd.read_file(path)
     gdf = gdf.to_crs(epsg=4326)
 
-    # Normalisation des colonnes
-    col_map = {}
-    cols = [c.lower() for c in gdf.columns]
-    for orig, lower in zip(gdf.columns, cols):
-        col_map[orig] = lower
-    gdf = gdf.rename(columns=col_map)
+    # Normaliser les noms de colonnes en minuscules
+    gdf.columns = [c.lower() for c in gdf.columns]
 
-    keep = ["geometry"]
+    # Garder uniquement les colonnes du schéma SQL
+    keep = []
     for c in ["nom", "name", "type", "arrondissement", "nb_prises"]:
         if c in gdf.columns:
             keep.append(c)
+    gdf = gdf[keep + ["geometry"]].copy()
 
-    gdf = gdf[keep].copy()
     if "name" in gdf.columns and "nom" not in gdf.columns:
         gdf = gdf.rename(columns={"name": "nom"})
 
-    gdf.to_postgis("bornes_recharge", engine, if_exists="replace",
+    # Renommer geometry -> geom pour correspondre au schéma SQL
+    gdf = gdf.rename_geometry("geom")
+
+    _truncate(engine, "bornes_recharge", cascade=True)
+    gdf.to_postgis("bornes_recharge", engine, if_exists="append",
                    index=False, chunksize=500)
     print(f"Bornes importées : {len(gdf)} entités")
 
@@ -51,25 +58,27 @@ def import_arrondissements(engine):
     gdf = gpd.read_file(path)
     gdf = gdf.to_crs(epsg=4326)
 
-    col_map = {c: c.lower() for c in gdf.columns}
-    gdf = gdf.rename(columns=col_map)
+    gdf.columns = [c.lower() for c in gdf.columns]
 
-    for c in ["nom", "name"]:
-        if c in gdf.columns:
-            gdf = gdf.rename(columns={c: "nom"}) if c != "nom" else gdf
-            break
+    if "name" in gdf.columns and "nom" not in gdf.columns:
+        gdf = gdf.rename(columns={"name": "nom"})
 
-    gdf = gdf[["nom", "geometry"]].copy() if "nom" in gdf.columns else gdf[["geometry"]].copy()
-    gdf["nb_bornes"]      = 0
+    cols = ["geometry"]
+    if "nom" in gdf.columns:
+        cols = ["nom"] + cols
+    gdf = gdf[cols].copy()
+    gdf["nb_bornes"] = 0
     gdf["pct_couverture"] = 0.0
 
-    gdf.to_postgis("arrondissements", engine, if_exists="replace",
+    gdf = gdf.rename_geometry("geom")
+
+    _truncate(engine, "arrondissements")
+    gdf.to_postgis("arrondissements", engine, if_exists="append",
                    index=False, chunksize=100)
     print(f"Arrondissements importés : {len(gdf)} entités")
 
 
 def import_metro(engine):
-    # Fichier arrêts STM (extrait dans stm_sig/)
     shp = os.path.join(DATA_DIR, "stm_sig", "stm_arrets_sig.shp")
     if not os.path.exists(shp):
         print("Fichier STM arrêts introuvable — import métro ignoré")
@@ -78,7 +87,7 @@ def import_metro(engine):
     gdf = gpd.read_file(shp)
     gdf = gdf.to_crs(epsg=4326)
 
-    # Filtrer stations de métro : stop_url contient "metro" + loc_type=0 (station principale)
+    # Stations de métro : stop_url contient "metro" + loc_type=0
     metro_mask = (
         gdf["stop_url"].fillna("").str.contains("metro", case=False) &
         (gdf["loc_type"] == 0)
@@ -88,66 +97,67 @@ def import_metro(engine):
     gdf = gdf.rename(columns={"stop_name": "nom"})
     gdf = gdf[["nom", "geometry"]].copy()
     gdf["ligne"] = None
+    gdf = gdf.rename_geometry("geom")
 
-    gdf.to_postgis("stations_metro", engine, if_exists="replace",
+    _truncate(engine, "stations_metro")
+    gdf.to_postgis("stations_metro", engine, if_exists="append",
                    index=False, chunksize=200)
     print(f"Stations métro importées : {len(gdf)} entités")
 
 
 def create_coverage_buffers(engine):
-    """Génère les buffers 500m autour de chaque borne (en MTM8 pour précision)."""
-    sql = """
-    TRUNCATE zones_couverture;
-    INSERT INTO zones_couverture (borne_id, rayon_m, geom)
-    SELECT
-        id,
-        500,
-        ST_Transform(
-            ST_Buffer(ST_Transform(geom, 32188), 500),
-            4326
-        )
-    FROM bornes_recharge;
-    """
+    """Génère les buffers 500m autour de chaque borne (MTM8 pour précision métrique)."""
     with engine.connect() as conn:
-        for stmt in sql.strip().split(";"):
-            stmt = stmt.strip()
-            if stmt:
-                conn.execute(text(stmt))
+        conn.execute(text("TRUNCATE zones_couverture"))
+        conn.execute(text("""
+            INSERT INTO zones_couverture (borne_id, rayon_m, geom)
+            SELECT
+                id,
+                500,
+                ST_Transform(
+                    ST_Buffer(ST_Transform(geom, 32188), 500),
+                    4326
+                )
+            FROM bornes_recharge
+        """))
         conn.commit()
     print("Buffers 500m générés")
 
 
 def update_arrondissement_stats(engine):
     """Calcule nb_bornes et pct_couverture par arrondissement."""
-    sql = """
-    UPDATE arrondissements a
-    SET nb_bornes = (
-        SELECT COUNT(*) FROM bornes_recharge b
-        WHERE ST_Within(b.geom, a.geom)
-    );
-
-    UPDATE arrondissements a
-    SET pct_couverture = ROUND(
-        100.0 * ST_Area(
-            ST_Intersection(
-                ST_Union(zc.geom),
-                a.geom
-            )
-        ) / NULLIF(ST_Area(a.geom), 0),
-        1
-    )
-    FROM zones_couverture zc
-    WHERE ST_Intersects(zc.geom, a.geom)
-    GROUP BY a.id, a.geom;
-    """
     with engine.connect() as conn:
-        for stmt in sql.strip().split(";"):
-            stmt = stmt.strip()
-            if stmt:
-                try:
-                    conn.execute(text(stmt))
-                except Exception as e:
-                    print(f"Stats arrondissement (partiel) : {e}")
+        # Compter les bornes par arrondissement
+        conn.execute(text("""
+            UPDATE arrondissements a
+            SET nb_bornes = (
+                SELECT COUNT(*) FROM bornes_recharge b
+                WHERE ST_Within(b.geom, a.geom)
+            )
+        """))
+        conn.commit()
+
+        # Calculer le % de couverture
+        conn.execute(text("""
+            UPDATE arrondissements a
+            SET pct_couverture = ROUND(
+                LEAST(
+                    100.0 * ST_Area(
+                        ST_Intersection(
+                            COALESCE(
+                                (SELECT ST_Union(zc.geom)
+                                 FROM zones_couverture zc
+                                 WHERE ST_Intersects(zc.geom, a.geom)),
+                                ST_GeomFromText('GEOMETRYCOLLECTION EMPTY', 4326)
+                            ),
+                            a.geom
+                        )::geography
+                    ) / NULLIF(ST_Area(a.geom::geography), 0),
+                    100
+                )::numeric,
+                1
+            )
+        """))
         conn.commit()
     print("Statistiques arrondissements mises à jour")
 

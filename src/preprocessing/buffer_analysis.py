@@ -83,10 +83,9 @@ def print_stats(engine):
     with engine.connect() as conn:
         result = conn.execute(text("""
             SELECT
-                COUNT(*) AS total_bornes,
+                (SELECT COUNT(*) FROM bornes_recharge) AS total_bornes,
                 (SELECT COUNT(*) FROM arrondissements WHERE pct_couverture < 30) AS sous_desservis,
-                ROUND(AVG(pct_couverture)::numeric, 1) AS couverture_moyenne
-            FROM bornes_recharge
+                (SELECT ROUND(AVG(pct_couverture)::numeric, 1) FROM arrondissements) AS couverture_moyenne
         """))
         row = result.fetchone()
         print(f"Total bornes       : {row[0]}")
