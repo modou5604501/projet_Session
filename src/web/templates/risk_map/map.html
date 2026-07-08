@@ -174,9 +174,66 @@
     #filter-label { font-size: 12px; color: var(--accent); font-weight: 700; }
 
     /* Info */
-    #fp-info { bottom: 12px; left: 12px; min-width: 210px; max-width: 250px; display: none; }
+    #fp-info { bottom: 12px; left: 12px; min-width: 210px; max-width: 260px; display: none; }
     .info-name { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
     .info-row  { font-size: 11.5px; line-height: 1.8; color: var(--text); }
+
+    /* Alertes */
+    #fp-alerts {
+      top: 12px; left: 12px; min-width: 230px; max-width: 270px;
+      display: none; max-height: 360px; overflow-y: auto;
+    }
+    #fp-alerts::-webkit-scrollbar { width: 4px; }
+    #fp-alerts::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .al-row {
+      padding: 6px 0; border-bottom: 1px solid rgba(30,58,95,.6);
+      cursor: pointer; transition: background .12s; border-radius: 4px;
+    }
+    .al-row:last-child { border-bottom: none; }
+    .al-row:hover { background: rgba(0,212,255,.05); }
+    .al-top { display: flex; align-items: center; gap: 6px; }
+    .al-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .al-nom  { flex: 1; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .al-pct  { font-size: 11px; font-weight: 700; min-width: 36px; text-align: right; }
+    .al-bar  { height: 3px; background: rgba(30,58,95,.8); border-radius: 2px; margin-top: 4px; }
+    .al-fill { height: 3px; border-radius: 2px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+
+    /* Bouton fermer (×) sur les panneaux */
+    .fp-close {
+      float: right; background: none; border: none; color: var(--dim);
+      font-size: 13px; cursor: pointer; line-height: 1; padding: 0; margin-top: -1px;
+      transition: color .12s;
+    }
+    .fp-close:hover { color: var(--text); }
+
+    /* Animation d'entrée des panneaux */
+    .fp {
+      animation: none;
+    }
+    .fp.fp-pop {
+      animation: fpIn .18s ease;
+    }
+    @keyframes fpIn {
+      from { opacity: 0; transform: scale(.96) translateY(-4px); }
+      to   { opacity: 1; transform: scale(1)  translateY(0); }
+    }
+
+    /* Couverture mini-barre dans le panneau info */
+    .cov-bar  { height: 5px; background: rgba(30,58,95,.8); border-radius: 3px; margin-top: 5px; }
+    .cov-fill { height: 5px; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+
+    /* Tooltip arrondissements */
+    .arrond-tt {
+      background: rgba(10,20,40,.92) !important;
+      border: 1px solid rgba(0,212,255,.4) !important;
+      color: #dce8f4 !important;
+      font-size: 12px !important;
+      font-family: 'Segoe UI', Tahoma, sans-serif !important;
+      border-radius: 6px !important;
+      padding: 5px 9px !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4) !important;
+    }
+    .arrond-tt::before { display: none !important; }
 
     /* ═══════════════ BOTTOM ═══════════════ */
     #bottom {
@@ -268,10 +325,10 @@
   <nav id="nav">
     <button class="nb active" title="Carte">🗺</button>
     <button class="nb" title="Statistiques" onclick="toggleLeg()">📊</button>
-    <button class="nb" title="Alertes" id="nb-alert">
+    <button class="nb" title="Alertes zones critiques" id="nb-alert" onclick="showAlerts()">
       🔔<span class="badge" id="alert-dot"></span>
     </button>
-    <button class="nb" title="À propos" onclick="showAbout()">ℹ</button>
+    <button class="nb" title="À propos du projet" onclick="showAbout()">ℹ</button>
   </nav>
 
   <!-- Carte -->
@@ -321,9 +378,23 @@
 
     <!-- Info sélection -->
     <div class="fp" id="fp-info">
-      <div class="fp-title">Information sélectionnée</div>
+      <div class="fp-title">
+        Information sélectionnée
+        <button class="fp-close" onclick="closePanel('fp-info')">✕</button>
+      </div>
       <div id="info-body">
         <div class="info-row" style="color:var(--dim);font-style:italic;">Cliquez sur une entité.</div>
+      </div>
+    </div>
+
+    <!-- Alertes zones sous-desservies -->
+    <div class="fp" id="fp-alerts">
+      <div class="fp-title">
+        ⚠ Zones sous-desservies
+        <button class="fp-close" onclick="closePanel('fp-alerts')">✕</button>
+      </div>
+      <div id="alerts-body">
+        <div class="info-row" style="color:var(--dim);font-style:italic;">Chargement…</div>
       </div>
     </div>
   </div>
@@ -445,8 +516,22 @@ function renderArrond(seuil) {
       else if (pct >= 30) mod++;
       else if (pct >= 15) fai++;
       else                crit++;
-      l.bindTooltip(`${f.properties.nom} : ${pct.toFixed(0)} %`, { sticky: true });
-      l.on('click', () => showArrond(f.properties));
+      const c = coul(pct);
+      l.bindTooltip(
+        `<strong style="color:${c}">${f.properties.nom}</strong><br>${pct.toFixed(1)}% couvert`,
+        { sticky: true, className: 'arrond-tt' }
+      );
+      l.on('mouseover', function() {
+        this.setStyle({ weight: 2.5, fillOpacity: .35 });
+        this.bringToFront();
+      });
+      l.on('mouseout', function() {
+        this.setStyle({ weight: 1.5, fillOpacity: .18 });
+      });
+      l.on('click', () => {
+        map.flyToBounds(l.getBounds(), { padding: [50, 50], duration: 0.6 });
+        showArrond(f.properties);
+      });
     }
   });
   if (document.getElementById('tog-arrond').checked) arrondLayer.addTo(map);
@@ -460,15 +545,30 @@ function updLegend(bon, mod, fai, crit) {
   document.getElementById('lc-crit').textContent = crit;
 }
 
+/* ─── COMPTEUR ANIMÉ ─── */
+function animCount(el, target, suffix, duration) {
+  const start = Date.now();
+  const from  = 0;
+  (function tick() {
+    const p = Math.min(1, (Date.now() - start) / duration);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (target - from) * ease) + (suffix || '');
+    if (p < 1) requestAnimationFrame(tick);
+  })();
+}
+
 /* ─── STATS ─── */
 fetch('/api/coverage-summary/')
   .then(r => r.json())
   .then(d => {
-    document.getElementById('s-bornes').textContent = d.total_bornes ?? '—';
-    document.getElementById('s-crit').textContent   = d.sous_desservis ?? '—';
+    const elB = document.getElementById('s-bornes');
+    const elC = document.getElementById('s-crit');
+    const elV = document.getElementById('s-cov');
+    animCount(elB, d.total_bornes ?? 0, '', 900);
+    animCount(elC, d.sous_desservis ?? 0, '', 700);
     if (d.arrondissements && d.arrondissements.length) {
       const moy = d.arrondissements.reduce((s, a) => s + (a.pct_couverture || 0), 0) / d.arrondissements.length;
-      document.getElementById('s-cov').textContent = moy.toFixed(0) + '%';
+      animCount(elV, Math.round(moy), '%', 800);
     }
     if ((d.sous_desservis || 0) > 0) document.getElementById('alert-dot').style.display = 'block';
   }).catch(() => {});
@@ -486,8 +586,15 @@ function showMetro(p) {
 function showArrond(p) {
   const pct = (p.pct_couverture||0).toFixed(1);
   const c   = coul(p.pct_couverture||0);
+  const w   = Math.max(1, p.pct_couverture||0).toFixed(1);
   open_info(`<span style="color:${c}">🏘 ${p.nom||'—'}</span>`,
-    `Bornes : ${p.nb_bornes||0}<br>Couverture : <strong style="color:${c}">${pct} %</strong>`);
+    `Bornes : ${p.nb_bornes||0}<br>` +
+    `Couverture : <strong style="color:${c}">${pct}%</strong>` +
+    `<div class="cov-bar"><div class="cov-fill" id="cov-fill-bar" style="width:0%;background:${c}"></div></div>`);
+  setTimeout(() => {
+    const bar = document.getElementById('cov-fill-bar');
+    if (bar) bar.style.width = w + '%';
+  }, 50);
 }
 function showAbout() {
   open_info('GeoRisk Sentinel',
@@ -495,9 +602,69 @@ function showAbout() {
     '<span style="color:var(--dim)">Données : Ville de Montréal, STM<br>Licence : CC-BY 4.0</span>');
 }
 function open_info(name, body) {
-  document.getElementById('fp-info').style.display = 'block';
+  const el = document.getElementById('fp-info');
   document.getElementById('info-body').innerHTML =
     `<div class="info-name">${name}</div><div class="info-row">${body}</div>`;
+  popPanel(el);
+}
+
+function closePanel(id) {
+  document.getElementById(id).style.display = 'none';
+}
+function popPanel(el) {
+  el.style.display = 'block';
+  el.classList.remove('fp-pop');
+  void el.offsetWidth;
+  el.classList.add('fp-pop');
+}
+
+/* ─── ALERTES ─── */
+function showAlerts() {
+  const panel = document.getElementById('fp-alerts');
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  if (!arrondData) { popPanel(panel); return; }
+
+  const seuil = +(document.getElementById('seuil-slider').value);
+  const sous = arrondData.features
+    .map(f => f.properties)
+    .filter(p => (p.pct_couverture || 0) < seuil)
+    .sort((a, b) => (a.pct_couverture || 0) - (b.pct_couverture || 0));
+
+  const body = document.getElementById('alerts-body');
+  if (!sous.length) {
+    body.innerHTML = '<div class="info-row" style="color:var(--green)">✅ Aucune zone sous le seuil actuel.</div>';
+  } else {
+    body.innerHTML = sous.map(p => {
+      const pct = (p.pct_couverture || 0).toFixed(1);
+      const c   = coul(p.pct_couverture || 0);
+      const w   = Math.max(1, (p.pct_couverture || 0)).toFixed(1);
+      return `<div class="al-row" onclick="zoomArrond('${p.nom}')">
+        <div class="al-top">
+          <span class="al-dot" style="background:${c}"></span>
+          <span class="al-nom" title="${p.nom}">${p.nom}</span>
+          <span class="al-pct" style="color:${c}">${pct}%</span>
+        </div>
+        <div class="al-bar"><div class="al-fill" style="width:0%;background:${c}" data-w="${w}"></div></div>
+      </div>`;
+    }).join('');
+    setTimeout(() => {
+      body.querySelectorAll('.al-fill').forEach(el => {
+        el.style.width = el.dataset.w + '%';
+      });
+    }, 50);
+  }
+  popPanel(panel);
+}
+
+/* Zoom sur un arrondissement par nom */
+function zoomArrond(nom) {
+  if (!arrondLayer) return;
+  arrondLayer.eachLayer(l => {
+    if ((l.feature.properties.nom || '') === nom) {
+      map.flyToBounds(l.getBounds(), { padding: [40, 40], duration: 0.6 });
+      showArrond(l.feature.properties);
+    }
+  });
 }
 
 /* ─── TOGGLES COUCHES ─── */
@@ -598,8 +765,30 @@ function pollStatus() {
 
 function toggleLeg() {
   const el = document.getElementById('fp-leg');
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (el.style.display === 'none') popPanel(el);
+  else el.style.display = 'none';
 }
+
+/* ─── RACCOURCIS CLAVIER ─── */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  switch (e.key.toUpperCase()) {
+    case 'R': if (!e.ctrlKey && !e.metaKey) refreshData();   break;
+    case 'A': showAlerts();  break;
+    case 'L': toggleLeg();   break;
+    case 'ESCAPE':
+      ['fp-info','fp-alerts','fp-filter'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+      break;
+  }
+});
+
+/* ─── FERMETURE AU CLIC EXTÉRIEUR ─── */
+document.getElementById('map').addEventListener('click', () => {
+  document.getElementById('fp-info').style.display   = 'none';
+  document.getElementById('fp-alerts').style.display = 'none';
+});
 
 function getCsrf() {
   const m = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
