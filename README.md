@@ -255,21 +255,21 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 
 ## 8. Livrables attendus
 
-| Livrable | Description | Statut |
+| Livrable | Fichier dans le repo | Statut |
 |---|---|---|
-| Données bornes de recharge | GeoJSON Données Québec | ✅ Téléchargé |
-| Données arrondissements | GeoJSON WGS84 Données Québec | ✅ Téléchargé |
-| Données STM (métro) | SHP Données Québec | ✅ Téléchargé |
-| Statistiques utilisation 2025 | CSV Données Québec | ✅ Téléchargé |
-| Script import PostGIS | import_postgis.py | ⏳ À écrire |
-| Script analyse buffer | buffer_analysis.py | ⏳ À écrire |
-| Script zones sous-desservies | gap_analysis.py | ⏳ À écrire |
-| Modèles Django | models.py mis à jour | ⏳ À faire |
-| API REST GeoJSON | /api/bornes/, /api/couverture/ | ⏳ À faire |
-| Carte Leaflet | Dashboard interactif | ⏳ À faire |
-| Docker Compose | PostGIS + pgAdmin + Django | ✅ Fichier existant (à adapter) |
-| Rapport technique final | Document PDF | ⏳ En cours |
-| Présentation (soutenance) | Slides + démonstration | ⏳ À faire |
+| Données bornes de recharge | [`data/vectors/bornes_recharge_montreal.geojson`](data/vectors/bornes_recharge_montreal.geojson) | ✅ Dans le repo |
+| Données arrondissements | [`data/vectors/arrondissements_montreal.geojson`](data/vectors/arrondissements_montreal.geojson) | ✅ Dans le repo |
+| Données STM (métro + bus) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | ✅ Dans le repo |
+| Statistiques utilisation 2025 | [`data/vectors/chargeurs_statistiques_2025.csv`](data/vectors/chargeurs_statistiques_2025.csv) | ✅ Dans le repo |
+| Script import PostGIS | [`src/preprocessing/import_postgis.py`](src/preprocessing/import_postgis.py) | ✅ Écrit |
+| Script analyse buffer 500m | [`src/preprocessing/buffer_analysis.py`](src/preprocessing/buffer_analysis.py) | ✅ Écrit |
+| Script zones sous-desservies | [`src/preprocessing/gap_analysis.py`](src/preprocessing/gap_analysis.py) | ✅ Écrit |
+| Modèles Django (4 tables) | [`src/web/risk_map/models.py`](src/web/risk_map/models.py) | ✅ Écrit |
+| API REST GeoJSON | [`src/web/risk_map/views.py`](src/web/risk_map/views.py) | ✅ Écrit |
+| Carte Leaflet interactive | [`src/web/templates/risk_map/map.html`](src/web/templates/risk_map/map.html) | ✅ Écrite |
+| Docker Compose (PostGIS + pgAdmin + Django) | [`docker-compose.yml`](docker-compose.yml) | ✅ Configuré |
+| Rapport technique final | — | ⏳ En cours |
+| Présentation (soutenance) | — | ⏳ À faire |
 
 ---
 
@@ -284,16 +284,18 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Phase 2 | Téléchargement arrondissements Montréal WGS84 (GeoJSON) | ✅ Complété | 7 juillet 2026 |
 | Phase 2 | Téléchargement tracés STM bus+métro (SHP) | ✅ Complété | 7 juillet 2026 |
 | Phase 2 | Documentation des sources (SOURCES.md) | ✅ Complété | 7 juillet 2026 |
-| Phase 3 | Reprojection STM NAD83→WGS84 | ⏳ À faire | Avant 9 juill. |
-| Phase 3 | Script import PostGIS (toutes les couches) | ⏳ À faire | Avant 9 juill. |
-| Phase 3 | Démarrage Docker PostGIS + import données | ⏳ À faire | Avant 9 juill. |
-| Phase 4 | Script analyse buffer 500m (PostGIS) | ⏳ À faire | Avant 11 juill. |
-| Phase 4 | Script zones sous-desservies (gap analysis) | ⏳ À faire | Avant 11 juill. |
-| Phase 5 | Mise à jour modèles Django (nouvelles tables) | ⏳ À faire | Avant 11 juill. |
-| Phase 5 | API REST GeoJSON (bornes, couverture, arrondissements) | ⏳ À faire | Avant 12 juill. |
-| Phase 5 | Carte Leaflet (4 couches + panneau stats) | ⏳ À faire | Avant 12 juill. |
-| Phase 5 | Tests et validation de l'application web | ⏳ À faire | Avant 13 juill. |
-| Phase 6 | Push GitHub complet | ⏳ À faire | Avant 13 juill. |
+| Phase 3 | Reprojection STM NAD83→WGS84 (dans import_postgis.py) | ✅ Script écrit | 7 juillet 2026 |
+| Phase 3 | Script import PostGIS — toutes les couches | ✅ Script écrit | 7 juillet 2026 |
+| Phase 3 | Création tables SQL (bornes, arrondissements, métro, couverture) | ✅ SQL écrit | 7 juillet 2026 |
+| Phase 3 | Démarrage Docker + import données réelles en BD | ⏳ À exécuter | Avant 11 juill. |
+| Phase 4 | Script analyse buffer 500m (PostGIS) | ✅ Script écrit | 7 juillet 2026 |
+| Phase 4 | Script zones sous-desservies (gap analysis + export GeoJSON) | ✅ Script écrit | 7 juillet 2026 |
+| Phase 4 | Exécution de l'analyse sur les données réelles | ⏳ À exécuter | Avant 11 juill. |
+| Phase 5 | Modèles Django (4 tables : bornes, couverture, arrondissements, métro) | ✅ Écrit | 7 juillet 2026 |
+| Phase 5 | API REST GeoJSON (bornes, couverture, arrondissements, métro) | ✅ Écrit | 7 juillet 2026 |
+| Phase 5 | Carte Leaflet (4 couches + panneau stats + toggle) | ✅ Écrite | 7 juillet 2026 |
+| Phase 5 | Tests et validation avec données réelles en BD | ⏳ À valider | Avant 13 juill. |
+| Phase 6 | Push GitHub complet (code + données) | ✅ Complété | 7 juillet 2026 |
 | Phase 6 | Rapport technique final | ⏳ En cours | Avant 14 juill. |
 | Phase 6 | Présentation de soutenance | ⏳ À faire | Avant 14 juill. |
 
@@ -326,8 +328,8 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 
 ```bash
 # 1. Cloner le dépôt
-git clone https://github.com/<votre-compte>/georisk-sentinel.git
-cd georisk-sentinel
+git clone https://github.com/modou5604501/projet_Session.git
+cd projet_Session
 
 # 2. Démarrer PostGIS + pgAdmin
 docker-compose up -d postgis pgadmin
