@@ -268,8 +268,8 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | API REST GeoJSON | [`src/web/risk_map/views.py`](src/web/risk_map/views.py) | ✅ Écrit |
 | Carte Leaflet interactive | [`src/web/templates/risk_map/map.html`](src/web/templates/risk_map/map.html) | ✅ Écrite |
 | Docker Compose (PostGIS + pgAdmin + Django) | [`docker-compose.yml`](docker-compose.yml) | ✅ Configuré |
-| Rapport technique final | — | ⏳ En cours |
-| Présentation (soutenance) | — | ⏳ À faire |
+| Rapport technique final | [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md) | ✅ Rédigé |
+| Présentation orale | [`PRESENTATION_ORALE.md`](PRESENTATION_ORALE.md) | ✅ Rédigée |
 
 ---
 
@@ -296,8 +296,8 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Phase 5 | Carte Leaflet (4 couches + panneau stats + toggle) | ✅ Écrite | 7 juillet 2026 |
 | Phase 5 | Tests et validation avec données réelles en BD | ⏳ À valider | Avant 13 juill. |
 | Phase 6 | Push GitHub complet (code + données) | ✅ Complété | 7 juillet 2026 |
-| Phase 6 | Rapport technique final | ⏳ En cours | Avant 14 juill. |
-| Phase 6 | Présentation de soutenance | ⏳ À faire | Avant 14 juill. |
+| Phase 6 | Rapport technique final | ✅ Rédigé | 7 juillet 2026 |
+| Phase 6 | Présentation orale | ✅ Rédigée | 7 juillet 2026 |
 
 ---
 
