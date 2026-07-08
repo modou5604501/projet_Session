@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Ajouter le dossier preprocessing au path
 PREPROCESSING_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "preprocessing"
+    os.path.dirname(__file__), "..", "..", "preprocessing"
 )
 if PREPROCESSING_DIR not in sys.path:
     sys.path.insert(0, os.path.abspath(PREPROCESSING_DIR))

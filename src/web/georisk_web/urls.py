@@ -16,4 +16,5 @@ urlpatterns = [
     path("api/coverage-summary/", views.coverage_summary, name="coverage-summary"),
     path("api/refresh/",          views.trigger_refresh,  name="trigger-refresh"),
     path("api/refresh/status/",   views.refresh_status,   name="refresh-status"),
+    path("sw.js",                  views.serve_sw,         name="service-worker"),
 ]

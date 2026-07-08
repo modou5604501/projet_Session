@@ -149,7 +149,12 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+# En développement, Django sert les fichiers statiques directement (pas de collectstatic).
+# En production (Railway), Whitenoise compresse mais ne renomme PAS les fichiers :
+# CompressedStaticFilesStorage (pas Manifest) pour garder les URLs stables
+# (sw.js, manifest.json, icônes référencés hardcodés dans map.html et manifest.json).
+if not DEBUG:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -6,9 +6,14 @@ class RiskMapConfig(AppConfig):
     name = "risk_map"
 
     def ready(self):
-        # Démarrer le scheduler uniquement dans le processus principal
         import os
-        if os.environ.get("RUN_MAIN") != "true":
+        import sys
+        # En développement avec runserver, Django crée 2 processus :
+        #   - reloader (RUN_MAIN absent) : on saute
+        #   - processus principal (RUN_MAIN=true) : on démarre
+        # En production (gunicorn / Railway) : RUN_MAIN est absent AUSSI,
+        #   mais "runserver" n'est pas dans argv → on démarre quand même
+        if "runserver" in sys.argv and os.environ.get("RUN_MAIN") != "true":
             return
         try:
             from . import scheduler

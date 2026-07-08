@@ -608,7 +608,7 @@ function getCsrf() {
 
 // ── Service Worker (PWA) ──
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/static/risk_map/sw.js')
+  navigator.serviceWorker.register('/sw.js')
     .catch(e => console.warn('SW non enregistré:', e));
 }
 </script>

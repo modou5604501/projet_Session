@@ -1,6 +1,8 @@
 import sys
 import os
 import threading
+from django.conf import settings
+from django.http import FileResponse, Http404
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -23,6 +25,20 @@ if PREPROCESSING_DIR not in sys.path:
 
 def map_view(request):
     return render(request, "risk_map/map.html")
+
+
+def serve_sw(request):
+    """Sert le service worker depuis /sw.js avec scope racine (PWA)."""
+    # Prod : collectstatic a copié le fichier dans STATIC_ROOT
+    sw_path = os.path.join(settings.STATIC_ROOT, "risk_map", "sw.js")
+    if not os.path.exists(sw_path):
+        # Dev : chercher dans le répertoire statique de l'app
+        sw_path = os.path.join(os.path.dirname(__file__), "static", "risk_map", "sw.js")
+    if not os.path.exists(sw_path):
+        raise Http404("Service worker introuvable")
+    response = FileResponse(open(sw_path, "rb"), content_type="application/javascript")
+    response["Service-Worker-Allowed"] = "/"
+    return response
 
 
 class BorneRechargeViewSet(viewsets.ReadOnlyModelViewSet):
