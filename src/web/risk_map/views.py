@@ -2,6 +2,7 @@ import sys
 import os
 import threading
 from django.conf import settings
+from django.db import connection
 from django.http import FileResponse, Http404
 from django.shortcuts import render
 from rest_framework import viewsets
@@ -116,3 +117,111 @@ def refresh_status(request):
         "running":     _refresh_status["running"],
         "last_result": _refresh_status["last_result"],
     })
+
+
+# ── REQUÊTES SPATIALES ──────────────────────────────────────────────────────
+
+@api_view(["GET"])
+def query_bornes_proches(request):
+    """N bornes les plus proches d'un point (KNN PostGIS <-> operator)."""
+    try:
+        lat = float(request.GET["lat"])
+        lng = float(request.GET["lng"])
+        n   = min(int(request.GET.get("n", 5)), 20)
+    except (KeyError, ValueError, TypeError):
+        return Response({"error": "Paramètres lat, lng requis."}, status=400)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT id, nom, type, arrondissement, nb_prises,
+                   ROUND(ST_Distance(
+                       geom::geography,
+                       ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+                   )) AS distance_m,
+                   ST_X(geom) AS lng, ST_Y(geom) AS lat
+            FROM bornes_recharge
+            ORDER BY geom::geography <-> ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+            LIMIT %s
+        """, [lng, lat, lng, lat, n])
+        cols = [c[0] for c in cur.description]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+
+    return Response({"bornes": rows, "count": len(rows),
+                     "point": {"lat": lat, "lng": lng}, "n": n})
+
+
+@api_view(["GET"])
+def query_bornes_rayon(request):
+    """Bornes dans un rayon R autour d'un point (ST_DWithin sur géographie)."""
+    try:
+        lat   = float(request.GET["lat"])
+        lng   = float(request.GET["lng"])
+        rayon = min(int(request.GET.get("rayon", 500)), 5000)
+    except (KeyError, ValueError, TypeError):
+        return Response({"error": "Paramètres lat, lng requis."}, status=400)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT id, nom, type, arrondissement, nb_prises,
+                   ROUND(ST_Distance(
+                       geom::geography,
+                       ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography
+                   )) AS distance_m,
+                   ST_X(geom) AS lng, ST_Y(geom) AS lat
+            FROM bornes_recharge
+            WHERE ST_DWithin(
+                geom::geography,
+                ST_SetSRID(ST_MakePoint(%s, %s), 4326)::geography,
+                %s
+            )
+            ORDER BY distance_m
+        """, [lng, lat, lng, lat, rayon])
+        cols = [c[0] for c in cur.description]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+
+    return Response({"bornes": rows, "count": len(rows),
+                     "point": {"lat": lat, "lng": lng}, "rayon_m": rayon})
+
+
+@api_view(["GET"])
+def query_metro_sans_borne(request):
+    """Stations de métro sans borne dans un rayon R (NOT EXISTS + ST_DWithin)."""
+    rayon = min(int(request.GET.get("rayon", 500)), 2000)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT m.id, m.nom, m.ligne,
+                   ST_X(m.geom) AS lng, ST_Y(m.geom) AS lat,
+                   ROUND(
+                       (SELECT MIN(ST_Distance(m.geom::geography, b.geom::geography))
+                        FROM bornes_recharge b)
+                   ) AS dist_borne_min_m
+            FROM stations_metro m
+            WHERE NOT EXISTS (
+                SELECT 1 FROM bornes_recharge b
+                WHERE ST_DWithin(m.geom::geography, b.geom::geography, %s)
+            )
+            ORDER BY dist_borne_min_m DESC
+        """, [rayon])
+        cols = [c[0] for c in cur.description]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+
+    return Response({"stations": rows, "count": len(rows), "rayon_m": rayon})
+
+
+@api_view(["GET"])
+def query_arrond_peu_equipes(request):
+    """Arrondissements avec moins de N bornes (filtre sur nb_bornes)."""
+    seuil = int(request.GET.get("seuil", 10))
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT nom, nb_bornes, ROUND(pct_couverture::numeric, 1) AS pct_couverture
+            FROM arrondissements
+            WHERE nb_bornes <= %s
+            ORDER BY nb_bornes ASC, pct_couverture ASC
+        """, [seuil])
+        cols = [c[0] for c in cur.description]
+        rows = [dict(zip(cols, row)) for row in cur.fetchall()]
+
+    return Response({"arrondissements": rows, "count": len(rows), "seuil": seuil})

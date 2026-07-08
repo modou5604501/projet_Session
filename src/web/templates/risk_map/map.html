@@ -222,6 +222,52 @@
     .cov-bar  { height: 5px; background: rgba(30,58,95,.8); border-radius: 3px; margin-top: 5px; }
     .cov-fill { height: 5px; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1); }
 
+    /* ═══════════════ PANNEAU REQUÊTES ═══════════════ */
+    #fp-queries {
+      top: 12px; right: 12px; width: 300px; display: none;
+      max-height: calc(100% - 24px); overflow-y: auto;
+    }
+    #fp-queries::-webkit-scrollbar { width: 4px; }
+    #fp-queries::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .q-section {
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .q-section:last-child { border-bottom: none; }
+    .q-title { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+    .q-sub   { font-size: 10px; color: var(--dim); margin-bottom: 6px; }
+    .q-row   { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+    .q-row label { font-size: 11px; color: var(--text); display: flex; align-items: center; gap: 4px; }
+    .q-row input[type="number"] {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 2px 5px; font-size: 11px; width: 58px;
+    }
+    .q-btn {
+      padding: 4px 10px; background: rgba(0,212,255,.1);
+      border: 1px solid rgba(0,212,255,.35); color: var(--accent);
+      border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600;
+      transition: background .12s; white-space: nowrap;
+    }
+    .q-btn:hover  { background: rgba(0,212,255,.22); }
+    .q-btn.active { background: rgba(0,212,255,.3); border-color: var(--accent); }
+    .q-status { font-size: 10.5px; color: var(--accent); font-style: italic; margin-bottom: 4px; min-height: 14px; }
+    .q-results { font-size: 11px; }
+    .q-item {
+      display: flex; align-items: baseline; gap: 5px;
+      padding: 3px 0; border-bottom: 1px solid rgba(30,58,95,.4);
+      cursor: pointer; transition: background .1s; border-radius: 3px;
+    }
+    .q-item:last-child { border-bottom: none; }
+    .q-item:hover { background: rgba(0,212,255,.07); }
+    .q-num  { font-size: 10px; color: var(--dim); min-width: 18px; text-align: right; }
+    .q-name { flex: 1; color: var(--text); }
+    .q-dist { font-size: 10px; color: var(--accent); white-space: nowrap; }
+    .q-count { font-size: 11px; color: var(--dim); margin-top: 4px; }
+    .q-warn  { font-size: 11px; color: var(--yellow); }
+
+    /* Mode clic actif */
+    body.waiting-click #map { cursor: crosshair !important; }
+
     /* Tooltip arrondissements */
     .arrond-tt {
       background: rgba(10,20,40,.92) !important;
@@ -329,6 +375,7 @@
       🔔<span class="badge" id="alert-dot"></span>
     </button>
     <button class="nb" title="À propos du projet" onclick="showAbout()">ℹ</button>
+    <button class="nb" title="Requêtes spatiales (PostGIS)" id="nb-queries" onclick="toggleQueries()">🔍</button>
   </nav>
 
   <!-- Carte -->
@@ -384,6 +431,59 @@
       </div>
       <div id="info-body">
         <div class="info-row" style="color:var(--dim);font-style:italic;">Cliquez sur une entité.</div>
+      </div>
+    </div>
+
+    <!-- Requêtes spatiales -->
+    <div class="fp" id="fp-queries">
+      <div class="fp-title">🔍 Requêtes spatiales PostGIS
+        <button class="fp-close" onclick="closePanel('fp-queries')">✕</button>
+      </div>
+
+      <!-- Q1 : N bornes les plus proches -->
+      <div class="q-section">
+        <div class="q-title">① Bornes les plus proches</div>
+        <div class="q-sub">ST_Distance — ordre KNN (&lt;-&gt;)</div>
+        <div class="q-row">
+          <label>N = <input type="number" id="q1-n" value="5" min="1" max="20"></label>
+          <button class="q-btn" id="q1-btn" onclick="startClickQuery(runQ1)">📍 Cliquer sur la carte</button>
+        </div>
+        <div id="q1-status" class="q-status"></div>
+        <div id="q1-results" class="q-results"></div>
+      </div>
+
+      <!-- Q2 : Bornes dans un rayon -->
+      <div class="q-section">
+        <div class="q-title">② Bornes dans un rayon</div>
+        <div class="q-sub">ST_DWithin (géographie, mètres)</div>
+        <div class="q-row">
+          <label>Rayon <input type="number" id="q2-rayon" value="500" min="50" max="5000" step="50"> m</label>
+          <button class="q-btn" id="q2-btn" onclick="startClickQuery(runQ2)">📍 Cliquer sur la carte</button>
+        </div>
+        <div id="q2-status" class="q-status"></div>
+        <div id="q2-results" class="q-results"></div>
+      </div>
+
+      <!-- Q3 : Stations métro sans borne -->
+      <div class="q-section">
+        <div class="q-title">③ Stations métro isolées</div>
+        <div class="q-sub">NOT EXISTS + ST_DWithin</div>
+        <div class="q-row">
+          <label>Rayon <input type="number" id="q3-rayon" value="500" min="100" max="2000" step="100"> m</label>
+          <button class="q-btn" onclick="runQ3()">▶ Exécuter</button>
+        </div>
+        <div id="q3-results" class="q-results"></div>
+      </div>
+
+      <!-- Q4 : Arrondissements peu équipés -->
+      <div class="q-section">
+        <div class="q-title">④ Arrondissements peu équipés</div>
+        <div class="q-sub">Filtre nb_bornes ≤ seuil</div>
+        <div class="q-row">
+          <label>≤ <input type="number" id="q4-seuil" value="10" min="0" max="200"> bornes</label>
+          <button class="q-btn" onclick="runQ4()">▶ Exécuter</button>
+        </div>
+        <div id="q4-results" class="q-results"></div>
       </div>
     </div>
 
@@ -784,15 +884,176 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ─── FERMETURE AU CLIC EXTÉRIEUR ─── */
-document.getElementById('map').addEventListener('click', () => {
-  document.getElementById('fp-info').style.display   = 'none';
-  document.getElementById('fp-alerts').style.display = 'none';
-});
+/* fermeture au clic sur carte gérée dans map.on('click') du bloc requêtes */
 
 function getCsrf() {
   const m = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
   return m ? m[2] : '';
+}
+
+/* ══════════════════════════════════════════════════════
+   REQUÊTES SPATIALES POSTGIS
+   ══════════════════════════════════════════════════════ */
+
+const qLayer = L.layerGroup().addTo(map);   // couche temporaire résultats
+let   qMarker = null;                        // marqueur point cliqué
+let   pendingClickQuery = null;             // callback en attente de clic
+
+function toggleQueries() {
+  const el = document.getElementById('fp-queries');
+  if (el.style.display === 'block') el.style.display = 'none';
+  else popPanel(el);
+}
+
+/* Remplace l'ancien handler clic carte pour gérer aussi les requêtes */
+map.on('click', function(e) {
+  if (pendingClickQuery) {
+    const fn = pendingClickQuery;
+    pendingClickQuery = null;
+    document.body.classList.remove('waiting-click');
+    document.querySelectorAll('.q-btn.active').forEach(b => b.classList.remove('active'));
+    fn(e.latlng.lat, e.latlng.lng);
+    return;
+  }
+  /* Fermeture panneaux info/alertes au clic libre */
+  document.getElementById('fp-info').style.display   = 'none';
+  document.getElementById('fp-alerts').style.display = 'none';
+});
+
+function startClickQuery(fn) {
+  pendingClickQuery = fn;
+  document.body.classList.add('waiting-click');
+  event.currentTarget.classList.add('active');
+}
+
+function placeQMarker(lat, lng, label) {
+  qLayer.clearLayers();
+  if (qMarker) qMarker = null;
+  qMarker = L.circleMarker([lat, lng], {
+    radius: 8, color: '#fff', fillColor: '#00d4ff', fillOpacity: 1, weight: 2
+  }).bindTooltip(label, { permanent: true, direction: 'top', offset: [0, -10],
+    className: 'arrond-tt' })
+    .addTo(qLayer);
+}
+
+function qResultBornes(items, containerId) {
+  if (!items.length) {
+    document.getElementById(containerId).innerHTML =
+      '<div class="q-warn">Aucune borne trouvée.</div>';
+    return;
+  }
+  document.getElementById(containerId).innerHTML =
+    items.map((b, i) =>
+      `<div class="q-item" onclick="map.flyTo([${b.lat},${b.lng}],17,{duration:.5})">
+        <span class="q-num">${i+1}.</span>
+        <span class="q-name">${b.nom || 'Borne #' + b.id}</span>
+        <span class="q-dist">${b.distance_m} m</span>
+      </div>`
+    ).join('') +
+    `<div class="q-count">${items.length} borne${items.length>1?'s':''} trouvée${items.length>1?'s':''}</div>`;
+
+  /* Afficher sur la carte */
+  items.forEach(b => {
+    L.circleMarker([b.lat, b.lng], {
+      radius: 7, color: '#ffd700', fillColor: '#ffd700', fillOpacity: .9, weight: 2
+    }).bindTooltip(`${b.nom||'Borne'} — ${b.distance_m} m`, { className: 'arrond-tt' })
+      .addTo(qLayer);
+  });
+}
+
+/* ── Q1 : N bornes les plus proches ── */
+function runQ1(lat, lng) {
+  const n = +document.getElementById('q1-n').value || 5;
+  const st = document.getElementById('q1-status');
+  const rs = document.getElementById('q1-results');
+  st.textContent = '⟳ Requête en cours…';
+  rs.innerHTML = '';
+  placeQMarker(lat, lng, `Point (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+  fetch(`/api/query/proches/?lat=${lat}&lng=${lng}&n=${n}`)
+    .then(r => r.json())
+    .then(d => {
+      st.textContent = `✅ SQL : ORDER BY geom <-> point LIMIT ${n}`;
+      qResultBornes(d.bornes, 'q1-results');
+    })
+    .catch(() => { st.textContent = '⚠ Erreur de requête.'; });
+}
+
+/* ── Q2 : Bornes dans un rayon ── */
+function runQ2(lat, lng) {
+  const rayon = +document.getElementById('q2-rayon').value || 500;
+  const st = document.getElementById('q2-status');
+  const rs = document.getElementById('q2-results');
+  st.textContent = '⟳ Requête en cours…';
+  rs.innerHTML = '';
+  placeQMarker(lat, lng, `Rayon ${rayon} m`);
+  L.circle([lat, lng], { radius: rayon, color: '#ffd700', fillColor: '#ffd700',
+    fillOpacity: .07, weight: 1.5, dashArray: '4 3' }).addTo(qLayer);
+  fetch(`/api/query/rayon/?lat=${lat}&lng=${lng}&rayon=${rayon}`)
+    .then(r => r.json())
+    .then(d => {
+      st.textContent = `✅ ST_DWithin(geom, point, ${rayon}) → ${d.count} résultat(s)`;
+      qResultBornes(d.bornes, 'q2-results');
+    })
+    .catch(() => { st.textContent = '⚠ Erreur de requête.'; });
+}
+
+/* ── Q3 : Stations métro sans borne ── */
+function runQ3() {
+  const rayon = +document.getElementById('q3-rayon').value || 500;
+  const rs = document.getElementById('q3-results');
+  rs.innerHTML = '<div class="q-status">⟳ Requête en cours…</div>';
+  qLayer.clearLayers();
+  fetch(`/api/query/metro-sans-borne/?rayon=${rayon}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.stations.length) {
+        rs.innerHTML = `<div class="q-warn">Toutes les stations ont une borne à ${rayon} m.</div>`;
+        return;
+      }
+      rs.innerHTML =
+        d.stations.map((s, i) =>
+          `<div class="q-item" onclick="map.flyTo([${s.lat},${s.lng}],16,{duration:.5})">
+            <span class="q-num">${i+1}.</span>
+            <span class="q-name">🚇 ${s.nom}</span>
+            <span class="q-dist">${s.dist_borne_min_m} m</span>
+          </div>`
+        ).join('') +
+        `<div class="q-count">${d.count} station${d.count>1?'s':''} sans borne à ${rayon} m</div>`;
+      d.stations.forEach(s => {
+        L.circleMarker([s.lat, s.lng], {
+          radius: 9, color: '#ff2d55', fillColor: '#ff2d55', fillOpacity: .85, weight: 2
+        }).bindTooltip(`🚇 ${s.nom} — borne la + proche : ${s.dist_borne_min_m} m`,
+          { className: 'arrond-tt' })
+          .addTo(qLayer);
+      });
+    })
+    .catch(() => { rs.innerHTML = '<div class="q-warn">⚠ Erreur de requête.</div>'; });
+}
+
+/* ── Q4 : Arrondissements peu équipés ── */
+function runQ4() {
+  const seuil = +document.getElementById('q4-seuil').value;
+  const rs = document.getElementById('q4-results');
+  rs.innerHTML = '<div class="q-status">⟳ Requête en cours…</div>';
+  fetch(`/api/query/arrond-peu-equipes/?seuil=${seuil}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.arrondissements.length) {
+        rs.innerHTML = `<div class="q-warn">Aucun arrondissement avec ≤ ${seuil} bornes.</div>`;
+        return;
+      }
+      rs.innerHTML =
+        d.arrondissements.map((a, i) => {
+          const c = coul(a.pct_couverture);
+          return `<div class="q-item" onclick="zoomArrond('${a.nom}')">
+            <span class="q-num">${i+1}.</span>
+            <span class="q-name">${a.nom}</span>
+            <span class="q-dist" style="color:${c}">${a.nb_bornes} ⚡ ${a.pct_couverture}%</span>
+          </div>`;
+        }).join('') +
+        `<div class="q-count">${d.count} arrondissement${d.count>1?'s':''} ≤ ${seuil} bornes</div>`;
+    })
+    .catch(() => { rs.innerHTML = '<div class="q-warn">⚠ Erreur de requête.</div>'; });
 }
 
 // ── Service Worker (PWA) ──
