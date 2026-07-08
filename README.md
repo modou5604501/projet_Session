@@ -287,14 +287,15 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Phase 3 | Reprojection STM NAD83→WGS84 (dans import_postgis.py) | ✅ Script écrit | 7 juillet 2026 |
 | Phase 3 | Script import PostGIS — toutes les couches | ✅ Script écrit | 7 juillet 2026 |
 | Phase 3 | Création tables SQL (bornes, arrondissements, métro, couverture) | ✅ SQL écrit | 7 juillet 2026 |
-| Phase 3 | Démarrage Docker + import données réelles en BD | ⏳ À exécuter | Avant 11 juill. |
-| Phase 4 | Script analyse buffer 500m (PostGIS) | ✅ Script écrit | 7 juillet 2026 |
-| Phase 4 | Script zones sous-desservies (gap analysis + export GeoJSON) | ✅ Script écrit | 7 juillet 2026 |
-| Phase 4 | Exécution de l'analyse sur les données réelles | ⏳ À exécuter | Avant 11 juill. |
-| Phase 5 | Modèles Django (4 tables : bornes, couverture, arrondissements, métro) | ✅ Écrit | 7 juillet 2026 |
-| Phase 5 | API REST GeoJSON (bornes, couverture, arrondissements, métro) | ✅ Écrit | 7 juillet 2026 |
-| Phase 5 | Carte Leaflet (4 couches + panneau stats + toggle) | ✅ Écrite | 7 juillet 2026 |
-| Phase 5 | Tests et validation avec données réelles en BD | ⏳ À valider | Avant 13 juill. |
+| Phase 3 | Démarrage Docker + import données réelles en BD | ✅ Complété | 7 juillet 2026 |
+| Phase 4 | Script analyse buffer 500m (PostGIS) | ✅ Complété | 7 juillet 2026 |
+| Phase 4 | Script zones sous-desservies (gap analysis + export GeoJSON) | ✅ Complété | 7 juillet 2026 |
+| Phase 4 | Exécution de l'analyse sur les données réelles | ✅ Complété | 7 juillet 2026 |
+| Phase 5 | Modèles Django (4 tables : bornes, couverture, arrondissements, métro) | ✅ Complété | 7 juillet 2026 |
+| Phase 5 | API REST GeoJSON (bornes, couverture, arrondissements, métro) | ✅ Complété | 7 juillet 2026 |
+| Phase 5 | Dashboard dark theme (choroplèthe, EN DIRECT, slider simulation) | ✅ Complété | 7 juillet 2026 |
+| Phase 5 | Mise à jour automatique depuis Données Québec (APScheduler) | ✅ Complété | 7 juillet 2026 |
+| Phase 5 | Tests et validation avec données réelles en BD | ✅ Validé (2 412 bornes, 34 arrond.) | 7 juillet 2026 |
 | Phase 6 | Push GitHub complet (code + données) | ✅ Complété | 7 juillet 2026 |
 | Phase 6 | Rapport technique final | ✅ Rédigé | 7 juillet 2026 |
 | Phase 6 | Présentation orale | ✅ Rédigée | 7 juillet 2026 |

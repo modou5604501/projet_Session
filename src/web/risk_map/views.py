@@ -15,7 +15,7 @@ from .serializers import (
 )
 
 PREPROCESSING_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "preprocessing")
+    os.path.join(os.path.dirname(__file__), "..", "..", "preprocessing")
 )
 if PREPROCESSING_DIR not in sys.path:
     sys.path.insert(0, PREPROCESSING_DIR)
