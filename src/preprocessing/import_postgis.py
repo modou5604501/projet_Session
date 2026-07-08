@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text
 
 DB_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://georisk:georisk2019@localhost:5433/georisk"
+    "postgresql://georisk_user:georisk2019@localhost:5433/georisk"
 )
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "vectors")

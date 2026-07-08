@@ -1,6 +1,6 @@
 """
 Django settings for GeoRisk Sentinel
-Zone d'étude : Sainte-Marthe-sur-le-Lac
+Projet : Optimisation de l'accessibilité aux bornes de recharge électrique à Montréal
 """
 
 import os
@@ -138,5 +138,3 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Chemin vers les données traitées (pour servir les masques TIF)
-FLOOD_MASKS_DIR = str(PROJECT_ROOT / "data" / "processed" / "flood_masks")
