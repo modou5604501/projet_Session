@@ -2,15 +2,14 @@
 # Installation : pip install -r requirements.txt
 
 # === Géospatial ===
-geopandas==0.14.4
-rasterio==1.4.4
+geopandas==1.0.1
 shapely==2.0.4
 fiona==1.10.1
 pyproj==3.7.1
 
 # === Base de données ===
 psycopg2-binary==2.9.12
-sqlalchemy==2.0.51
+sqlalchemy==2.0.41
 geoalchemy2==0.20.0
 
 # === Web / Django ===
@@ -31,4 +30,3 @@ whitenoise==6.7.0
 numpy>=1.24
 requests>=2.31
 python-dotenv>=1.0
-tqdm>=4.66

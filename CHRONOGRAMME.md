@@ -132,7 +132,7 @@ gantt
 | Tâche | Fichier | Statut |
 |---|---|---|
 | Docker Compose multi-services | docker-compose.yml | ✅ PostGIS + pgAdmin + web |
-| Push GitHub complet (code + données) | GitHub | ✅ 17 commits, branche main |
+| Push GitHub complet (code + données) | GitHub | ✅ commits, branche master |
 | Rapport technique final | RAPPORT_FINAL.md | ✅ 9 sections, résultats réels |
 | Présentation orale | PRESENTATION_ORALE.md | ✅ 10 diapositives |
 | Déploiement Railway | railway.json + nixpacks.toml | ✅ Prêt à déployer |

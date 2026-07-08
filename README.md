@@ -191,7 +191,7 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
     ├── bornes_recharge_montreal.geojson  → Données Québec (Ville de Montréal)
     ├── arrondissements_montreal.geojson  → Données Québec (Ville de Montréal)
     ├── chargeurs_statistiques_2025.csv   → Données Québec (Ville de Montréal)
-    └── stm_traces_arrets.zip             → Données Québec (STM)
+    └── stm_sig/stm_arrets_sig.shp        → Données Québec (STM)
 
 [Phase 2 — Prétraitement]
     ├── Reprojection STM : NAD83 MTM8 → WGS84 (EPSG:4326)
@@ -248,7 +248,7 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | API REST | Django REST Framework | 3.17 | Sérialisation JSON/GeoJSON |
 | Base de données | PostgreSQL + PostGIS | 15 + 3.3 | Stockage spatial (Docker) |
 | Carte web | Leaflet.js | 1.9 | Carte interactive |
-| Analyse spatiale | GeoPandas | 0.14 | Import et traitement vecteur |
+| Analyse spatiale | GeoPandas | 1.0 | Import et traitement vecteur |
 | Coordonnées | PyProj | 3.7 | Reprojection CRS |
 | Conteneurisation | Docker + Compose | — | Déploiement reproductible |
 | Versionnement | Git + GitHub | — | Open source |

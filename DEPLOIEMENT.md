@@ -72,7 +72,8 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 
 ```bash
 cd src/web
-# Créer les tables
+
+# 1. Créer les tables PostGIS (bornes, couverture, arrondissements, métro)
 python manage.py shell -c "
 from django.db import connection
 import pathlib
@@ -82,14 +83,22 @@ with connection.cursor() as c:
 print('Tables créées.')
 "
 
-# Importer les données (télécharge depuis Données Québec)
+# 2. Importer toutes les couches (bornes + arrondissements + métro + buffers 500m)
 python manage.py shell -c "
 import sys; sys.path.insert(0, '../../preprocessing')
-from refresh_data import run_refresh
-r = run_refresh()
-print(r)
+from import_postgis import get_engine, import_bornes, import_arrondissements, import_metro, create_coverage_buffers, update_arrondissement_stats
+engine = get_engine()
+import_bornes(engine)
+import_arrondissements(engine)
+import_metro(engine)
+create_coverage_buffers(engine)
+update_arrondissement_stats(engine)
+print('Import complet.')
 "
 ```
+
+> **Note :** `run_refresh()` (mise à jour auto hebdomadaire) ne réimporte que les bornes.
+> Pour l'initialisation complète, il faut `import_postgis.py` qui importe aussi les arrondissements et les stations de métro.
 
 ---
 
@@ -136,9 +145,9 @@ ALLOWED_HOSTS=*.railway.app
 
 ## Mise à jour de l'application
 
-Chaque push sur la branche `main` de GitHub déclenche automatiquement un redéploiement Railway.
+Chaque push sur la branche `master` de GitHub déclenche automatiquement un redéploiement Railway.
 
 ```bash
-git push origin master:main
+git push origin master
 # Railway redéploie automatiquement en ~2 minutes
 ```
