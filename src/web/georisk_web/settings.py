@@ -4,50 +4,58 @@ Projet : Optimisation de l'accessibilité aux bornes de recharge électrique à 
 """
 
 import os
-from pathlib import Path
-
-# Fix PROJ conflit PostgreSQL local — doit être avant tout import géo
 import sys
-_proj_data = os.path.join(sys.prefix, "Lib", "site-packages", "rasterio", "proj_data")
-if os.path.isdir(_proj_data):
-    os.environ.setdefault("PROJ_DATA", _proj_data)
-    os.environ.setdefault("PROJ_LIB",  _proj_data)
+from pathlib import Path
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# GDAL / GEOS — DLLs bundlées dans le venv (Windows)
-# GeoDjango les cherche par nom court (gdal310, geos_c, etc.) ; on pointe
-# explicitement vers les DLLs hashées de shapely/rasterio.
-import glob as _glob
-
-def _first_dll(patterns):
-    for p in patterns:
-        hits = _glob.glob(p)
-        if hits:
-            return hits[0]
-    return None
-
-GDAL_LIBRARY_PATH = _first_dll([
-    str(Path(sys.prefix) / "Lib/site-packages/rasterio.libs/gdal*.dll"),
-    str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/gdal*.dll"),
-    r"C:/OSGeo4W/bin/gdal310.dll",
-])
-
-GEOS_LIBRARY_PATH = _first_dll([
-    str(Path(sys.prefix) / "Lib/site-packages/shapely.libs/geos_c*.dll"),
-    str(Path(sys.prefix) / "Lib/site-packages/rasterio.libs/geos_c*.dll"),
-    str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/geos_c*.dll"),
-    r"C:/OSGeo4W/bin/geos_c.dll",
-])
 PROJECT_ROOT = BASE_DIR.parent.parent   # GMQ580_projetsession/
+
+# ── GDAL/GEOS : Windows uniquement (Linux = bibliothèques système) ──
+if sys.platform == "win32":
+    import glob as _glob
+
+    def _first_dll(patterns):
+        for p in patterns:
+            hits = _glob.glob(p)
+            if hits:
+                return hits[0]
+        return None
+
+    # Fix PROJ avant tout import géo
+    _proj_data = os.path.join(sys.prefix, "Lib", "site-packages", "rasterio", "proj_data")
+    if os.path.isdir(_proj_data):
+        os.environ.setdefault("PROJ_DATA", _proj_data)
+        os.environ.setdefault("PROJ_LIB",  _proj_data)
+
+    GDAL_LIBRARY_PATH = _first_dll([
+        str(Path(sys.prefix) / "Lib/site-packages/rasterio.libs/gdal*.dll"),
+        str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/gdal*.dll"),
+        r"C:/OSGeo4W/bin/gdal310.dll",
+    ])
+    GEOS_LIBRARY_PATH = _first_dll([
+        str(Path(sys.prefix) / "Lib/site-packages/shapely.libs/geos_c*.dll"),
+        str(Path(sys.prefix) / "Lib/site-packages/rasterio.libs/geos_c*.dll"),
+        str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/geos_c*.dll"),
+        r"C:/OSGeo4W/bin/geos_c.dll",
+    ])
+else:
+    # Linux/Railway : laisser Django trouver les libs système
+    # Surcharger via env si nécessaire
+    if os.environ.get("GDAL_LIBRARY_PATH"):
+        GDAL_LIBRARY_PATH = os.environ["GDAL_LIBRARY_PATH"]
+    if os.environ.get("GEOS_LIBRARY_PATH"):
+        GEOS_LIBRARY_PATH = os.environ["GEOS_LIBRARY_PATH"]
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "dev-insecure-georisk-sentinel-2026-change-in-prod"
 )
 
-DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+DEBUG = os.environ.get("DEBUG", "True") == "True"
+
+_extra_hosts = os.environ.get("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"] + [h for h in _extra_hosts if h]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -65,6 +73,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -78,6 +87,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
+CORS_ALLOW_ALL_ORIGINS = not DEBUG
 
 ROOT_URLCONF = "georisk_web.urls"
 
@@ -99,17 +109,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "georisk_web.wsgi.application"
 
-# Base de données PostGIS (Docker sur port 5433)
-DATABASES = {
-    "default": {
-        "ENGINE":   "django.contrib.gis.db.backends.postgis",
-        "NAME":     os.environ.get("POSTGRES_DB",       "georisk"),
-        "USER":     os.environ.get("POSTGRES_USER",     "georisk_user"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "georisk2019"),
-        "HOST":     os.environ.get("POSTGRES_HOST",     "localhost"),
-        "PORT":     os.environ.get("POSTGRES_PORT",     "5433"),
+# Base de données PostGIS
+# Railway fournit DATABASE_URL, sinon on utilise les variables locales
+if os.environ.get("DATABASE_URL"):
+    _u = urlparse(os.environ["DATABASE_URL"])
+    DATABASES = {
+        "default": {
+            "ENGINE":   "django.contrib.gis.db.backends.postgis",
+            "NAME":     _u.path.lstrip("/"),
+            "USER":     _u.username,
+            "PASSWORD": _u.password,
+            "HOST":     _u.hostname,
+            "PORT":     _u.port or 5432,
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE":   "django.contrib.gis.db.backends.postgis",
+            "NAME":     os.environ.get("POSTGRES_DB",       "georisk"),
+            "USER":     os.environ.get("POSTGRES_USER",     "georisk_user"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "georisk2019"),
+            "HOST":     os.environ.get("POSTGRES_HOST",     "localhost"),
+            "PORT":     os.environ.get("POSTGRES_PORT",     "5433"),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -125,6 +149,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

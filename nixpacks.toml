@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["gdal", "geos", "proj"]
+
+[phases.install]
+cmds = ["pip install -r src/web/requirements_web.txt"]
+
+[start]
+cmd = "bash railway_start.sh"

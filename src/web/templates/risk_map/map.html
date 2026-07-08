@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GeoRisk Sentinel — Bornes de recharge Montréal</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/static/risk_map/manifest.json">
+  <meta name="theme-color" content="#0d1b2e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GeoRisk">
+  <link rel="apple-touch-icon" href="/static/risk_map/icon-192.svg">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -594,6 +604,12 @@ function toggleLeg() {
 function getCsrf() {
   const m = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)');
   return m ? m[2] : '';
+}
+
+// ── Service Worker (PWA) ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/risk_map/sw.js')
+    .catch(e => console.warn('SW non enregistré:', e));
 }
 </script>
 </body>
