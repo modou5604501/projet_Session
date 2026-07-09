@@ -158,9 +158,9 @@ gantt
 
 | Défi | Solution choisie |
 |---|---|
-| Données SAR Sentinel difficiles à obtenir | Pivot vers données ouvertes Ville de Montréal (immédiatement disponibles) |
+| Données d'imagerie satellitaire difficiles à obtenir | Pivot vers données ouvertes Ville de Montréal (immédiatement disponibles, licence CC-BY 4.0) |
 | GeoServer complexe à configurer | Django REST Framework + djangorestframework-gis (plus simple, même résultat) |
-| Modèle IA (U-Net) trop long à entraîner | Analyse spatiale PostGIS suffisante pour répondre à la question de recherche |
+| Données de revenu StatCan au format IVT non exploitable | Intégration des valeurs StatCan Recensement 2021 (revenu médian) pour l'analyse d'équité socio-économique |
 | Mises à jour manuelles fastidieuses | APScheduler + API CKAN Données Québec (refresh hebdomadaire automatique) |
 | Application inaccessible hors local | Déploiement Railway + PWA installable sur tablette |
 

@@ -22,20 +22,21 @@ if sys.platform == "win32":
                 return hits[0]
         return None
 
-    # Fix PROJ avant tout import géo
-    _proj_data = os.path.join(sys.prefix, "Lib", "site-packages", "rasterio", "proj_data")
-    if os.path.isdir(_proj_data):
+    # Fix PROJ avant tout import géo (pyproj ou fiona comme source de vérité)
+    try:
+        from pyproj.datadir import get_data_dir as _get_pyproj_dir
+        _proj_data = _get_pyproj_dir()
         os.environ.setdefault("PROJ_DATA", _proj_data)
         os.environ.setdefault("PROJ_LIB",  _proj_data)
+    except Exception:
+        pass
 
     GDAL_LIBRARY_PATH = _first_dll([
-        str(Path(sys.prefix) / "Lib/site-packages/rasterio.libs/gdal*.dll"),
         str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/gdal*.dll"),
         r"C:/OSGeo4W/bin/gdal310.dll",
     ])
     GEOS_LIBRARY_PATH = _first_dll([
         str(Path(sys.prefix) / "Lib/site-packages/shapely.libs/geos_c*.dll"),
-        str(Path(sys.prefix) / "Lib/site-packages/rasterio.libs/geos_c*.dll"),
         str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/geos_c*.dll"),
         r"C:/OSGeo4W/bin/geos_c.dll",
     ])
