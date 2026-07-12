@@ -1,4 +1,4 @@
-# Sources des données — GeoRisk Sentinel
+# Sources des données — GeoCharge Montréal
 ## Projet : Accessibilité aux bornes de recharge électrique à Montréal
 
 ---

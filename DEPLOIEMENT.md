@@ -1,4 +1,4 @@
-# Déploiement sur Railway — GeoRisk Sentinel
+# Déploiement sur Railway — GeoCharge Montréal
 
 ## Vue d'ensemble
 

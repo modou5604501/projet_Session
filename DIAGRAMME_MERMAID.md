@@ -1,4 +1,4 @@
-# Diagrammes Mermaid — GeoRisk Sentinel
+# Diagrammes Mermaid — GeoCharge Montréal
 ## Pour utilisation dans Draw.io / GitHub
 
 **Comment utiliser dans Draw.io :**
@@ -176,5 +176,5 @@ flowchart LR
 
 ---
 
-*GeoRisk Sentinel — GMQ580 Géomatique Informatique 2 — Été 2026 — Université de Sherbrooke*
+*GeoCharge Montréal — GMQ580 Géomatique Informatique 2 — Été 2026 — Université de Sherbrooke*
 *Équipe : Modou Khabane Mbaye & Rahina Djelila Sarah Bagre*
