@@ -1,4 +1,4 @@
--- GeoRisk Sentinel — Création des tables PostGIS
+-- GeoCharge Montréal — Création des tables PostGIS
 -- Projet : Bornes de recharge électrique à Montréal
 
 CREATE EXTENSION IF NOT EXISTS postgis;

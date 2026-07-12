@@ -42,7 +42,7 @@ services:
       POSTGRES_PASSWORD: georisk2019
       POSTGRES_HOST: postgis
       POSTGRES_PORT: "5432"
-      DJANGO_SECRET_KEY: "prod-change-me-georisk-sentinel-2026"
+      DJANGO_SECRET_KEY: "prod-change-me-geocharge-montreal-2026"
     ports:
       - "8000:8000"
     depends_on:
