@@ -1,4 +1,4 @@
-# GeoRisk Sentinel — Dépendances Python
+# GeoCharge Montréal — Dépendances Python
 # Installation : pip install -r requirements.txt
 
 # === Géospatial ===

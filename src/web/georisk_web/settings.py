@@ -1,5 +1,5 @@
 """
-Django settings for GeoRisk Sentinel
+Django settings for GeoCharge Montréal
 Projet : Optimisation de l'accessibilité aux bornes de recharge électrique à Montréal
 """
 

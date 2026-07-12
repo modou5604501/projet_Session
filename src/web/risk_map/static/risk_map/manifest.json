@@ -1,6 +1,6 @@
 {
-  "name": "GeoRisk Sentinel — Bornes de recharge",
-  "short_name": "GeoRisk",
+  "name": "GeoCharge Montréal — Bornes de recharge",
+  "short_name": "GeoCharge",
   "description": "Tableau de bord d'accessibilité aux bornes de recharge électrique à Montréal",
   "start_url": "/",
   "display": "standalone",
