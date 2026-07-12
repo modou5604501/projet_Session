@@ -1,4 +1,4 @@
-# Chronogramme — GeoRisk Sentinel
+# Chronogramme — GeoCharge Montréal
 ## GMQ580 — Géomatique Informatique 2 — Été 2026
 
 > **Contrainte de livraison : avant le 15 juillet 2026**
@@ -23,7 +23,7 @@
 
 ```mermaid
 gantt
-    title GeoRisk Sentinel — Chronogramme Sprint (24 juin – 14 juillet 2026)
+    title GeoCharge Montréal — Chronogramme Sprint (24 juin – 14 juillet 2026)
     dateFormat  YYYY-MM-DD
     axisFormat  %d %b
 

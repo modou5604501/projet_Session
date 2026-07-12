@@ -1,4 +1,4 @@
-# GeoRisk Sentinel
+# GeoCharge Montréal
 ## Accessibilité aux bornes de recharge électrique à Montréal
 
 **Cours :** GMQ580 — Géomatique Informatique 2 · Été 2026 · Université de Sherbrooke
