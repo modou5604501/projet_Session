@@ -15,10 +15,12 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-DB_URL = os.getenv(
+_raw_db_url = os.getenv(
     "DATABASE_URL",
     "postgresql://georisk_user:georisk2019@localhost:5433/georisk"
 )
+DB_URL = _raw_db_url.replace("postgres://", "postgresql://", 1) \
+    if _raw_db_url.startswith("postgres://") else _raw_db_url
 
 # URL CKAN API — Données Québec / Ville de Montréal
 CKAN_API = "https://donnees.montreal.ca/api/3/action/package_show?id=bornes-de-recharge-electrique"

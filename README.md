@@ -84,7 +84,8 @@ git clone https://github.com/modou5604501/projet_Session.git
 cd projet_Session
 docker-compose up -d postgis
 python -m venv venv && pip install -r requirements.txt
-python src/preprocessing/import_postgis.py
+python src/preprocessing/import_postgis.py   # import + buffers 500m + stats
+python src/preprocessing/gap_analysis.py     # zones sous-desservies → GeoJSON
 cd src/web && python manage.py runserver
 # Tableau de bord : http://localhost:8000
 ```

@@ -12,3 +12,4 @@ whitenoise==6.7.0
 # Requis par refresh_data.py (scheduler + bouton mise à jour)
 geopandas==1.0.1
 sqlalchemy==2.0.41
+geoalchemy2==0.20.0

@@ -7,10 +7,12 @@ par arrondissement.
 import os
 from sqlalchemy import create_engine, text
 
-DB_URL = os.getenv(
+_raw_db_url = os.getenv(
     "DATABASE_URL",
     "postgresql://georisk_user:georisk2019@localhost:5433/georisk"
 )
+DB_URL = _raw_db_url.replace("postgres://", "postgresql://", 1) \
+    if _raw_db_url.startswith("postgres://") else _raw_db_url
 
 
 def run(engine):
