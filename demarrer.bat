@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================
-REM  GeoRisk Sentinel — Script de demarrage (Windows)
+REM  GeoCharge Montreal — Script de demarrage (Windows)
 REM  Projet : Bornes de recharge electrique - Montreal
 REM  Prerequis : Docker Desktop en cours d'execution
 REM              Python 3.10+ dans le PATH ou venv actif
@@ -8,7 +8,7 @@ REM ============================================================
 
 echo.
 echo ============================================================
-echo  GeoRisk Sentinel - Bornes de recharge Montreal
+echo  GeoCharge Montreal - Bornes de recharge Montreal
 echo  Demarrage de l'infrastructure...
 echo ============================================================
 echo.

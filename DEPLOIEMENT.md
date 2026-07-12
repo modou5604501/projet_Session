@@ -121,7 +121,7 @@ Le dashboard est accessible à cette URL.
 1. Ouvrir l'URL Railway dans **Safari (iPad)** ou **Chrome (Android)**
 2. Appuyer sur le bouton **Partager** (Safari) ou **⋮** (Chrome)
 3. Choisir **"Ajouter à l'écran d'accueil"** / **"Installer l'application"**
-4. L'icône GeoRisk Sentinel apparaît sur l'écran d'accueil
+4. L'icône GeoCharge Montréal apparaît sur l'écran d'accueil
 5. L'application s'ouvre en plein écran, sans barre de navigation du navigateur
 
 ### Fonctionnalités sur tablette :
