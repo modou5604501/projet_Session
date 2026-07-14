@@ -2,6 +2,7 @@ import sys
 import os
 import threading
 from django.shortcuts import render
+import pandas as pd
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -100,3 +101,45 @@ def refresh_status(request):
         "running":     _refresh_status["running"],
         "last_result": _refresh_status["last_result"],
     })
+
+
+@api_view(["GET"])
+def priority_zones(request):
+    """Classe les arrondissements selon un score de priorite de developpement."""
+    csv_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "vectors", "priorites_arrondissements.csv")
+    )
+
+    if os.path.exists(csv_path):
+        df = pd.read_csv(csv_path)
+        records = df.to_dict(orient="records")
+        for rec in records:
+            rec["rang"] = int(rec.get("rang", 0))
+            rec["score_priorite"] = round(float(rec.get("score_priorite", 0.0)), 4)
+
+        return Response({
+            "count": len(records),
+            "source": "precomputed_csv_with_road_network",
+            "weights": {
+                "deficit_couverture": 0.25,
+                "distance_reseau": 0.25,
+                "demographie": 0.20,
+                "potentiel_demande": 0.15,
+                "pression_equipement": 0.10,
+                "criticite": 0.05,
+            },
+            "results": records,
+        })
+
+    return Response(
+        {
+            "count": 0,
+            "source": "missing_precomputed_priorities",
+            "message": (
+                "Le fichier data/vectors/priorites_arrondissements.csv est absent. "
+                "Executez d'abord: python src/preprocessing/prioritization_analysis.py"
+            ),
+            "results": [],
+        },
+        status=503,
+    )

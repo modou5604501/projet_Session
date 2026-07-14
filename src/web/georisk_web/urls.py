@@ -14,6 +14,7 @@ urlpatterns = [
     path("",                      views.map_view,        name="map"),
     path("api/",                  include(router.urls)),
     path("api/coverage-summary/", views.coverage_summary, name="coverage-summary"),
+    path("api/priorites/",        views.priority_zones,   name="priority-zones"),
     path("api/refresh/",          views.trigger_refresh,  name="trigger-refresh"),
     path("api/refresh/status/",   views.refresh_status,   name="refresh-status"),
 ]

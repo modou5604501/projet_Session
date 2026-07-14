@@ -7,6 +7,8 @@ rasterio==1.4.4
 shapely==2.0.4
 fiona==1.10.1
 pyproj==3.7.1
+osmnx>=1.9.4
+networkx>=3.2
 
 # === Base de données ===
 psycopg2-binary==2.9.12
@@ -29,6 +31,7 @@ whitenoise==6.7.0
 
 # === Utilitaires ===
 numpy>=1.24
+pandas>=2.0
 requests>=2.31
 python-dotenv>=1.0
 tqdm>=4.66

@@ -206,8 +206,14 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
     ├── ST_Difference   → zones NON couvertes (sous-desservies)
     └── Calcul % couverture par arrondissement
 
+[Phase 3b — Priorisation multicritère]
+    ├── Données démographiques (RData local RMR_CT/Habkm2)
+    ├── Distances sur réseau routier (OSMnx + NetworkX)
+    ├── Score de priorité par arrondissement
+    └── Export : priorites_arrondissements.csv / .geojson
+
 [Phase 4 — Application web (Django + Leaflet)]
-    ├── API REST : /api/bornes/, /api/couverture/, /api/arrondissements/, /api/metro/
+    ├── API REST : /api/bornes/, /api/couverture/, /api/arrondissements/, /api/metro/, /api/priorites/
     ├── Dashboard dark theme (CARTO Dark Matter) :
     │     ├── Couche 1 : bornes existantes (points cyan)
     │     ├── Couche 2 : zones couvertes à 500m (bleu transparent)
@@ -249,6 +255,7 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Base de données | PostgreSQL + PostGIS | 15 + 3.3 | Stockage spatial (Docker) |
 | Carte web | Leaflet.js | 1.9 | Carte interactive |
 | Analyse spatiale | GeoPandas | 0.14 | Import et traitement vecteur |
+| Analyse réseau routier | OSMnx + NetworkX | 2.x + 3.x | Distances sur réseau routier |
 | Coordonnées | PyProj | 3.7 | Reprojection CRS |
 | Conteneurisation | Docker + Compose | — | Déploiement reproductible |
 | Versionnement | Git + GitHub | — | Open source |
@@ -264,10 +271,15 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Données STM (métro + bus) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | ✅ Dans le repo |
 | Statistiques utilisation 2025 | [`data/vectors/chargeurs_statistiques_2025.csv`](data/vectors/chargeurs_statistiques_2025.csv) | ✅ Dans le repo |
 | Zones sous-desservies (résultat gap analysis) | [`data/vectors/zones_sous_desservies.geojson`](data/vectors/zones_sous_desservies.geojson) | ✅ Dans le repo |
+| Données démographiques (export) | [`data/vectors/demographie_quebec.geojson`](data/vectors/demographie_quebec.geojson) | ✅ Générable |
+| Priorisation (export CSV) | [`data/vectors/priorites_arrondissements.csv`](data/vectors/priorites_arrondissements.csv) | ✅ Générable |
+| Priorisation (export GeoJSON) | [`data/vectors/priorites_arrondissements.geojson`](data/vectors/priorites_arrondissements.geojson) | ✅ Générable |
 | Script téléchargement données | [`src/acquisition/download_bornes.py`](src/acquisition/download_bornes.py) | ✅ Écrit |
+| Script démographie Québec (RData/Données Québec/Cancensus) | [`src/acquisition/download_demographie_quebec.R`](src/acquisition/download_demographie_quebec.R) | ✅ Écrit |
 | Script import PostGIS | [`src/preprocessing/import_postgis.py`](src/preprocessing/import_postgis.py) | ✅ Écrit |
 | Script analyse buffer 500m | [`src/preprocessing/buffer_analysis.py`](src/preprocessing/buffer_analysis.py) | ✅ Écrit |
 | Script zones sous-desservies | [`src/preprocessing/gap_analysis.py`](src/preprocessing/gap_analysis.py) | ✅ Écrit |
+| Script priorisation multicritère | [`src/preprocessing/prioritization_analysis.py`](src/preprocessing/prioritization_analysis.py) | ✅ Écrit |
 | Script mise à jour automatique | [`src/preprocessing/refresh_data.py`](src/preprocessing/refresh_data.py) | ✅ Écrit |
 | Modèles Django (4 tables) | [`src/web/risk_map/models.py`](src/web/risk_map/models.py) | ✅ Écrit |
 | API REST GeoJSON + endpoints refresh | [`src/web/risk_map/views.py`](src/web/risk_map/views.py) | ✅ Écrit |
@@ -334,6 +346,7 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 
 - Docker Desktop (Engine en cours d'exécution)
 - Python 3.10 avec venv
+- R (Rscript) pour générer la couche démographique
 - Git
 
 ### Démarrage rapide
@@ -348,14 +361,26 @@ docker-compose up -d postgis pgadmin
 
 # 3. Installer les dépendances Python
 python -m venv venv
-pip install -r requirements.txt
+venv\Scripts\python -m pip install -r requirements.txt
 
 # 4. Importer les données
-python src/preprocessing/import_postgis.py
+venv\Scripts\python src/preprocessing/import_postgis.py
 
-# 5. Lancer le serveur Django
+# 5. Générer la démographie (source prioritaire: RData local)
+Rscript src/acquisition/download_demographie_quebec.R
+
+# 6. Calculer les priorités
+venv\Scripts\python src/preprocessing/prioritization_analysis.py
+
+# 7. Lancer le serveur Django
 cd src/web
-python manage.py runserver 0.0.0.0:8000
+..\..\venv\Scripts\python manage.py runserver 0.0.0.0:8000
+```
+
+Si `Rscript` n'est pas dans le `PATH` sous Windows, utilisez son chemin complet, par exemple:
+
+```powershell
+"C:\Program Files\R\R-4.5.0\bin\Rscript.exe" src/acquisition/download_demographie_quebec.R
 ```
 
 **OU — Script tout-en-un (Windows) :**
@@ -378,8 +403,69 @@ Carte interactive :        http://localhost:8000
 API bornes :               http://localhost:8000/api/bornes/
 API zones couverture :     http://localhost:8000/api/couverture/
 API arrondissements :      http://localhost:8000/api/arrondissements/
+API priorites zones :      http://localhost:8000/api/priorites/
 pgAdmin :                  http://localhost:5050
 ```
+
+### Priorisation des zones a developper
+
+Le projet inclut un score multicritere pour identifier les arrondissements prioritaires:
+
+- deficit de couverture
+- distance via reseau routier vers la borne la plus proche (graphe OSM)
+- demographie Quebec issue du fichier RData (RMR_CT/Habkm2) ou Donnees Quebec
+- pression d'equipement (moins de bornes = priorite plus haute)
+- potentiel de demande (proxy: nombre de stations metro)
+- criticite de sous-desserte (<30% de couverture)
+
+Ponderation du score:
+
+- deficit de couverture: 25%
+- distance reseau routier: 25%
+- demographie: 20%
+- potentiel de demande: 15%
+- pression d'equipement: 10%
+- criticite: 5%
+
+Preparation des donnees demographiques Quebec:
+
+Source prioritaire configuree dans le projet:
+
+- `c:/Users/Utilisateur/Desktop/hiver2026/Eté 2026/Démographie spatiale/labo3/Data/DataRMR_MTL.Rdata`
+
+Cette source est lue via l'objet `RMR_CT` et la variable `Habkm2` (densite d'habitants).
+Si besoin, vous pouvez surcharger le chemin avec `DEMOGRAPHIE_RDATA_PATH`.
+
+L'endpoint `/api/priorites/` lit le resultat pre-calcule depuis:
+
+- `data/vectors/priorites_arrondissements.csv`
+
+S'il est absent, l'API retourne une erreur explicite demandant d'executer le script de priorisation.
+
+1. Definir la source Donnees Quebec:
+   - soit `DQ_DEMOGRAPHIE_URL` (url directe d'une ressource GeoJSON/SHP/GPKG)
+   - soit `DQ_DEMOGRAPHIE_DATASET_ID` (identifiant CKAN du dataset)
+2. Executer le script R:
+
+    Rscript src/acquisition/download_demographie_quebec.R
+
+Le script genere:
+
+- data/vectors/demographie_quebec.geojson
+
+Note: aucune valeur demographique par defaut n'est fabriquee. Si la donnee manque
+ou est incomplete, le calcul de priorisation echoue explicitement.
+
+Script d'analyse:
+
+```bash
+python src/preprocessing/prioritization_analysis.py
+```
+
+Sorties generees:
+
+- `data/vectors/priorites_arrondissements.csv`
+- `data/vectors/priorites_arrondissements.geojson`
 
 ---
 
