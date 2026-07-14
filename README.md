@@ -10,6 +10,18 @@
 
 ---
 
+## Documents du projet
+
+| Document | Contenu |
+|---|---|
+| [RAPPORT_FINAL.md](RAPPORT_FINAL.md) | Rapport technique complet — méthodologie, algorithmes SQL, résultats, réponses aux questions du professeur |
+| [PRESENTATION_ORALE.md](PRESENTATION_ORALE.md) | Plan de présentation orale 10 min + réponses préparées aux questions |
+| [data/SOURCES.md](data/SOURCES.md) | Fiche de métadonnées de toutes les couches (citations, CRS, filtrage) |
+| [DIAGRAMME_MERMAID.md](DIAGRAMME_MERMAID.md) | Diagrammes architecture, pipeline, modèle ER |
+| [DEPLOIEMENT.md](DEPLOIEMENT.md) | Instructions déploiement Railway (production) |
+
+---
+
 ## Problématique
 
 La distribution des bornes de recharge publiques à Montréal est inégale : les arrondissements centraux concentrent la majorité des installations tandis que les secteurs périphériques en manquent. Il n'existe pas d'outil permettant de quantifier ces disparités ni d'orienter les décisions d'investissement.
@@ -45,7 +57,7 @@ flowchart TD
     subgraph ACQ["ACQUISITION — Données Québec (CC-BY 4.0)"]
         A1[("Bornes de recharge\n2 412 bornes · GeoJSON")]
         A2[("Arrondissements\n34 polygones · GeoJSON")]
-        A3[("Stations de métro STM\n68 stations · Shapefile")]
+        A3[("Stations de métro STM\n72 stations · GeoJSON")]
         A4[("Parcs et espaces verts\n1 541 parcs · GeoJSON")]
         A5[("Établissements alimentaires\n3 010 épiceries · GeoJSON")]
         A6[("Réseau routier — Géobase\n17 540 tronçons · GeoJSON")]
@@ -54,7 +66,7 @@ flowchart TD
     subgraph PRE["PRÉTRAITEMENT — import_postgis.py"]
         B1["Lecture & validation\nGeoPandas + Shapely"]
         B2["Reprojection STM\nNAD83 MTM8 → WGS84"]
-        B3["Import PostGIS\n6 tables spatiales"]
+        B3["Import PostGIS\n7 tables spatiales"]
     end
 
     subgraph ANA["ANALYSE SPATIALE — PostGIS 15 / EPSG:32188"]
@@ -64,9 +76,9 @@ flowchart TD
     end
 
     subgraph WEB["APPLICATION WEB — Django 5.2 + Leaflet.js"]
-        D1["API REST · 16 endpoints GeoJSON"]
+        D1["API REST · 18 endpoints GeoJSON"]
         D2["Tableau de bord dark theme\nChoroplèthe · Couches · Requêtes"]
-        D3["Panel gestionnaire\nParcs · Épiceries · Score · Corrélation"]
+        D3["Panel gestionnaire\nParcs · Épiceries · Score · Corrélation · Intermodalité STM"]
     end
 
     A1 & A2 & A3 & A4 & A5 & A6 --> B1
@@ -89,15 +101,47 @@ La reprojection en EPSG:32188 (NAD83 / MTM zone 8) garantit la précision métri
 - **Couche parcs** : 1 541 parcs et espaces verts de l'île de Montréal
 - **Couche épiceries** : 3 010 établissements alimentaires (supermarchés, épiceries, boucheries)
 - **Requêtes spatiales PostGIS** (4 requêtes classiques) : N bornes les plus proches (KNN `<->`), bornes dans un rayon (`ST_DWithin`), stations de métro sans borne (`NOT EXISTS`), arrondissements peu équipés
-- **Outils gestionnaire** (4 analyses décisionnelles) :
+- **Outils gestionnaire** (5 analyses décisionnelles) :
   - Parcs sans couverture adéquate (< N bornes à 500 m)
   - Épiceries sans borne à proximité (< rayon paramétrable)
   - Score de priorité composite par arrondissement (couverture 35% + densité 25% + motorisation 15% + équité 15% + faible revenu 10%)
   - Corrélation multi-variable : couverture vs revenu, densité, taux de motorisation, taux de faible revenu
+  - Intermodalité STM par ligne de métro : couverture park-and-charge (NOT EXISTS + ST_DWithin)
 - **Analyse d'équité** : scatter plot couverture vs revenu médian (StatCan 2021), coefficient de Pearson, droite de régression
 - **Simulation** : slider de seuil de sous-desserte avec recoloration de la carte en temps réel
 - **Mise à jour automatique** : re-téléchargement hebdomadaire depuis Données Québec (APScheduler + API CKAN)
 - **PWA** : installable sur tablette (manifest.json + service worker)
+
+---
+
+---
+
+## Méthodologie — Comment déterminer une zone à développer ?
+
+La méthode combine **trois étapes complémentaires** (détail complet : [RAPPORT_FINAL.md §3.7](RAPPORT_FINAL.md#37-détermination-des-zones-à-développer--méthode-en-trois-étapes)) :
+
+| Étape | Outil | Question répondue |
+|---|---|---|
+| **A — Identifier géographiquement** | `gap_analysis.py` → `ST_Difference` → polygones rouges sur la carte | *Où* manque-t-il de couverture ? |
+| **B — Prioriser l'arrondissement** | `/api/priorite/` → score composite 0–100 (5 critères pondérés) | *Lequel traiter en premier ?* |
+| **C — Localiser précisément** | Intersection score + polygones gap | *Où exactement* installer ? |
+
+**Exemple concret :** Montréal-Nord (37 k$ revenu, 10 200 hab/km², 38 % faible revenu) obtient un score de **≈ 72/100** malgré une couverture de 25 %. L'Île-Bizard (8,8 % de couverture mais 520 hab/km², 82 k$) ne score que **≈ 50/100**. La méthode priorise l'**impact humain** sur la simple étendue géographique.
+
+---
+
+## Réponses aux questions du professeur
+
+> Réponses détaillées et chiffrées dans [RAPPORT_FINAL.md §3.7–3.10](RAPPORT_FINAL.md) et [PRESENTATION_ORALE.md — Réponses préparées](PRESENTATION_ORALE.md)
+
+| Question | Réponse synthétique |
+|---|---|
+| Pourquoi ne pas tenir compte du réseau routier ? | Le réseau routier Géobase (17 540 tronçons) est intégré comme couche visuelle. Le buffer 500 m reste l'indicateur de couverture : il représente la zone de marche depuis la borne (standard INSPQ/Transports Canada). Les isochrones de conduite (pgRouting) sont identifiées comme perspective. |
+| Pourquoi inclure les données STM ? | Logique park-and-charge : 7/72 stations sans borne à 500 m (ligne Jaune : 33 %). Requête `NOT EXISTS + ST_DWithin` par ligne (outil gestionnaire ⑤). |
+| Est-ce lié au profil de la population ? | Oui — corrélation Pearson (r positif revenu/couverture) confirme une inéquité structurelle mesurée sur 19 arrondissements (StatCan 2021). |
+| Est-ce lié à la proximité des loisirs ? | Oui — requête LEFT JOIN : parcs périphériques (Beaconsfield, Senneville) ont 0 borne à 500 m. |
+| Est-ce la présence de magasins ? | Oui — requête CROSS JOIN LATERAL KNN : épiceries de l'ouest montréalais à > 2 000 m de la borne la plus proche. |
+| Comment déterminer une zone à développer ? | 3 étapes : gap géographique (ST_Difference) + score composite (5 critères) + localisation dans l'arrondissement prioritaire. |
 
 ---
 
