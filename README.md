@@ -27,7 +27,7 @@ Toutes les données sont disponibles dans le dossier [`data/`](data/) de ce dép
 | Bornes de recharge publiques (2 412 bornes) | [`data/vectors/bornes_recharge_montreal.geojson`](data/vectors/bornes_recharge_montreal.geojson) | Données Québec — Ville de Montréal |
 | Statistiques d'utilisation 2025 | [`data/vectors/chargeurs_statistiques_2025.csv`](data/vectors/chargeurs_statistiques_2025.csv) | Données Québec — Ville de Montréal |
 | Limites des arrondissements | [`data/vectors/arrondissements_montreal.geojson`](data/vectors/arrondissements_montreal.geojson) | Données Québec — Ville de Montréal |
-| Stations de métro (STM) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | Données Québec — STM |
+| Stations de métro STM (72 stations) | [`data/vectors/stations_metro_stm.geojson`](data/vectors/stations_metro_stm.geojson) | Données Québec — STM (lignes Verte, Orange, Bleue, Jaune) |
 | **Parcs et espaces verts (1 541 parcs)** | [`data/vectors/parcs_montreal.geojson`](data/vectors/parcs_montreal.geojson) | Données Québec — Ville de Montréal |
 | **Établissements alimentaires (3 010 épiceries)** | [`data/vectors/epiceries_montreal.geojson`](data/vectors/epiceries_montreal.geojson) | Données Québec — Ville de Montréal |
 | Référentiel concordance quartiers ↔ arrondissements | [`data/quartiers_reference_habitation.csv`](data/quartiers_reference_habitation.csv) | Données Québec — StatCan Recensement 2021 |
