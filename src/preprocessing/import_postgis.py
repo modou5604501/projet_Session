@@ -164,11 +164,49 @@ def update_arrondissement_stats(engine):
     print("Statistiques arrondissements mises à jour")
 
 
+def import_parcs(engine):
+    path = os.path.join(DATA_DIR, "parcs_montreal.geojson")
+    if not os.path.exists(path):
+        print("parcs_montreal.geojson introuvable — import ignoré")
+        return
+    gdf = gpd.read_file(path)
+    gdf = gdf.to_crs(epsg=4326)
+    gdf.columns = [c.lower() for c in gdf.columns]
+    gdf = gdf[["nom", "superficie_ha", "typo", "geometry"]].copy()
+    gdf = gdf.rename_geometry("geom")
+
+    with engine.connect() as conn:
+        conn.execute(text("TRUNCATE parcs"))
+        conn.commit()
+    gdf.to_postgis("parcs", engine, if_exists="append", index=False, chunksize=200)
+    print(f"Parcs importés : {len(gdf)} entités")
+
+
+def import_epiceries(engine):
+    path = os.path.join(DATA_DIR, "epiceries_montreal.geojson")
+    if not os.path.exists(path):
+        print("epiceries_montreal.geojson introuvable — import ignoré")
+        return
+    gdf = gpd.read_file(path)
+    gdf = gdf.to_crs(epsg=4326)
+    gdf.columns = [c.lower() for c in gdf.columns]
+    gdf = gdf[["nom", "type", "adresse", "geometry"]].copy()
+    gdf = gdf.rename_geometry("geom")
+
+    with engine.connect() as conn:
+        conn.execute(text("TRUNCATE epiceries"))
+        conn.commit()
+    gdf.to_postgis("epiceries", engine, if_exists="append", index=False, chunksize=500)
+    print(f"Épiceries importées : {len(gdf)} entités")
+
+
 if __name__ == "__main__":
     engine = get_engine()
     import_bornes(engine)
     import_arrondissements(engine)
     import_metro(engine)
+    import_parcs(engine)
+    import_epiceries(engine)
     create_coverage_buffers(engine)
     update_arrondissement_stats(engine)
     print("Import terminé.")

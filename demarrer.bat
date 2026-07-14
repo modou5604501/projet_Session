@@ -22,7 +22,8 @@ timeout /t 15 /nobreak > nul
 
 REM Importer les donnees dans PostGIS
 echo.
-echo Import des donnees Montreal dans PostGIS (bornes + buffers 500m + stats)...
+echo Import des donnees Montreal dans PostGIS
+echo (bornes + arrondissements + metro + parcs + epiceries + buffers 500m + stats)...
 python src\preprocessing\import_postgis.py
 
 echo.

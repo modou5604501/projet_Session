@@ -28,7 +28,9 @@ Toutes les données sont disponibles dans le dossier [`data/`](data/) de ce dép
 | Statistiques d'utilisation 2025 | [`data/vectors/chargeurs_statistiques_2025.csv`](data/vectors/chargeurs_statistiques_2025.csv) | Données Québec — Ville de Montréal |
 | Limites des arrondissements | [`data/vectors/arrondissements_montreal.geojson`](data/vectors/arrondissements_montreal.geojson) | Données Québec — Ville de Montréal |
 | Stations de métro (STM) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | Données Québec — STM |
-| Référentiel quartiers / revenu médian | [`data/quartiers_reference_habitation.csv`](data/quartiers_reference_habitation.csv) | Données Québec — StatCan Recensement 2021 |
+| **Parcs et espaces verts (1 541 parcs)** | [`data/vectors/parcs_montreal.geojson`](data/vectors/parcs_montreal.geojson) | Données Québec — Ville de Montréal |
+| **Établissements alimentaires (3 010 épiceries)** | [`data/vectors/epiceries_montreal.geojson`](data/vectors/epiceries_montreal.geojson) | Données Québec — Ville de Montréal |
+| Référentiel quartiers / profil socio-démographique | [`data/quartiers_reference_habitation.csv`](data/quartiers_reference_habitation.csv) | Données Québec — StatCan Recensement 2021 |
 
 Les zones sous-desservies calculées par l'analyse sont disponibles dans [`data/vectors/zones_sous_desservies.geojson`](data/vectors/zones_sous_desservies.geojson).
 
@@ -55,8 +57,15 @@ La reprojection en EPSG:32188 (NAD83 / MTM zone 8) garantit la précision métri
 
 - **Choroplèthe** : taux de couverture à 500 m par arrondissement (vert ≥ 60 % · jaune 30-60 % · orange 15-30 % · rouge < 15 %)
 - **Couche zones non couvertes** : zones géographiques sans borne issues de `gap_analysis.py`
-- **Requêtes spatiales PostGIS** (4 requêtes interactives) : N bornes les plus proches (KNN `<->`), bornes dans un rayon (`ST_DWithin`), stations de métro sans borne (`NOT EXISTS`), arrondissements peu équipés
-- **Analyse d'équité** : scatter plot couverture vs revenu médian (StatCan 2021), coefficient de Pearson, droite de régression, interprétation automatique
+- **Couche parcs** : 1 541 parcs et espaces verts de l'île de Montréal
+- **Couche épiceries** : 3 010 établissements alimentaires (supermarchés, épiceries, boucheries)
+- **Requêtes spatiales PostGIS** (4 requêtes classiques) : N bornes les plus proches (KNN `<->`), bornes dans un rayon (`ST_DWithin`), stations de métro sans borne (`NOT EXISTS`), arrondissements peu équipés
+- **Outils gestionnaire** (4 analyses décisionnelles) :
+  - Parcs sans couverture adéquate (< N bornes à 500 m)
+  - Épiceries sans borne à proximité (< rayon paramétrable)
+  - Score de priorité composite par arrondissement (couverture 35% + densité 25% + motorisation 15% + équité 15% + faible revenu 10%)
+  - Corrélation multi-variable : couverture vs revenu, densité, taux de motorisation, taux de faible revenu
+- **Analyse d'équité** : scatter plot couverture vs revenu médian (StatCan 2021), coefficient de Pearson, droite de régression
 - **Simulation** : slider de seuil de sous-desserte avec recoloration de la carte en temps réel
 - **Mise à jour automatique** : re-téléchargement hebdomadaire depuis Données Québec (APScheduler + API CKAN)
 - **PWA** : installable sur tablette (manifest.json + service worker)

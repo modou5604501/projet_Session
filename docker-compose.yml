@@ -11,7 +11,7 @@ services:
       - "5433:5432"
     volumes:
       - postgis_data:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
+      - ./sql:/docker-entrypoint-initdb.d   # 01_create_tables.sql + 02_add_poi_tables.sql
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U georisk_user -d georisk"]

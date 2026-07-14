@@ -1,6 +1,6 @@
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from rest_framework import serializers
-from .models import BorneRecharge, ZoneCouverture, Arrondissement, StationMetro
+from .models import BorneRecharge, ZoneCouverture, Arrondissement, StationMetro, Parc, Epicerie
 
 
 class BorneRechargeSerializer(GeoFeatureModelSerializer):
@@ -29,3 +29,17 @@ class StationMetroSerializer(GeoFeatureModelSerializer):
         model     = StationMetro
         geo_field = "geom"
         fields    = ["id", "nom", "ligne"]
+
+
+class ParcSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model     = Parc
+        geo_field = "geom"
+        fields    = ["id", "nom", "superficie_ha", "typo"]
+
+
+class EpicerieSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model     = Epicerie
+        geo_field = "geom"
+        fields    = ["id", "nom", "type", "adresse"]

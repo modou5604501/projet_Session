@@ -55,3 +55,31 @@ class StationMetro(models.Model):
 
     def __str__(self):
         return f"{self.nom} ({self.ligne})"
+
+
+class Parc(models.Model):
+    nom          = models.CharField(max_length=200, null=True, blank=True)
+    superficie_ha = models.FloatField(default=0)
+    typo         = models.CharField(max_length=100, null=True, blank=True)
+    geom         = models.PointField(srid=4326)
+
+    class Meta:
+        db_table = "parcs"
+        managed  = False
+
+    def __str__(self):
+        return self.nom or "Parc"
+
+
+class Epicerie(models.Model):
+    nom     = models.CharField(max_length=200, null=True, blank=True)
+    type    = models.CharField(max_length=100, null=True, blank=True)
+    adresse = models.CharField(max_length=300, null=True, blank=True)
+    geom    = models.PointField(srid=4326)
+
+    class Meta:
+        db_table = "epiceries"
+        managed  = False
+
+    def __str__(self):
+        return self.nom or "Épicerie"

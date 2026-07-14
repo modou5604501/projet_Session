@@ -395,6 +395,7 @@
     <button class="nb" title="À propos du projet" onclick="showAbout()">ℹ</button>
     <button class="nb" title="Requêtes spatiales (PostGIS)" id="nb-queries" onclick="toggleQueries()">🔍</button>
     <button class="nb" title="Analyse d'équité socio-économique" id="nb-equity" onclick="showEquity()">📈</button>
+    <button class="nb" title="Outils gestionnaire : parcs, épiceries, priorité" id="nb-gestionnaire" onclick="showGestionnaire()">🏛</button>
   </nav>
 
   <!-- Carte -->
@@ -423,6 +424,14 @@
       <label class="lr">
         <input type="checkbox" id="tog-gaps" checked>
         <span class="sq" style="background:#ff2d55;opacity:.5;border-radius:2px;"></span> Zones non couvertes
+      </label>
+      <label class="lr">
+        <input type="checkbox" id="tog-parcs">
+        <span class="dot" style="background:#00c851;"></span> Parcs (1 541)
+      </label>
+      <label class="lr">
+        <input type="checkbox" id="tog-epiceries">
+        <span class="dot" style="background:#ffbb33;"></span> Épiceries (3 010)
       </label>
       <div class="fp-title" style="margin-top:10px;">Fond</div>
       <div class="bm-row">
@@ -537,6 +546,57 @@
         <span style="color:var(--dim);font-style:italic;">⟳ Chargement…</span>
       </div>
       <div id="eq-interp" class="eq-interp"></div>
+    </div>
+
+    <!-- Panel gestionnaire -->
+    <div class="fp" id="fp-gestionnaire" style="display:none;width:360px;max-height:80vh;overflow-y:auto;">
+      <div class="fp-title">
+        🏛 Outils gestionnaire — Questions décisionnelles
+        <button class="fp-close" onclick="closePanel('fp-gestionnaire')">✕</button>
+      </div>
+
+      <!-- G1 : Parcs sans couverture adéquate -->
+      <div class="q-section">
+        <div class="q-title">① Parcs sans bornes à proximité</div>
+        <div class="q-sub">Tous les parcs ont-ils ≥ N bornes à 500 m ?</div>
+        <div class="q-row">
+          <label>Min. <input type="number" id="g1-n" value="20" min="1" max="100"> bornes</label>
+          <label style="margin-left:8px;">Rayon <input type="number" id="g1-rayon" value="500" min="200" max="1000" step="50"> m</label>
+          <button class="q-btn" onclick="runG1()">▶</button>
+        </div>
+        <div id="g1-results" class="q-results"></div>
+      </div>
+
+      <!-- G2 : Épiceries sans borne -->
+      <div class="q-section">
+        <div class="q-title">② Épiceries sans borne à proximité</div>
+        <div class="q-sub">Toutes les épiceries ont-elles des bornes ?</div>
+        <div class="q-row">
+          <label>Rayon <input type="number" id="g2-rayon" value="300" min="100" max="1000" step="50"> m</label>
+          <button class="q-btn" onclick="runG2()">▶</button>
+        </div>
+        <div id="g2-results" class="q-results"></div>
+      </div>
+
+      <!-- G3 : Score de priorité -->
+      <div class="q-section">
+        <div class="q-title">③ Zones prioritaires — Score composite</div>
+        <div class="q-sub">Où installer de nouvelles bornes ? (multicritère)</div>
+        <div class="q-row">
+          <button class="q-btn" onclick="runG3()">▶ Calculer les priorités</button>
+        </div>
+        <div id="g3-results" class="q-results"></div>
+      </div>
+
+      <!-- G4 : Corrélation multi-variable -->
+      <div class="q-section">
+        <div class="q-title">④ Profil de population → couverture</div>
+        <div class="q-sub">Les bornes sont-elles liées au profil socio-démographique ?</div>
+        <div class="q-row">
+          <button class="q-btn" onclick="runG4()">▶ Analyser</button>
+        </div>
+        <div id="g4-results" class="q-results"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1253,6 +1313,159 @@ Bornes : ${a.nb_bornes}</title>
       '↔ <strong>Équité relative :</strong> aucune corrélation significative entre revenu et couverture. ' +
       'La distribution des bornes n\'est pas clairement biaisée par le niveau socio-économique.';
   }
+}
+
+// ── Layers parcs & épiceries ──
+let parcsLayer = null, epiceriesLayer = null;
+
+function loadParcs() {
+  if (parcsLayer) return;
+  fetch('/api/parcs/?format=json&limit=2000')
+    .then(r => r.json())
+    .then(d => {
+      parcsLayer = L.geoJSON(d, {
+        pointToLayer: (f, ll) => L.circleMarker(ll, {
+          radius: 5, color: '#00c851', fillColor: '#00c851',
+          fillOpacity: 0.7, weight: 1
+        }),
+        onEachFeature: (f, l) => {
+          l.bindTooltip(`🌳 ${f.properties.nom||'Parc'}<br>${f.properties.superficie_ha} ha`, {sticky:true});
+          l.on('click', () => open_info(`🌳 ${f.properties.nom||'Parc'}`,
+            `Superficie : ${f.properties.superficie_ha} ha<br>Type : ${f.properties.typo||'—'}`));
+        }
+      });
+      if (document.getElementById('tog-parcs').checked) parcsLayer.addTo(map);
+    }).catch(() => {});
+}
+
+function loadEpiceries() {
+  if (epiceriesLayer) return;
+  fetch('/api/epiceries/?format=json&limit=4000')
+    .then(r => r.json())
+    .then(d => {
+      epiceriesLayer = L.geoJSON(d, {
+        pointToLayer: (f, ll) => L.circleMarker(ll, {
+          radius: 4, color: '#ffbb33', fillColor: '#ffbb33',
+          fillOpacity: 0.75, weight: 1
+        }),
+        onEachFeature: (f, l) => {
+          l.bindTooltip(`🛒 ${f.properties.nom||'Épicerie'}`, {sticky:true});
+          l.on('click', () => open_info(`🛒 ${f.properties.nom||'Épicerie'}`,
+            `Type : ${f.properties.type||'—'}<br>Adresse : ${f.properties.adresse||'—'}`));
+        }
+      });
+      if (document.getElementById('tog-epiceries').checked) epiceriesLayer.addTo(map);
+    }).catch(() => {});
+}
+
+document.getElementById('tog-parcs').addEventListener('change', function() {
+  if (this.checked) { loadParcs(); if (parcsLayer) parcsLayer.addTo(map); }
+  else if (parcsLayer) map.removeLayer(parcsLayer);
+});
+document.getElementById('tog-epiceries').addEventListener('change', function() {
+  if (this.checked) { loadEpiceries(); if (epiceriesLayer) epiceriesLayer.addTo(map); }
+  else if (epiceriesLayer) map.removeLayer(epiceriesLayer);
+});
+
+// ── Panel gestionnaire ──
+function showGestionnaire() {
+  const el = document.getElementById('fp-gestionnaire');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function runG1() {
+  const n = document.getElementById('g1-n').value;
+  const rayon = document.getElementById('g1-rayon').value;
+  const el = document.getElementById('g1-results');
+  el.innerHTML = '<span style="color:var(--dim)">⟳ Analyse en cours…</span>';
+  fetch(`/api/query/parcs-sans-couverture/?n_bornes_min=${n}&rayon_m=${rayon}`)
+    .then(r => r.json())
+    .then(d => {
+      let html = `<div style="color:var(--orange);font-size:11px;margin-bottom:6px">${d.interpretation}</div>`;
+      html += `<div style="color:var(--dim);font-size:10px">${d.pct_parcs_ok}% des parcs atteignent le seuil de ${n} bornes</div>`;
+      if (d.parcs_insuffisants && d.parcs_insuffisants.length) {
+        html += '<table style="width:100%;font-size:10px;margin-top:6px"><tr><th>Parc</th><th>Bornes</th><th>Dist. min</th></tr>';
+        d.parcs_insuffisants.slice(0, 15).forEach(p => {
+          const dist = p.dist_borne_min_m ? p.dist_borne_min_m + ' m' : 'aucune';
+          html += `<tr><td>${(p.nom||'?').substring(0,30)}</td><td>${p.nb_bornes_proches}</td><td>${dist}</td></tr>`;
+        });
+        html += '</table>';
+        if (d.count > 15) html += `<div style="color:var(--dim);font-size:10px">+ ${d.count-15} autres…</div>`;
+      }
+      el.innerHTML = html;
+    }).catch(e => { el.innerHTML = `<span style="color:var(--red)">Erreur : vérifier que les parcs sont importés dans PostGIS</span>`; });
+}
+
+function runG2() {
+  const rayon = document.getElementById('g2-rayon').value;
+  const el = document.getElementById('g2-results');
+  el.innerHTML = '<span style="color:var(--dim)">⟳ Analyse en cours…</span>';
+  fetch(`/api/query/epiceries-sans-borne/?rayon_m=${rayon}`)
+    .then(r => r.json())
+    .then(d => {
+      let html = `<div style="color:var(--orange);font-size:11px;margin-bottom:6px">${d.interpretation}</div>`;
+      html += `<div style="color:var(--dim);font-size:10px">${d.pct_epiceries_ok}% des épiceries ont une borne à ${rayon} m</div>`;
+      if (d.epiceries_sans_borne && d.epiceries_sans_borne.length) {
+        html += '<table style="width:100%;font-size:10px;margin-top:6px"><tr><th>Épicerie</th><th>Type</th><th>+ proche</th></tr>';
+        d.epiceries_sans_borne.slice(0, 15).forEach(e => {
+          html += `<tr><td>${(e.nom||'?').substring(0,28)}</td><td style="color:var(--dim)">${(e.type||'?').substring(0,15)}</td><td>${e.dist_borne_min_m} m</td></tr>`;
+        });
+        html += '</table>';
+        if (d.count > 15) html += `<div style="color:var(--dim);font-size:10px">+ ${d.count-15} autres…</div>`;
+      }
+      el.innerHTML = html;
+    }).catch(e => { el.innerHTML = `<span style="color:var(--red)">Erreur : vérifier que les épiceries sont importées</span>`; });
+}
+
+function runG3() {
+  const el = document.getElementById('g3-results');
+  el.innerHTML = '<span style="color:var(--dim)">⟳ Calcul du score de priorité…</span>';
+  fetch('/api/priorite/')
+    .then(r => r.json())
+    .then(d => {
+      let html = `<div style="color:var(--dim);font-size:10px;margin-bottom:6px">Score 0-100 — multicritère (couverture 35% + densité 25% + motorisation 15% + équité 15% + pauvreté 10%)</div>`;
+      html += '<table style="width:100%;font-size:10px"><tr><th>Arrondissement</th><th>Score</th><th>Couv.</th><th>Revenu</th></tr>';
+      (d.arrondissements || []).slice(0, 15).forEach(a => {
+        const sc = a.score_priorite;
+        const c  = sc >= 70 ? 'var(--red)' : sc >= 50 ? 'var(--orange)' : sc >= 35 ? 'var(--yellow)' : 'var(--green)';
+        html += `<tr>
+          <td>${a.nom.split(/[–-]/)[0].replace(/^(Le |La |L')/, '').trim().substring(0,22)}</td>
+          <td style="color:${c};font-weight:bold">${sc}</td>
+          <td>${a.pct_couverture}%</td>
+          <td>${(a.revenu_median/1000).toFixed(0)}k$</td>
+        </tr>`;
+      });
+      html += '</table>';
+      el.innerHTML = html;
+    }).catch(() => { el.innerHTML = `<span style="color:var(--red)">Erreur API — vérifier les données démographiques</span>`; });
+}
+
+function runG4() {
+  const el = document.getElementById('g4-results');
+  el.innerHTML = '<span style="color:var(--dim)">⟳ Analyse des corrélations…</span>';
+  fetch('/api/correlation/')
+    .then(r => r.json())
+    .then(d => {
+      const cors = d.correlations_pearson || {};
+      const labels = {
+        revenu_median: 'Revenu médian',
+        densite_pop: 'Densité pop.',
+        tx_voiture: 'Taux motorisation',
+        tx_faible_revenu: 'Taux faible revenu'
+      };
+      let html = `<div style="font-size:10px;color:var(--dim);margin-bottom:6px">${d.question_recherche||''}</div>`;
+      html += '<table style="width:100%;font-size:10px"><tr><th>Variable</th><th>r Pearson</th><th>Interprétation</th></tr>';
+      Object.keys(cors).forEach(k => {
+        const r = cors[k];
+        const c = Math.abs(r) > 0.4 ? (r > 0 ? 'var(--orange)' : 'var(--green)') : 'var(--dim)';
+        const strength = Math.abs(r) < 0.2 ? 'faible' : Math.abs(r) < 0.4 ? 'modérée' : 'forte';
+        const dir = r > 0.1 ? '↑' : r < -0.1 ? '↓' : '≈';
+        html += `<tr><td>${labels[k]||k}</td><td style="color:${c}">${r} ${dir}</td><td style="color:var(--dim)">${strength}</td></tr>`;
+      });
+      html += '</table>';
+      html += `<div style="font-size:10px;color:var(--dim);margin-top:6px">Source : ${d.source||'StatCan 2021'}</div>`;
+      el.innerHTML = html;
+    }).catch(() => { el.innerHTML = `<span style="color:var(--red)">Erreur API corrélation</span>`; });
 }
 
 // ── Service Worker (PWA) ──
