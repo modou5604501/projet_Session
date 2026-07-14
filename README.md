@@ -130,21 +130,6 @@ La méthode combine **trois étapes complémentaires** (détail complet : [RAPPO
 
 ---
 
-## Réponses aux questions du professeur
-
-> Réponses détaillées et chiffrées dans [RAPPORT_FINAL.md §3.7–3.10](RAPPORT_FINAL.md) et [PRESENTATION_ORALE.md — Réponses préparées](PRESENTATION_ORALE.md)
-
-| Question | Réponse synthétique |
-|---|---|
-| Pourquoi ne pas tenir compte du réseau routier ? | Le réseau routier Géobase (17 540 tronçons) est intégré comme couche visuelle. Le buffer 500 m reste l'indicateur de couverture : il représente la zone de marche depuis la borne (standard INSPQ/Transports Canada). Les isochrones de conduite (pgRouting) sont identifiées comme perspective. |
-| Pourquoi inclure les données STM ? | Logique park-and-charge : 7/72 stations sans borne à 500 m (ligne Jaune : 33 %). Requête `NOT EXISTS + ST_DWithin` par ligne (outil gestionnaire ⑤). |
-| Est-ce lié au profil de la population ? | Oui — corrélation Pearson (r positif revenu/couverture) confirme une inéquité structurelle mesurée sur 19 arrondissements (StatCan 2021). |
-| Est-ce lié à la proximité des loisirs ? | Oui — requête LEFT JOIN : parcs périphériques (Beaconsfield, Senneville) ont 0 borne à 500 m. |
-| Est-ce la présence de magasins ? | Oui — requête CROSS JOIN LATERAL KNN : épiceries de l'ouest montréalais à > 2 000 m de la borne la plus proche. |
-| Comment déterminer une zone à développer ? | 3 étapes : gap géographique (ST_Difference) + score composite (5 critères) + localisation dans l'arrondissement prioritaire. |
-
----
-
 > Diagrammes complets (architecture Docker, workflow mise à jour, API) : voir [`DIAGRAMME_MERMAID.md`](DIAGRAMME_MERMAID.md)
 
 ## Modèle de données PostGIS
