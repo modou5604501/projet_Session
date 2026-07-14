@@ -384,6 +384,20 @@ def gaps_geojson(request):
 
 
 @api_view(["GET"])
+def reseau_routier_geojson(request):
+    """Réseau routier de Montréal — artères et collectrices (CLASSE >= 5)."""
+    path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "vectors",
+                     "reseau_routier_montreal.geojson")
+    )
+    if not os.path.exists(path):
+        return Response({"type": "FeatureCollection", "features": []})
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    return Response(data)
+
+
+@api_view(["GET"])
 def equity_analysis(request):
     """Corrélation couverture ↔ profil socio-démographique (StatCan Recensement 2021)."""
     arronds = list(Arrondissement.objects.all().values("nom", "nb_bornes", "pct_couverture"))

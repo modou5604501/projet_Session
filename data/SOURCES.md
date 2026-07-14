@@ -89,7 +89,26 @@
 - **Date d'acquisition** : 10 juillet 2026
 - **Citation** : Ville de Montréal. *Établissements alimentaires*, Données Québec. CC-BY 4.0. Consulté le 10 juillet 2026.
 
-## 7. Tracés des lignes de bus et de métro (STM)
+## 7. Réseau routier de Montréal (Géobase)
+- **Fichier** : `vectors/reseau_routier_montreal.geojson`
+- **Organisation** : Ville de Montréal
+- **Source** : Données Québec — *Géobase - réseau routier*
+- **Licence** : CC-BY 4.0 — attribution obligatoire
+- **Projection** : WGS84 (EPSG:4326)
+- **Mise à jour** : Périodique (dernier dépôt : 08 juillet 2026)
+- **Contenu original** : 47 983 tronçons de voirie — réseau complet de l'île de Montréal
+- **Filtrage appliqué** : CLASSE >= 5 uniquement (collectrices, artères secondaires, artères principales, autoroutes, voies express)
+  - CLASSE 5 : collectrice
+  - CLASSE 6 : artère secondaire
+  - CLASSE 7 : artère principale
+  - CLASSE 8 : autoroute
+  - CLASSE 9 : voie express
+- **Contenu retenu** : 17 540 tronçons avec `id`, `classe`, `type_route`, `nom_voie`, `type_voie`, `arrondissement`, `sens_circulation`
+- **Justification** : Le réseau routier permet de situer les bornes par rapport aux axes de circulation majeurs. Le projet reconnaît la limitation des buffers circulaires de 500 m (surestimation vs distance-réseau réelle), et cette couche sert de référence visuelle et de base pour de futures analyses isochrones (pgRouting/OSRM).
+- **Date d'acquisition** : 13 juillet 2026
+- **Citation** : VILLE DE MONTRÉAL. *Géobase - réseau routier*, Données Québec, 2013, mis à jour 08 juillet 2026. CC-BY 4.0.
+
+## 8. Tracés des lignes de bus et de métro (STM)
 - **Fichiers** : `vectors/stm_sig/stm_arrets_sig.shp`, `vectors/stm_sig/stm_lignes_sig.shp`
 - **Organisation** : Société de transport de Montréal (STM)
 - **Source** : Données Québec
@@ -112,6 +131,7 @@
 | Parcs (centroïdes) | WGS84 | WGS84 (EPSG:4326) | Centroïde calculé depuis polygone source |
 | Épiceries | WGS84 | WGS84 (EPSG:4326) | Aucune |
 | STM arrêts/lignes | NAD83 MTM8 (EPSG:32188) | WGS84 (EPSG:4326) | Via `gdf.to_crs(epsg=4326)` |
+| Réseau routier | WGS84 | WGS84 (EPSG:4326) | Aucune (déjà en WGS84) |
 | Buffers 500m | — | WGS84 (EPSG:4326) | Calcul en MTM8, retour WGS84 |
 
 **Calcul des buffers** : Les zones de couverture de 500m sont calculées en EPSG:32188 (projection métrique) pour garantir la précision des distances, puis reprojetées en WGS84 pour le stockage et l'affichage.

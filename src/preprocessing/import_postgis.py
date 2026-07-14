@@ -200,6 +200,24 @@ def import_epiceries(engine):
     print(f"Épiceries importées : {len(gdf)} entités")
 
 
+def import_reseau_routier(engine):
+    path = os.path.join(DATA_DIR, "reseau_routier_montreal.geojson")
+    if not os.path.exists(path):
+        print("reseau_routier_montreal.geojson introuvable — import ignoré")
+        return
+    gdf = gpd.read_file(path)
+    gdf = gdf.to_crs(epsg=4326)
+    gdf.columns = [c.lower() for c in gdf.columns]
+    gdf = gdf[["id", "classe", "type_route", "nom_voie", "type_voie",
+               "arrondissement", "sens_circulation", "geometry"]].copy()
+    gdf = gdf.rename_geometry("geom")
+    with engine.connect() as conn:
+        conn.execute(text("TRUNCATE reseau_routier"))
+        conn.commit()
+    gdf.to_postgis("reseau_routier", engine, if_exists="append", index=False, chunksize=500)
+    print(f"Réseau routier importé : {len(gdf)} tronçons")
+
+
 if __name__ == "__main__":
     engine = get_engine()
     import_bornes(engine)
@@ -207,6 +225,7 @@ if __name__ == "__main__":
     import_metro(engine)
     import_parcs(engine)
     import_epiceries(engine)
+    import_reseau_routier(engine)
     create_coverage_buffers(engine)
     update_arrondissement_stats(engine)
     print("Import terminé.")

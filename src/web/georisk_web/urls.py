@@ -33,6 +33,8 @@ urlpatterns = [
     path("api/query/parcs-sans-couverture/", views.query_parcs_sans_couverture, name="query-parcs"),
     path("api/query/epiceries-sans-borne/",  views.query_epiceries_sans_borne,  name="query-epiceries"),
     path("api/priorite/",                    views.priorite_installation,        name="priorite"),
+    # Réseau routier
+    path("api/reseau-routier/",              views.reseau_routier_geojson,        name="reseau-routier"),
     # PWA
     path("sw.js",                        views.serve_sw,                     name="service-worker"),
 ]

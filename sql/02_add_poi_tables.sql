@@ -17,6 +17,18 @@ CREATE TABLE IF NOT EXISTS epiceries (
     geom    GEOMETRY(POINT, 4326)
 );
 
+CREATE TABLE IF NOT EXISTS reseau_routier (
+    id          INTEGER PRIMARY KEY,
+    classe      INTEGER,
+    type_route  VARCHAR(50),
+    nom_voie    VARCHAR(200),
+    type_voie   VARCHAR(50),
+    arrondissement VARCHAR(100),
+    sens_circulation INTEGER,
+    geom        GEOMETRY(LINESTRING, 4326)
+);
+
 -- Index spatiaux
-CREATE INDEX IF NOT EXISTS idx_parcs_geom    ON parcs     USING GIST(geom);
-CREATE INDEX IF NOT EXISTS idx_epiceries_geom ON epiceries USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_parcs_geom        ON parcs          USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_epiceries_geom    ON epiceries       USING GIST(geom);
+CREATE INDEX IF NOT EXISTS idx_reseau_geom       ON reseau_routier  USING GIST(geom);

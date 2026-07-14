@@ -32,6 +32,7 @@ Toutes les données sont disponibles dans le dossier [`data/`](data/) de ce dép
 | **Établissements alimentaires (3 010 épiceries)** | [`data/vectors/epiceries_montreal.geojson`](data/vectors/epiceries_montreal.geojson) | Données Québec — Ville de Montréal |
 | Référentiel concordance quartiers ↔ arrondissements | [`data/quartiers_reference_habitation.csv`](data/quartiers_reference_habitation.csv) | Données Québec — StatCan Recensement 2021 |
 | **Profil socio-démographique (19 arrondissements)** | [`data/demo_arrondissements.csv`](data/demo_arrondissements.csv) | StatCan Recensement 2021 (pop, densité, revenu, motorisation, faible revenu) |
+| **Réseau routier (17 540 tronçons, CLASSE ≥ 5)** | [`data/vectors/reseau_routier_montreal.geojson`](data/vectors/reseau_routier_montreal.geojson) | Données Québec — Géobase Ville de Montréal (CC-BY 4.0, mis à jour 08 juillet 2026) |
 
 Les zones sous-desservies calculées par l'analyse sont disponibles dans [`data/vectors/zones_sous_desservies.geojson`](data/vectors/zones_sous_desservies.geojson).
 
@@ -47,6 +48,7 @@ flowchart TD
         A3[("Stations de métro STM\n68 stations · Shapefile")]
         A4[("Parcs et espaces verts\n1 541 parcs · GeoJSON")]
         A5[("Établissements alimentaires\n3 010 épiceries · GeoJSON")]
+        A6[("Réseau routier — Géobase\n17 540 tronçons · GeoJSON")]
     end
 
     subgraph PRE["PRÉTRAITEMENT — import_postgis.py"]
@@ -67,7 +69,7 @@ flowchart TD
         D3["Panel gestionnaire\nParcs · Épiceries · Score · Corrélation"]
     end
 
-    A1 & A2 & A3 & A4 & A5 --> B1
+    A1 & A2 & A3 & A4 & A5 & A6 --> B1
     A3 --> B2
     B1 & B2 --> B3
     B3 --> C1 --> C2 --> C3
@@ -146,11 +148,20 @@ erDiagram
         varchar adresse
         geometry geom "POINT · EPSG:4326"
     }
+    RESEAU_ROUTIER {
+        int id PK
+        int classe
+        varchar type_route
+        varchar nom_voie
+        varchar arrondissement
+        geometry geom "LINESTRING · EPSG:4326"
+    }
 
     BORNES_RECHARGE ||--o{ ZONES_COUVERTURE : "1 borne → 1 buffer 500m"
     ARRONDISSEMENTS ||--o{ BORNES_RECHARGE : "contient"
     PARCS }o--o{ BORNES_RECHARGE : "ST_DWithin 500m"
     EPICERIES }o--o{ BORNES_RECHARGE : "KNN / ST_DWithin"
+    RESEAU_ROUTIER }o--o{ BORNES_RECHARGE : "ST_DWithin (axe routier)"
 ```
 
 ---
