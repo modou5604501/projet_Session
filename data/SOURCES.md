@@ -33,16 +33,35 @@
 - **Date d'acquisition** : 7 juillet 2026
 - **Citation** : Ville de Montréal. *Limites administratives de l'agglomération de Montréal*, Données Québec, mis à jour le 30 juin 2026.
 
-## 4. Référentiel quartiers / revenu médian (StatCan Recensement 2021)
+## 4. Référentiel quartiers (StatCan Recensement 2021 — concordance)
 - **Fichier** : `quartiers_reference_habitation.csv`
 - **Organisation** : Statistique Canada / Ville de Montréal
 - **Source** : Données Québec — Commande personnalisée du recensement 2021 du Service de la stratégie immobilière et de l'habitation
 - **Licence** : CC-BY 4.0
 - **Format** : CSV (séparateur `;`)
-- **Contenu** : 75 quartiers montréalais avec leur numéro et nom d'arrondissement (Num Arr, Nom Arr, Num Quartier, Nom Quartier)
-- **Utilisation** : Référentiel de concordance quartier → arrondissement ; valeurs de revenu médian des ménages par arrondissement pour l'analyse d'équité socio-économique
+- **Contenu** : 91 quartiers montréalais avec leur numéro et nom d'arrondissement (Num Quartier, Nom Quartier, Num Arr, Nom Arr, nom_mun)
+- **Utilisation** : Référentiel de concordance quartier → arrondissement
 - **Date d'acquisition** : 8 juillet 2026
 - **Citation** : Ville de Montréal. *Commande personnalisée du recensement 2021 — Service de la stratégie immobilière et de l'habitation*, Données Québec. Consulté le 8 juillet 2026.
+
+## 4b. Profil socio-démographique par arrondissement (StatCan Recensement 2021)
+- **Fichier** : `demo_arrondissements.csv`
+- **Organisation** : Statistique Canada
+- **Source** : Recensement de la population 2021 — tableaux thématiques par subdivision de recensement (arrondissement)
+- **Licence** : CC-BY 4.0
+- **Format** : CSV (séparateur `;`)
+- **Contenu** : 19 arrondissements de la Ville de Montréal avec 6 variables socio-démographiques :
+  - `pop_2021` — population totale (personnes)
+  - `densite_pop_km2` — densité de population (hab./km²)
+  - `revenu_median_menage` — revenu médian des ménages ($)
+  - `tx_propriete_pct` — taux de ménages propriétaires (%)
+  - `tx_voiture_pct` — taux de ménages avec au moins un véhicule (proxy demande EV) (%)
+  - `tx_faible_revenu_pct` — taux de population sous le seuil de faible revenu MBM 2021 (%)
+- **Utilisation** : Corrélation Pearson (couverture ↔ 4 variables), score de priorité composite, analyse d'équité socio-économique
+- **Intégration** : Valeurs lues dans le backend Django (`_DEMO_DATA` dict, `views.py`) ; endpoints `/api/equity/`, `/api/correlation/`, `/api/priorite/`
+- **Date d'acquisition** : Recensement 2021 (données publiées février 2022)
+- **Note** : Les 15 villes reconstituées (Beaconsfield, Kirkland, Pointe-Claire, etc.) ne sont pas incluses car leurs données socio-démographiques ne font pas partie des tableaux d'arrondissements de la Ville de Montréal.
+- **Citation** : Statistique Canada. *Recensement de la population 2021 — Profil des subdivisions de recensement*. Gouvernement du Canada. CC-BY 4.0.
 
 ## 5. Parcs et espaces verts de Montréal
 - **Fichier** : `vectors/parcs_montreal.geojson`

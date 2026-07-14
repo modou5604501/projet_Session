@@ -30,7 +30,8 @@ Toutes les données sont disponibles dans le dossier [`data/`](data/) de ce dép
 | Stations de métro (STM) | [`data/vectors/stm_sig/`](data/vectors/stm_sig/) | Données Québec — STM |
 | **Parcs et espaces verts (1 541 parcs)** | [`data/vectors/parcs_montreal.geojson`](data/vectors/parcs_montreal.geojson) | Données Québec — Ville de Montréal |
 | **Établissements alimentaires (3 010 épiceries)** | [`data/vectors/epiceries_montreal.geojson`](data/vectors/epiceries_montreal.geojson) | Données Québec — Ville de Montréal |
-| Référentiel quartiers / profil socio-démographique | [`data/quartiers_reference_habitation.csv`](data/quartiers_reference_habitation.csv) | Données Québec — StatCan Recensement 2021 |
+| Référentiel concordance quartiers ↔ arrondissements | [`data/quartiers_reference_habitation.csv`](data/quartiers_reference_habitation.csv) | Données Québec — StatCan Recensement 2021 |
+| **Profil socio-démographique (19 arrondissements)** | [`data/demo_arrondissements.csv`](data/demo_arrondissements.csv) | StatCan Recensement 2021 (pop, densité, revenu, motorisation, faible revenu) |
 
 Les zones sous-desservies calculées par l'analyse sont disponibles dans [`data/vectors/zones_sous_desservies.geojson`](data/vectors/zones_sous_desservies.geojson).
 
