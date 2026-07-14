@@ -34,7 +34,7 @@ def _load_demo_data():
     data = {}
     try:
         with open(csv_path, encoding="utf-8", newline="") as f:
-            reader = _csv.DictReader(f, delimiter=";")
+            reader = _csv.DictReader(f, delimiter=",")
             for row in reader:
                 nom = row["arrondissement"]
                 entry = {

@@ -8,7 +8,11 @@ Toutes les données sont sous licence **CC-BY 4.0** (Données Québec / Statisti
 
 ### [`demo_arrondissements.csv`](demo_arrondissements.csv)
 
-Profil socio-démographique des **19 arrondissements** de la Ville de Montréal, extrait du Recensement de la population 2021 de Statistique Canada.
+Profil socio-démographique des **19 arrondissements** de la Ville de Montréal.
+
+**Source officielle :** [Profil des ménages et des logements 2021 — Données de Montréal](https://donnees.montreal.ca/dataset/profils-menages-logements) · Statistique Canada, Recensement 2021 · Licence CC-BY 4.0
+
+Les données ont été téléchargées automatiquement via le script [`src/preprocessing/download_demo_data.py`](../src/preprocessing/download_demo_data.py) qui lit les profils HTML de chaque arrondissement publiés sur le portail Données de Montréal.
 
 | Variable | Description | Unité |
 |---|---|---|
@@ -17,8 +21,8 @@ Profil socio-démographique des **19 arrondissements** de la Ville de Montréal,
 | `densite_pop_km2` | Densité de population | hab./km² |
 | `revenu_median_menage` | Revenu médian des ménages | $ CAD |
 | `tx_propriete_pct` | Taux de ménages propriétaires | % |
-| `tx_voiture_pct` | **Taux de ménages avec au moins un véhicule** (proxy demande VE) | % |
-| `tx_faible_revenu_pct` | Taux de population sous le seuil de faible revenu (MBM 2021) | % |
+| `tx_voiture_pct` | **Taux de ménages avec au moins un véhicule** — proxy calculé à partir du taux de propriété + type de logement (Données de Montréal 2021) | % |
+| `tx_faible_revenu_pct` | % ménages avec revenu total < 40 000 $ (3 tranches de revenu, Données de Montréal 2021) | % |
 
 **Comment ces données sont utilisées dans le projet :**
 

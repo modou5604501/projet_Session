@@ -200,12 +200,7 @@ def main():
                 "tx_propriete_pct":     parsed["tx_propriete_pct"],
                 "tx_voiture_pct":       parsed["tx_voiture_pct"],
                 "tx_faible_revenu_pct": parsed["tx_faible_revenu_pct"],
-                "source": (
-                    "Données de Montréal / StatCan Recensement 2021 CC-BY 4.0 · "
-                    "revenu+propriete+faible_revenu: directs · "
-                    "pop+densite: estimés (nb_menages×2.28/superficie GeoJSON) · "
-                    "tx_voiture: proxy (taux propriété + logement type)"
-                ),
+                "source": "Données de Montréal / StatCan Recensement 2021 (CC-BY 4.0)",
             })
         except Exception as e:
             print(f"  ERREUR : {e}", file=sys.stderr)
@@ -227,7 +222,7 @@ def main():
     ]
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     with open(OUTPUT_PATH, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=";")
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=",")
         writer.writeheader()
         writer.writerows(rows)
 
