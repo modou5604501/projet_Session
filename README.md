@@ -146,7 +146,7 @@ La méthode combine **trois étapes complémentaires** (détail complet : [RAPPO
 | **B — Prioriser l'arrondissement** | `/api/priorite/` → score composite 0–100 (5 critères pondérés) | *Lequel traiter en premier ?* |
 | **C — Localiser précisément** | Intersection score + polygones gap | *Où exactement* installer ? |
 
-**Exemple concret :** Montréal-Nord (37 k$ revenu, 10 200 hab/km², 38 % faible revenu) obtient un score de **≈ 72/100** malgré une couverture de 25 %. L'Île-Bizard (8,8 % de couverture mais 520 hab/km², 82 k$) ne score que **≈ 50/100**. La méthode priorise l'**impact humain** sur la simple étendue géographique.
+**Exemple concret (données réelles StatCan 2021) :** Montréal-Nord (56 400 $ revenu, 6 648 hab/km², 32 % faible revenu) obtient un score de **≈ 63/100** malgré une couverture de ~25 %. L'Île-Bizard (couverture faible mais seulement 441 hab/km², 98 000 $) ne score que **≈ 52/100**. La méthode priorise l'**impact humain** sur la simple étendue géographique.
 
 ---
 

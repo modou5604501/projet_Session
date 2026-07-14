@@ -1,3 +1,4 @@
+import csv as _csv
 import json
 import sys
 import os
@@ -20,130 +21,48 @@ from .serializers import (
     EpicerieSerializer,
 )
 
-# Données socio-démographiques par arrondissement — StatCan Recensement 2021
-# Sources : Commande personnalisée recensement 2021, Données Québec / Ville de Montréal
-# pop_2021 : population totale
-# densite_pop : habitants/km²
-# revenu_median : revenu médian des ménages ($)
-# tx_propriete : % ménages propriétaires
-# tx_voiture : % ménages avec au moins un véhicule (proxy pour demande EV)
-# tx_faible_revenu : % population sous seuil de faible revenu (MBM 2021)
-_DEMO_DATA = {
-    "Ahuntsic-Cartierville": {
-        "pop_2021": 141_560, "densite_pop": 5_200,
-        "revenu_median": 62_000, "tx_propriete": 35, "tx_voiture": 70, "tx_faible_revenu": 17
-    },
-    "Anjou": {
-        "pop_2021": 43_105, "densite_pop": 3_100,
-        "revenu_median": 62_000, "tx_propriete": 55, "tx_voiture": 82, "tx_faible_revenu": 12
-    },
-    "Côte-des-Neiges–Notre-Dame-de-Grâce": {
-        "pop_2021": 173_145, "densite_pop": 8_100,
-        "revenu_median": 53_000, "tx_propriete": 28, "tx_voiture": 55, "tx_faible_revenu": 25
-    },
-    "Côte-des-Neiges-Notre-Dame-de-Grâce": {
-        "pop_2021": 173_145, "densite_pop": 8_100,
-        "revenu_median": 53_000, "tx_propriete": 28, "tx_voiture": 55, "tx_faible_revenu": 25
-    },
-    "Lachine": {
-        "pop_2021": 47_370, "densite_pop": 2_700,
-        "revenu_median": 55_000, "tx_propriete": 45, "tx_voiture": 75, "tx_faible_revenu": 16
-    },
-    "LaSalle": {
-        "pop_2021": 80_615, "densite_pop": 4_400,
-        "revenu_median": 57_000, "tx_propriete": 48, "tx_voiture": 78, "tx_faible_revenu": 14
-    },
-    "Le Plateau-Mont-Royal": {
-        "pop_2021": 105_520, "densite_pop": 14_800,
-        "revenu_median": 70_000, "tx_propriete": 18, "tx_voiture": 38, "tx_faible_revenu": 13
-    },
-    "Plateau-Mont-Royal": {
-        "pop_2021": 105_520, "densite_pop": 14_800,
-        "revenu_median": 70_000, "tx_propriete": 18, "tx_voiture": 38, "tx_faible_revenu": 13
-    },
-    "Le Sud-Ouest": {
-        "pop_2021": 79_815, "densite_pop": 7_600,
-        "revenu_median": 58_000, "tx_propriete": 25, "tx_voiture": 52, "tx_faible_revenu": 18
-    },
-    "Sud-Ouest": {
-        "pop_2021": 79_815, "densite_pop": 7_600,
-        "revenu_median": 58_000, "tx_propriete": 25, "tx_voiture": 52, "tx_faible_revenu": 18
-    },
-    "L'Île-Bizard–Sainte-Geneviève": {
-        "pop_2021": 20_990, "densite_pop": 520,
-        "revenu_median": 82_000, "tx_propriete": 78, "tx_voiture": 94, "tx_faible_revenu": 5
-    },
-    "Île-Bizard-Sainte-Geneviève": {
-        "pop_2021": 20_990, "densite_pop": 520,
-        "revenu_median": 82_000, "tx_propriete": 78, "tx_voiture": 94, "tx_faible_revenu": 5
-    },
-    "Mercier–Hochelaga-Maisonneuve": {
-        "pop_2021": 131_460, "densite_pop": 6_900,
-        "revenu_median": 50_000, "tx_propriete": 32, "tx_voiture": 62, "tx_faible_revenu": 22
-    },
-    "Mercier-Hochelaga-Maisonneuve": {
-        "pop_2021": 131_460, "densite_pop": 6_900,
-        "revenu_median": 50_000, "tx_propriete": 32, "tx_voiture": 62, "tx_faible_revenu": 22
-    },
-    "Montréal-Nord": {
-        "pop_2021": 83_868, "densite_pop": 10_200,
-        "revenu_median": 37_000, "tx_propriete": 22, "tx_voiture": 60, "tx_faible_revenu": 38
-    },
-    "Outremont": {
-        "pop_2021": 24_215, "densite_pop": 6_500,
-        "revenu_median": 90_000, "tx_propriete": 42, "tx_voiture": 65, "tx_faible_revenu": 8
-    },
-    "Pierrefonds-Roxboro": {
-        "pop_2021": 70_250, "densite_pop": 2_400,
-        "revenu_median": 72_000, "tx_propriete": 68, "tx_voiture": 88, "tx_faible_revenu": 8
-    },
-    "Rivière-des-Prairies–Pointe-aux-Trembles": {
-        "pop_2021": 107_170, "densite_pop": 2_900,
-        "revenu_median": 53_000, "tx_propriete": 52, "tx_voiture": 80, "tx_faible_revenu": 16
-    },
-    "Rivière-des-Prairies-Pointe-aux-Trembles": {
-        "pop_2021": 107_170, "densite_pop": 2_900,
-        "revenu_median": 53_000, "tx_propriete": 52, "tx_voiture": 80, "tx_faible_revenu": 16
-    },
-    "Rosemont–La Petite-Patrie": {
-        "pop_2021": 143_635, "densite_pop": 9_300,
-        "revenu_median": 65_000, "tx_propriete": 28, "tx_voiture": 55, "tx_faible_revenu": 14
-    },
-    "Rosemont-La Petite-Patrie": {
-        "pop_2021": 143_635, "densite_pop": 9_300,
-        "revenu_median": 65_000, "tx_propriete": 28, "tx_voiture": 55, "tx_faible_revenu": 14
-    },
-    "Saint-Laurent": {
-        "pop_2021": 101_735, "densite_pop": 2_800,
-        "revenu_median": 60_000, "tx_propriete": 42, "tx_voiture": 80, "tx_faible_revenu": 15
-    },
-    "Saint-Léonard": {
-        "pop_2021": 73_490, "densite_pop": 7_200,
-        "revenu_median": 55_000, "tx_propriete": 50, "tx_voiture": 78, "tx_faible_revenu": 16
-    },
-    "Verdun": {
-        "pop_2021": 69_795, "densite_pop": 9_100,
-        "revenu_median": 62_000, "tx_propriete": 30, "tx_voiture": 55, "tx_faible_revenu": 14
-    },
-    "Ville-Marie": {
-        "pop_2021": 84_885, "densite_pop": 10_500,
-        "revenu_median": 65_000, "tx_propriete": 20, "tx_voiture": 40, "tx_faible_revenu": 19
-    },
-    "Villeray–Saint-Michel–Parc-Extension": {
-        "pop_2021": 149_490, "densite_pop": 9_800,
-        "revenu_median": 48_000, "tx_propriete": 22, "tx_voiture": 58, "tx_faible_revenu": 28
-    },
-    "Villeray-Saint-Michel-Parc Extension": {
-        "pop_2021": 149_490, "densite_pop": 9_800,
-        "revenu_median": 48_000, "tx_propriete": 22, "tx_voiture": 58, "tx_faible_revenu": 28
-    },
-    "Villeray-Saint-Michel-Parc-Extension": {
-        "pop_2021": 149_490, "densite_pop": 9_800,
-        "revenu_median": 48_000, "tx_propriete": 22, "tx_voiture": 58, "tx_faible_revenu": 28
-    },
-}
-# Alias rétrocompatible pour l'analyse d'équité (revenu seul)
-_INCOME_DATA = {k: v["revenu_median"] for k, v in _DEMO_DATA.items()}
+
+def _load_demo_data():
+    """
+    Charge les données socio-démographiques depuis data/demo_arrondissements.csv.
+    Source : Données de Montréal / StatCan Recensement 2021 (CC-BY 4.0).
+    Script de téléchargement : src/preprocessing/download_demo_data.py
+    """
+    csv_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "data", "demo_arrondissements.csv")
+    )
+    data = {}
+    try:
+        with open(csv_path, encoding="utf-8", newline="") as f:
+            reader = _csv.DictReader(f, delimiter=";")
+            for row in reader:
+                nom = row["arrondissement"]
+                entry = {
+                    "pop_2021":         int(row["pop_2021"]),
+                    "densite_pop":      int(row["densite_pop_km2"]),
+                    "revenu_median":    int(row["revenu_median_menage"]),
+                    "tx_propriete":     float(row["tx_propriete_pct"]),
+                    "tx_voiture":       float(row["tx_voiture_pct"]),
+                    "tx_faible_revenu": float(row["tx_faible_revenu_pct"]),
+                }
+                data[nom] = entry
+                # Alias tiret normal vs tiret cadratin (–) pour compatibilité BDD
+                nom_trait = nom.replace("–", "-")
+                if nom_trait != nom:
+                    data[nom_trait] = entry
+                # Alias sans préfixe "Le " / "L'" (noms courts dans la BDD)
+                if nom.startswith("Le "):
+                    data[nom[3:]] = entry
+                    data[nom_trait[3:]] = entry
+                elif nom.startswith("L’") or nom.startswith("L'"):
+                    data[nom[2:]] = entry
+                    data[nom_trait[2:]] = entry
+    except FileNotFoundError:
+        pass
+    return data
+
+
+_DEMO_DATA = _load_demo_data()
 
 _gaps_cache = None
 

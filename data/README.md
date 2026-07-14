@@ -33,7 +33,7 @@ Profil socio-démographique des **19 arrondissements** de la Ville de Montréal,
 
 3. **Analyse d'équité** (`/api/equity/`) — scatter plot couverture vs revenu médian avec droite de régression
 
-> Exemple : Montréal-Nord (`revenu_median = 37 000 $`, `tx_voiture_pct = 60 %`, `tx_faible_revenu_pct = 38 %`) obtient un **score de priorité ≈ 72/100** malgré une couverture de 25 %. L'Île-Bizard (`revenu_median = 82 000 $`, densité 520 hab/km²) ne score que **≈ 50/100** malgré moins de couverture — car l'impact social par borne y serait bien moindre.
+> Exemple (valeurs réelles Données de Montréal 2021) : Montréal-Nord (`revenu_median = 56 400 $`, `tx_voiture_pct = 73 %`, `tx_faible_revenu_pct = 32 %`, densité = 6 648 hab/km²) obtient un **score de priorité ≈ 63/100** malgré une couverture de ~25 %. L'Île-Bizard (`revenu_median = 98 000 $`, densité 441 hab/km²) ne score que **≈ 52/100** malgré une couverture géographique plus faible — car l'impact social par borne y serait bien moindre (très faible densité, revenu élevé).
 
 ---
 
