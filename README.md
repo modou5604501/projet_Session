@@ -38,17 +38,43 @@ Les zones sous-desservies calculées par l'analyse sont disponibles dans [`data/
 
 ## Pipeline de traitement
 
-```
-Données Québec (GeoJSON, CSV, SHP)
-      ↓  src/preprocessing/import_postgis.py   (import + reprojection STM MTM8→WGS84)
-      ↓  src/preprocessing/buffer_analysis.py  (ST_Buffer 500m en EPSG:32188, ST_Union, %couverture)
-      ↓  src/preprocessing/gap_analysis.py     (ST_Difference → zones_sous_desservies.geojson)
-PostGIS 15.3 · 4 tables : bornes_recharge · zones_couverture · arrondissements · stations_metro
-      ↓  Django 5.2 + GeoDjango · API REST GeoJSON
-Tableau de bord Leaflet.js → http://localhost:8000
+```mermaid
+flowchart TD
+    subgraph ACQ["ACQUISITION — Données Québec (CC-BY 4.0)"]
+        A1[("Bornes de recharge\n2 412 bornes · GeoJSON")]
+        A2[("Arrondissements\n34 polygones · GeoJSON")]
+        A3[("Stations de métro STM\n68 stations · Shapefile")]
+        A4[("Parcs et espaces verts\n1 541 parcs · GeoJSON")]
+        A5[("Établissements alimentaires\n3 010 épiceries · GeoJSON")]
+    end
+
+    subgraph PRE["PRÉTRAITEMENT — import_postgis.py"]
+        B1["Lecture & validation\nGeoPandas + Shapely"]
+        B2["Reprojection STM\nNAD83 MTM8 → WGS84"]
+        B3["Import PostGIS\n6 tables spatiales"]
+    end
+
+    subgraph ANA["ANALYSE SPATIALE — PostGIS 15 / EPSG:32188"]
+        C1["ST_Buffer 500 m\nzones_couverture"]
+        C2["ST_Intersection / ST_Area\npct_couverture par arrondissement"]
+        C3["ST_Difference\nzones_sous_desservies.geojson"]
+    end
+
+    subgraph WEB["APPLICATION WEB — Django 5.2 + Leaflet.js"]
+        D1["API REST · 16 endpoints GeoJSON"]
+        D2["Tableau de bord dark theme\nChoroplèthe · Couches · Requêtes"]
+        D3["Panel gestionnaire\nParcs · Épiceries · Score · Corrélation"]
+    end
+
+    A1 & A2 & A3 & A4 & A5 --> B1
+    A3 --> B2
+    B1 & B2 --> B3
+    B3 --> C1 --> C2 --> C3
+    B3 & C1 & C2 & C3 --> D1
+    D1 --> D2 & D3
 ```
 
-Le rayon de 500 m correspond à la distance de marche accessible recommandée en urbanisme actif.
+Le rayon de 500 m correspond à la distance de marche accessible recommandée en urbanisme actif (INSPQ, Transports Canada).
 La reprojection en EPSG:32188 (NAD83 / MTM zone 8) garantit la précision métrique des buffers.
 
 ---
@@ -69,6 +95,62 @@ La reprojection en EPSG:32188 (NAD83 / MTM zone 8) garantit la précision métri
 - **Simulation** : slider de seuil de sous-desserte avec recoloration de la carte en temps réel
 - **Mise à jour automatique** : re-téléchargement hebdomadaire depuis Données Québec (APScheduler + API CKAN)
 - **PWA** : installable sur tablette (manifest.json + service worker)
+
+---
+
+> Diagrammes complets (architecture Docker, workflow mise à jour, API) : voir [`DIAGRAMME_MERMAID.md`](DIAGRAMME_MERMAID.md)
+
+## Modèle de données PostGIS
+
+```mermaid
+erDiagram
+    BORNES_RECHARGE {
+        bigint id PK
+        varchar nom
+        varchar type
+        varchar arrondissement
+        int nb_prises
+        geometry geom "POINT · EPSG:4326"
+    }
+    ZONES_COUVERTURE {
+        bigint id PK
+        bigint borne_id FK
+        int rayon_m
+        geometry geom "POLYGON · EPSG:4326"
+    }
+    ARRONDISSEMENTS {
+        bigint id PK
+        varchar nom
+        int nb_bornes
+        float pct_couverture
+        geometry geom "MULTIPOLYGON · EPSG:4326"
+    }
+    STATIONS_METRO {
+        bigint id PK
+        varchar nom
+        varchar ligne
+        geometry geom "POINT · EPSG:4326"
+    }
+    PARCS {
+        bigint id PK
+        varchar nom
+        float superficie_ha
+        varchar typo
+        geometry geom "POINT · EPSG:4326"
+    }
+    EPICERIES {
+        bigint id PK
+        varchar nom
+        varchar type
+        varchar adresse
+        geometry geom "POINT · EPSG:4326"
+    }
+
+    BORNES_RECHARGE ||--o{ ZONES_COUVERTURE : "1 borne → 1 buffer 500m"
+    ARRONDISSEMENTS ||--o{ BORNES_RECHARGE : "contient"
+    PARCS }o--o{ BORNES_RECHARGE : "ST_DWithin 500m"
+    EPICERIES }o--o{ BORNES_RECHARGE : "KNN / ST_DWithin"
+```
 
 ---
 

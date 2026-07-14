@@ -14,46 +14,40 @@
 
 ```mermaid
 flowchart TD
-    subgraph ACQ["PHASE 1 — ACQUISITION DES DONNÉES OUVERTES"]
-        A1[("Bornes de recharge\n2 412 bornes GeoJSON\nVille de Montréal\nDonnées Québec")]
-        A2[("Arrondissements\n34 polygones GeoJSON\nVille de Montréal\nWGS84 / EPSG:4326")]
-        A3[("Stations de métro\nShapefile STM\nDonnées Québec 2026\n68 stations")]
-        A4[("Statistiques 2025\nCSV utilisation bornes\nVille de Montréal")]
+    subgraph ACQ["PHASE 1 — ACQUISITION DES DONNÉES OUVERTES (Données Québec · CC-BY 4.0)"]
+        A1[("Bornes de recharge\n2 412 bornes GeoJSON\nVille de Montréal")]
+        A2[("Arrondissements\n34 polygones GeoJSON\nVille de Montréal")]
+        A3[("Stations de métro\nShapefile STM\n68 stations")]
+        A4[("Statistiques 2025\nCSV utilisation bornes")]
+        A5[("Parcs et espaces verts\n1 541 parcs GeoJSON\nVille de Montréal")]
+        A6[("Établissements alimentaires\n3 010 épiceries GeoJSON\nVille de Montréal")]
     end
 
     subgraph PRE["PHASE 2 — PRÉTRAITEMENT (import_postgis.py)"]
-        B1["Lecture GeoJSON\nGeoPandas + Shapely\nValidation géométries"]
-        B2["Reprojection STM\nNAD83 → WGS84\nPyProj / GeoPandas"]
-        B3["Import PostGIS\nTRUNCATE CASCADE + append\nrenamegeometry('geom')"]
+        B1["Lecture GeoJSON/SHP\nGeoPandas + Shapely\nValidation géométries"]
+        B2["Reprojection STM\nNAD83 MTM8 → WGS84\nPyProj / GeoPandas"]
+        B3["Import PostGIS\nTRUNCATE + append\n6 tables spatiales"]
     end
 
-    subgraph ANA["PHASE 3 — ANALYSE SPATIALE PostGIS"]
-        C1["buffer_analysis.py\nST_Buffer(geom, 500m)\nen EPSG:32188 MTM8\n→ zones_couverture"]
-        C2["Calcul couverture\nST_Area(ST_Intersection)\n/ ST_Area(arrondissement)\n→ pct_couverture %"]
+    subgraph ANA["PHASE 3 — ANALYSE SPATIALE PostGIS (EPSG:32188)"]
+        C1["buffer_analysis.py\nST_Buffer(geom, 500m)\n→ zones_couverture"]
+        C2["ST_Area(ST_Intersection)\n/ ST_Area(arrondissement)\n→ pct_couverture %"]
         C3["gap_analysis.py\nST_Difference(arrond, union_buffers)\n→ zones_sous_desservies.geojson"]
     end
 
-    subgraph WEB["PHASE 4 — APPLICATION WEB Django + Leaflet"]
-        D1["Django 5.2 + GeoDjango\nAPI REST GeoJSON\nDjango REST Framework"]
-        D2["Dashboard Leaflet\nFond CARTO Dark\nChoroplèthe couverture\nEN DIRECT + horloge"]
-        D3["Mise à jour temps réel\nAPScheduler hebdo\nAPI CKAN Données Québec\nPWA tablette"]
+    subgraph WEB["PHASE 4 — APPLICATION WEB Django 5.2 + Leaflet.js"]
+        D1["API REST · 16 endpoints GeoJSON\nDjango REST Framework + DRF-GIS"]
+        D2["Dashboard Leaflet\nCARTO Dark Matter\nChoroplèthe · Couches · Requêtes"]
+        D3["Panel gestionnaire\nParcs · Épiceries · Score priorité\nCorrélation démographique"]
+        D4["APScheduler hebdo\nAPI CKAN Données Québec\nPWA tablette"]
     end
 
-    A1 --> B1
-    A2 --> B1
+    A1 & A2 & A4 & A5 & A6 --> B1
     A3 --> B2
-    A4 --> B1
-    B1 --> B3
-    B2 --> B3
-    B3 --> C1
-    C1 --> C2
-    C2 --> C3
-    B3 --> D1
-    C1 --> D1
-    C2 --> D1
-    C3 --> D1
-    D1 --> D2
-    D1 --> D3
+    B1 & B2 --> B3
+    B3 --> C1 --> C2 --> C3
+    B3 & C1 & C2 & C3 --> D1
+    D1 --> D2 & D3 & D4
 ```
 
 ---
@@ -104,14 +98,12 @@ erDiagram
         int nb_prises
         geometry geom "POINT EPSG:4326"
     }
-
     ZONES_COUVERTURE {
         bigint id PK
         bigint borne_id FK
         int rayon_m
         geometry geom "POLYGON EPSG:4326"
     }
-
     ARRONDISSEMENTS {
         bigint id PK
         varchar nom
@@ -119,15 +111,31 @@ erDiagram
         float pct_couverture
         geometry geom "MULTIPOLYGON EPSG:4326"
     }
-
     STATIONS_METRO {
         bigint id PK
         varchar nom
         varchar ligne
         geometry geom "POINT EPSG:4326"
     }
+    PARCS {
+        bigint id PK
+        varchar nom
+        float superficie_ha
+        varchar typo
+        geometry geom "POINT EPSG:4326"
+    }
+    EPICERIES {
+        bigint id PK
+        varchar nom
+        varchar type
+        varchar adresse
+        geometry geom "POINT EPSG:4326"
+    }
 
     BORNES_RECHARGE ||--o{ ZONES_COUVERTURE : "1 borne → 1 buffer 500m"
+    ARRONDISSEMENTS ||--o{ BORNES_RECHARGE : "contient"
+    PARCS }o--o{ BORNES_RECHARGE : "ST_DWithin 500m"
+    EPICERIES }o--o{ BORNES_RECHARGE : "KNN / ST_DWithin"
 ```
 
 ---
