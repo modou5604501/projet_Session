@@ -44,7 +44,33 @@
 - **Date d'acquisition** : 8 juillet 2026
 - **Citation** : Ville de Montréal. *Commande personnalisée du recensement 2021 — Service de la stratégie immobilière et de l'habitation*, Données Québec. Consulté le 8 juillet 2026.
 
-## 5. Tracés des lignes de bus et de métro (STM)
+## 5. Parcs et espaces verts de Montréal
+- **Fichier** : `vectors/parcs_montreal.geojson`
+- **Organisation** : Ville de Montréal — Direction des grands parcs et de la nature en ville
+- **Source** : Données Québec — *Grands parcs, parcs d'arrondissements et espaces publics*
+- **Licence** : CC-BY 4.0
+- **Projection** : WGS84 (EPSG:4326) — centroïdes des polygones sources
+- **Contenu original** : Polygones de tous les parcs de l'île, incluant les grands parcs, parcs d'arrondissements et espaces publics
+- **Filtrage appliqué** : superficie > 0.1 ha ; exclusion des entités sans coordonnées valides
+- **Contenu retenu** : 1 541 parcs avec `nom`, `superficie_ha`, `typo` (type de parc), coordonnées point (centroïde)
+- **Utilisation** : Requête spatiale « parcs sans couverture adéquate » (< N bornes à 500 m) via LEFT JOIN PostGIS
+- **Date d'acquisition** : 10 juillet 2026
+- **Citation** : Ville de Montréal. *Grands parcs, parcs d'arrondissements et espaces publics*, Données Québec. CC-BY 4.0. Consulté le 10 juillet 2026.
+
+## 6. Établissements alimentaires (épiceries, marchés, supermarchés)
+- **Fichier** : `vectors/epiceries_montreal.geojson`
+- **Organisation** : Ville de Montréal — Direction de la santé environnementale et des affaires réglementaires
+- **Source** : Données Québec — *Établissements alimentaires*
+- **Licence** : CC-BY 4.0
+- **Projection** : WGS84 (EPSG:4326)
+- **Contenu original** : Tous les établissements alimentaires déclarés à Montréal (épiceries, boucheries, marchés, supermarchés, dépanneurs, etc.)
+- **Filtrage appliqué** : type contenant 'picerie', 'march' ou 'Aliments' ; statut = 'Ouvert' ; coordonnées valides dans les limites de l'île
+- **Contenu retenu** : 3 010 établissements avec `nom`, `type`, `adresse`, coordonnées point
+- **Utilisation** : Requête spatiale « épiceries sans borne à proximité » (NOT EXISTS + CROSS JOIN LATERAL / KNN `<->`) via PostGIS
+- **Date d'acquisition** : 10 juillet 2026
+- **Citation** : Ville de Montréal. *Établissements alimentaires*, Données Québec. CC-BY 4.0. Consulté le 10 juillet 2026.
+
+## 7. Tracés des lignes de bus et de métro (STM)
 - **Fichiers** : `vectors/stm_sig/stm_arrets_sig.shp`, `vectors/stm_sig/stm_lignes_sig.shp`
 - **Organisation** : Société de transport de Montréal (STM)
 - **Source** : Données Québec
@@ -64,6 +90,8 @@
 |---|---|---|---|
 | Bornes de recharge | WGS84 | WGS84 (EPSG:4326) | Aucune |
 | Arrondissements | WGS84 | WGS84 (EPSG:4326) | Aucune |
+| Parcs (centroïdes) | WGS84 | WGS84 (EPSG:4326) | Centroïde calculé depuis polygone source |
+| Épiceries | WGS84 | WGS84 (EPSG:4326) | Aucune |
 | STM arrêts/lignes | NAD83 MTM8 (EPSG:32188) | WGS84 (EPSG:4326) | Via `gdf.to_crs(epsg=4326)` |
 | Buffers 500m | — | WGS84 (EPSG:4326) | Calcul en MTM8, retour WGS84 |
 
