@@ -35,6 +35,8 @@ urlpatterns = [
     path("api/priorite/",                    views.priorite_installation,        name="priorite"),
     # Réseau routier
     path("api/reseau-routier/",              views.reseau_routier_geojson,        name="reseau-routier"),
+    # Intermodalité STM
+    path("api/metro/intermodalite/",         views.metro_intermodalite,           name="metro-intermodalite"),
     # PWA
     path("sw.js",                        views.serve_sw,                     name="service-worker"),
 ]

@@ -81,30 +81,40 @@ def import_arrondissements(engine):
 
 
 def import_metro(engine):
-    shp = os.path.join(DATA_DIR, "stm_sig", "stm_arrets_sig.shp")
-    if not os.path.exists(shp):
-        print("Fichier STM arrêts introuvable — import métro ignoré")
+    # Préférer le GeoJSON (72 stations, champ ligne renseigné)
+    geojson_path = os.path.join(DATA_DIR, "stations_metro_stm.geojson")
+    if os.path.exists(geojson_path):
+        gdf = gpd.read_file(geojson_path)
+        gdf = gdf.to_crs(epsg=4326)
+        gdf.columns = [c.lower() for c in gdf.columns]
+        gdf = gdf[["nom", "ligne", "geometry"]].copy()
+        gdf = gdf.rename_geometry("geom")
+        _truncate(engine, "stations_metro")
+        gdf.to_postgis("stations_metro", engine, if_exists="append",
+                       index=False, chunksize=200)
+        print(f"Stations métro importées (GeoJSON) : {len(gdf)} entités")
         return
 
+    # Fallback : shapefile STM (ligne = None)
+    shp = os.path.join(DATA_DIR, "stm_sig", "stm_arrets_sig.shp")
+    if not os.path.exists(shp):
+        print("Fichier STM introuvable — import métro ignoré")
+        return
     gdf = gpd.read_file(shp)
     gdf = gdf.to_crs(epsg=4326)
-
-    # Stations de métro : stop_url contient "metro" + loc_type=0
     metro_mask = (
         gdf["stop_url"].fillna("").str.contains("metro", case=False) &
         (gdf["loc_type"] == 0)
     )
     gdf = gdf[metro_mask].copy()
-
     gdf = gdf.rename(columns={"stop_name": "nom"})
     gdf = gdf[["nom", "geometry"]].copy()
     gdf["ligne"] = None
     gdf = gdf.rename_geometry("geom")
-
     _truncate(engine, "stations_metro")
     gdf.to_postgis("stations_metro", engine, if_exists="append",
                    index=False, chunksize=200)
-    print(f"Stations métro importées : {len(gdf)} entités")
+    print(f"Stations métro importées (SHP) : {len(gdf)} entités")
 
 
 def create_coverage_buffers(engine):

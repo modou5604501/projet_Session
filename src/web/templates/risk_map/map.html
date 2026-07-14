@@ -601,6 +601,17 @@
         </div>
         <div id="g4-results" class="q-results"></div>
       </div>
+
+      <!-- G5 : Intermodalité STM par ligne -->
+      <div class="q-section">
+        <div class="q-title">⑤ Intermodalité STM — park-and-charge</div>
+        <div class="q-sub">Quelles lignes de métro manquent de bornes à proximité ?</div>
+        <div class="q-row">
+          <label>Rayon <input type="number" id="g5-rayon" value="500" min="100" max="1000" step="100"> m</label>
+          <button class="q-btn" onclick="runG5()">▶ Analyser</button>
+        </div>
+        <div id="g5-results" class="q-results"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1501,6 +1512,33 @@ function runG4() {
       html += `<div style="font-size:10px;color:var(--dim);margin-top:6px">Source : ${d.source||'StatCan 2021'}</div>`;
       el.innerHTML = html;
     }).catch(() => { el.innerHTML = `<span style="color:var(--red)">Erreur API corrélation</span>`; });
+}
+
+function runG5() {
+  const rayon = document.getElementById('g5-rayon').value;
+  const el = document.getElementById('g5-results');
+  el.innerHTML = '<span style="color:var(--dim)">⟳ Analyse intermodalité…</span>';
+  fetch(`/api/metro/intermodalite/?rayon=${rayon}`)
+    .then(r => r.json())
+    .then(d => {
+      const COULEURS = { Verte: '#00c851', Orange: '#ff8c00', Bleue: '#4488ff', Jaune: '#ffd700' };
+      let html = `<div style="color:var(--accent);font-size:11px;margin-bottom:6px">${d.interpretation}</div>`;
+      html += '<table style="width:100%;font-size:10px"><tr><th>Ligne</th><th>Total</th><th>Avec borne</th><th>Sans borne</th></tr>';
+      (d.par_ligne || []).forEach(l => {
+        const nom = l.ligne || 'Inconnue';
+        const c = COULEURS[nom.split(' / ')[0]] || 'var(--dim)';
+        const pctOk = l.total_stations ? Math.round(100 * l.stations_avec_borne / l.total_stations) : 0;
+        html += `<tr>
+          <td style="color:${c}">⬤ ${nom}</td>
+          <td>${l.total_stations}</td>
+          <td style="color:var(--green)">${l.stations_avec_borne} (${pctOk}%)</td>
+          <td style="color:${l.stations_sans_borne > 0 ? 'var(--red)' : 'var(--dim)'}">${l.stations_sans_borne}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      html += `<div style="font-size:10px;color:var(--dim);margin-top:6px">Source : STM / Données Québec · rayon = ${rayon} m · NOT EXISTS + ST_DWithin</div>`;
+      el.innerHTML = html;
+    }).catch(() => { el.innerHTML = '<span style="color:var(--red)">Erreur API — vérifier les stations métro</span>'; });
 }
 
 // ── Service Worker (PWA) ──

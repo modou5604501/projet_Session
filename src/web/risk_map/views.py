@@ -398,6 +398,45 @@ def reseau_routier_geojson(request):
 
 
 @api_view(["GET"])
+def metro_intermodalite(request):
+    """Couverture EV par ligne de métro STM — intermodalité park-and-charge."""
+    rayon = min(int(request.GET.get("rayon", 500)), 2000)
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT
+                m.ligne,
+                COUNT(*) AS total_stations,
+                COUNT(CASE WHEN EXISTS (
+                    SELECT 1 FROM bornes_recharge b
+                    WHERE ST_DWithin(m.geom::geography, b.geom::geography, %s)
+                ) THEN 1 END) AS stations_avec_borne,
+                COUNT(CASE WHEN NOT EXISTS (
+                    SELECT 1 FROM bornes_recharge b
+                    WHERE ST_DWithin(m.geom::geography, b.geom::geography, %s)
+                ) THEN 1 END) AS stations_sans_borne
+            FROM stations_metro m
+            GROUP BY m.ligne
+            ORDER BY stations_sans_borne DESC
+        """, [rayon, rayon])
+        cols = [c[0] for c in cur.description]
+        lignes = [dict(zip(cols, row)) for row in cur.fetchall()]
+
+    total = sum(r["total_stations"] for r in lignes)
+    sans = sum(r["stations_sans_borne"] for r in lignes)
+    return Response({
+        "rayon_m": rayon,
+        "total_stations": total,
+        "stations_sans_borne": sans,
+        "pct_sans_borne": round(100 * sans / total, 1) if total else 0,
+        "par_ligne": lignes,
+        "interpretation": (
+            f"{sans}/{total} stations ({round(100*sans/total,1) if total else 0}%) "
+            f"sans borne dans un rayon de {rayon} m — perte d'opportunité intermodale."
+        )
+    })
+
+
+@api_view(["GET"])
 def equity_analysis(request):
     """Corrélation couverture ↔ profil socio-démographique (StatCan Recensement 2021)."""
     arronds = list(Arrondissement.objects.all().values("nom", "nb_bornes", "pct_couverture"))
