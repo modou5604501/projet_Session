@@ -624,3 +624,131 @@ def correlation_demo(request):
         "question_recherche": "Les bornes dans les zones résidentielles sont-elles conditionnées au profil de la population ?",
         "source": "StatCan, Recensement 2021 — données socio-démographiques par arrondissement",
     })
+
+
+@api_view(["GET"])
+def facteurs_distribution(request):
+    """
+    Analyse multi-facteurs : pourquoi certaines zones ont-elles plus de bornes que d'autres ?
+    Corrèle pct_couverture avec : nb_parcs, nb_épiceries, revenu, densité, motorisation.
+    Répond directement à la question gestionnaire du professeur :
+    'est-ce lié à la proximité de zones de loisirs ? est-ce la présence de magasins ?'
+    """
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT
+                a.nom,
+                a.nb_bornes,
+                CAST(a.pct_couverture AS float)                           AS pct_couverture,
+                (SELECT COUNT(*) FROM parcs    p WHERE ST_Within(p.geom, a.geom)) AS nb_parcs,
+                (SELECT COUNT(*) FROM epiceries e WHERE ST_Within(e.geom, a.geom)) AS nb_epiceries
+            FROM arrondissements a
+            ORDER BY a.nb_bornes DESC
+        """)
+        cols = [c[0] for c in cur.description]
+        rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    # Enrichir avec profil démographique
+    enriched = []
+    for r in rows:
+        entry = {
+            "nom":            r["nom"],
+            "nb_bornes":      r["nb_bornes"],
+            "pct_couverture": round(float(r["pct_couverture"] or 0), 1),
+            "nb_parcs":       r["nb_parcs"],
+            "nb_epiceries":   r["nb_epiceries"],
+        }
+        demo = _DEMO_DATA.get(r["nom"])
+        if demo:
+            entry.update({
+                "revenu_median":    demo["revenu_median"],
+                "densite_pop":      demo["densite_pop"],
+                "tx_voiture":       demo["tx_voiture"],
+                "tx_faible_revenu": demo["tx_faible_revenu"],
+            })
+        enriched.append(entry)
+
+    # Pearson r : chaque facteur vs pct_couverture
+    def pearson(xs, ys):
+        n = len(xs)
+        if n < 3:
+            return 0
+        mx, my = sum(xs) / n, sum(ys) / n
+        num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+        dx  = sum((x - mx) ** 2 for x in xs) ** 0.5
+        dy  = sum((y - my) ** 2 for y in ys) ** 0.5
+        return round(num / (dx * dy + 1e-9), 3)
+
+    covs      = [r["pct_couverture"] for r in enriched]
+    demo_rows = [r for r in enriched if "revenu_median" in r]
+    dcovs     = [r["pct_couverture"] for r in demo_rows]
+
+    labels = {
+        "nb_parcs":         "Zones de loisirs (parcs)",
+        "nb_epiceries":     "Commerces alimentaires (épiceries)",
+        "revenu_median":    "Revenu médian des ménages",
+        "densite_pop":      "Densité de population",
+        "tx_voiture":       "Taux de motorisation (proxy demande EV)",
+        "tx_faible_revenu": "Taux de faible revenu",
+    }
+    questions = {
+        "nb_parcs":         "est-ce lié à la proximité de zones de loisirs ?",
+        "nb_epiceries":     "est-ce la présence de commerces ?",
+        "revenu_median":    "est-ce lié au profil économique ?",
+        "densite_pop":      "est-ce lié à la densité de population ?",
+        "tx_voiture":       "est-ce lié à l'accès en voiture ?",
+        "tx_faible_revenu": "est-ce lié à la vulnérabilité socio-économique ?",
+    }
+
+    cors_raw = {
+        "nb_parcs":         pearson([r["nb_parcs"]          for r in enriched], covs),
+        "nb_epiceries":     pearson([r["nb_epiceries"]      for r in enriched], covs),
+        "revenu_median":    pearson([r["revenu_median"]     for r in demo_rows], dcovs) if demo_rows else 0,
+        "densite_pop":      pearson([r["densite_pop"]       for r in demo_rows], dcovs) if demo_rows else 0,
+        "tx_voiture":       pearson([r["tx_voiture"]        for r in demo_rows], dcovs) if demo_rows else 0,
+        "tx_faible_revenu": pearson([r["tx_faible_revenu"]  for r in demo_rows], dcovs) if demo_rows else 0,
+    }
+
+    correlations = sorted(
+        [{"variable": k, "r": v, "label": labels[k], "question": questions[k]} for k, v in cors_raw.items()],
+        key=lambda x: -abs(x["r"])
+    )
+
+    # Interprétation narrative pour le gestionnaire
+    _dir_label = {
+        "nb_parcs":         ("plus de parcs",       "moins de parcs"),
+        "nb_epiceries":     ("plus de commerces",   "moins de commerces"),
+        "revenu_median":    ("revenu médian élevé", "revenu médian faible"),
+        "densite_pop":      ("forte densité",        "faible densité"),
+        "tx_voiture":       ("taux de motorisation élevé", "faible motorisation"),
+        "tx_faible_revenu": ("taux de faible revenu élevé", "faible taux de pauvreté"),
+    }
+    top = correlations[0] if correlations else None
+    if top and abs(top["r"]) >= 0.4:
+        pos_lbl, neg_lbl = _dir_label.get(top["variable"], (top["label"], top["label"]))
+        dir_lbl = pos_lbl if top["r"] > 0 else neg_lbl
+        interpretation = (
+            f"Le facteur dominant est « {top['label']} » (r = {top['r']}). "
+            f"Les zones avec {dir_lbl} tendent à avoir une meilleure couverture en bornes."
+        )
+    elif top and abs(top["r"]) >= 0.2:
+        interpretation = (
+            f"La distribution semble partiellement liée à « {top['label']} » "
+            f"(r = {top['r']}), mais aucun facteur isolé n'est dominant — "
+            f"la distribution est probablement multifactorielle."
+        )
+    else:
+        interpretation = (
+            "Aucun facteur isolé n'explique clairement la distribution. "
+            "La localisation des bornes semble davantage liée à des décisions historiques "
+            "ou à la disponibilité foncière qu'à un critère socio-spatial unique."
+        )
+
+    return Response({
+        "arrondissements":   enriched,
+        "correlations":      correlations,
+        "interpretation":    interpretation,
+        "question_gestionnaire": "Pourquoi certaines zones ont-elles plus de bornes que d'autres ?",
+        "source": "PostGIS ST_Within (parcs, épiceries, bornes) · StatCan Recensement 2021",
+        "nb_arrondissements": len(enriched),
+    })

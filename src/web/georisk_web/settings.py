@@ -34,11 +34,14 @@ if sys.platform == "win32":
     GDAL_LIBRARY_PATH = _first_dll([
         str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/gdal*.dll"),
         r"C:/OSGeo4W/bin/gdal310.dll",
+        r"C:/Program Files/QGIS 3.34.6/bin/gdal308.dll",
+        r"C:/Program Files/QGIS 3.34.6/bin/gdal*.dll",
     ])
     GEOS_LIBRARY_PATH = _first_dll([
         str(Path(sys.prefix) / "Lib/site-packages/shapely.libs/geos_c*.dll"),
         str(Path(sys.prefix) / "Lib/site-packages/fiona.libs/geos_c*.dll"),
         r"C:/OSGeo4W/bin/geos_c.dll",
+        r"C:/Program Files/QGIS 3.34.6/bin/geos_c.dll",
     ])
 else:
     # Linux/Railway : laisser Django trouver les libs système
