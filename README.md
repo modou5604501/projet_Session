@@ -50,6 +50,26 @@ Les zones sous-desservies calculées par l'analyse sont disponibles dans [`data/
 
 ---
 
+## Analyse socio-démographique
+
+La localisation des bornes ne se réduit pas à la position spatiale : elle est conditionnée par le **contexte socio-démographique** et l'**accès en voiture** de chaque arrondissement. Le fichier [`data/demo_arrondissements.csv`](data/demo_arrondissements.csv) contient 6 variables StatCan 2021 pour les 19 arrondissements :
+
+| Variable | Rôle dans l'analyse |
+|---|---|
+| `densite_pop_km2` | Plus la densité est élevée, plus l'impact d'une borne est grand |
+| `tx_voiture_pct` | Proxy de la demande en véhicules électriques — accès en voiture |
+| `revenu_median_menage` | Mesure de l'inéquité : les zones aisées sont mieux desservies |
+| `tx_faible_revenu_pct` | Vulnérabilité socio-économique |
+
+Ces variables alimentent trois analyses distinctes :
+- **Score de priorité** (`/api/priorite/`) : classement des arrondissements 0–100 selon 5 critères pondérés
+- **Corrélation Pearson** (`/api/correlation/`) : lien statistique entre couverture et chaque variable
+- **Analyse d'équité** (`/api/equity/`) : scatter plot couverture vs revenu médian
+
+> La corrélation confirme que les zones à revenu élevé et à fort taux de motorisation sont mieux desservies — l'inégalité d'accès est à la fois géographique et socio-économique.
+
+---
+
 ## Pipeline de traitement
 
 ```mermaid
