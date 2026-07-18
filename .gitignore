@@ -35,3 +35,8 @@ Thumbs.db
 
 # CI (token sans scope workflow)
 .github/
+
+# Documents remis séparément au professeur (pas sur GitHub)
+RAPPORT_FINAL.md
+PRESENTATION_ORALE.md
+PRESENTATION_ORALE.pptx
