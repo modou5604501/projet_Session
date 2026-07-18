@@ -33,11 +33,11 @@ Les données ont été téléchargées automatiquement via le script [`src/prepr
    - Équité de revenu (15 %) — les zones à faible revenu sont sous-pondérées dans l'offre actuelle
    - `tx_faible_revenu_pct` (10 %) — vulnérabilité socio-économique
 
-2. **Corrélation Pearson** (`/api/correlation/`) — mesure le lien entre taux de couverture et chaque variable socio-démographique → confirme une corrélation positive entre revenu médian et couverture (inéquité structurelle)
+2. **Corrélation Pearson** (`/api/correlation/`) — mesure le lien entre taux de couverture et chaque variable socio-démographique → sur les 19 arrondissements, le facteur dominant est la **densité de population** (r = 0,875), pas le revenu (r = -0,60, négatif) : ce sont les zones peu denses et dépendantes de l'auto qui sont sous-desservies, pas les zones pauvres
 
 3. **Analyse d'équité** (`/api/equity/`) — scatter plot couverture vs revenu médian avec droite de régression
 
-> Exemple (valeurs réelles Données de Montréal 2021) : Montréal-Nord (`revenu_median = 56 400 $`, `tx_voiture_pct = 73 %`, `tx_faible_revenu_pct = 32 %`, densité = 6 648 hab/km²) obtient un **score de priorité ≈ 63/100** malgré une couverture de ~25 %. L'Île-Bizard (`revenu_median = 98 000 $`, densité 441 hab/km²) ne score que **≈ 52/100** malgré une couverture géographique plus faible — car l'impact social par borne y serait bien moindre (très faible densité, revenu élevé).
+> Exemple (valeurs réelles Données de Montréal 2021, calculé en direct par l'app) : Le Plateau-Mont-Royal (`revenu_median = 60 000 $`, `tx_voiture_pct = 58 %`, `tx_faible_revenu_pct = 33.6 %`, densité = 16 212 hab/km² — la plus forte de l'île) obtient un **score de priorité de 49,9/100** malgré une couverture déjà quasi complète (97,8 %). L'Île-Bizard (`revenu_median = 98 000 $`, densité 441 hab/km²) ne score qu'à peine plus haut (**52,1/100**) malgré une couverture géographique bien plus faible (8,9 %) — car l'impact social par borne y serait bien moindre (très faible densité, revenu élevé).
 
 ---
 

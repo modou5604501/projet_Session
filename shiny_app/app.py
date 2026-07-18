@@ -10,7 +10,12 @@ Remplace Django+Docker+PostGIS par une app autonome :
 Lancer : shiny run app.py --reload
 """
 
-import os, math, warnings
+import sys, os, math, warnings
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 import pandas as pd
 import geopandas as gpd
 import folium
@@ -41,6 +46,7 @@ bornes_gdf    = gpd.read_file(os.path.join(VEC, "bornes_recharge_montreal.geojso
 arrond_gdf    = gpd.read_file(os.path.join(VEC, "arrondissements_montreal.geojson")).to_crs(4326)
 parcs_gdf     = gpd.read_file(os.path.join(VEC, "parcs_montreal.geojson")).to_crs(4326)
 epiceries_gdf = gpd.read_file(os.path.join(VEC, "epiceries_montreal.geojson")).to_crs(4326)
+stations_gdf  = gpd.read_file(os.path.join(VEC, "stations_metro_stm.geojson")).to_crs(4326)
 demo_df       = pd.read_csv(os.path.join(DATA, "demo_arrondissements.csv"))
 
 # Normaliser la colonne nom dans arrond_gdf
@@ -49,14 +55,22 @@ for col in arrond_gdf.columns:
         arrond_gdf = arrond_gdf.rename(columns={col: "nom"})
         break
 
+# demo_arrondissements.csv utilise le tiret cadratin (–) dans les noms composés
+# (ex. "Côte-des-Neiges–Notre-Dame-de-Grâce") alors que le GeoJSON des
+# arrondissements utilise le trait d'union simple (-) partout : sans cette
+# normalisation, la jointure échoue silencieusement sur 6 des 19 arrondissements.
+demo_df["arrondissement"] = demo_df["arrondissement"].str.replace("–", "-", regex=False)
+
 print(f"  → {len(bornes_gdf)} bornes · {len(arrond_gdf)} arrondissements · "
-      f"{len(parcs_gdf)} parcs · {len(epiceries_gdf)} épiceries", flush=True)
+      f"{len(parcs_gdf)} parcs · {len(epiceries_gdf)} épiceries · "
+      f"{len(stations_gdf)} stations métro", flush=True)
 
 # ── Projeter en MTM-8 (EPSG:32188) pour les calculs de distance ────────────
 bornes_p    = bornes_gdf.to_crs(32188)
 arrond_p    = arrond_gdf.to_crs(32188)
 parcs_p     = parcs_gdf.to_crs(32188)
 epiceries_p = epiceries_gdf.to_crs(32188)
+stations_p  = stations_gdf.to_crs(32188)
 
 # ── Couverture 500 m par arrondissement ────────────────────────────────────
 print("⏳ Calcul couverture 500 m…", flush=True)
@@ -80,6 +94,24 @@ arrond_gdf = arrond_gdf.merge(
              "tx_voiture_pct", "tx_faible_revenu_pct"]],
     on="nom", how="left"
 )
+
+# ── Score de priorité composite (5 critères pondérés, cf. RAPPORT_FINAL §3.7) ─
+# Restreint aux 19 arrondissements avec données StatCan (les 15 villes liées
+# n'ont pas de profil démographique officiel par arrondissement).
+_score_df = arrond_gdf.dropna(subset=["densite_pop_km2", "revenu_median_menage",
+                                       "tx_voiture_pct", "tx_faible_revenu_pct"]).copy()
+_gap    = 1 - _score_df["pct_couverture"] / 100
+_dens   = _score_df["densite_pop_km2"] / _score_df["densite_pop_km2"].max()
+_moto   = _score_df["tx_voiture_pct"] / _score_df["tx_voiture_pct"].max()
+_equite = 1 - _score_df["revenu_median_menage"] / _score_df["revenu_median_menage"].max()
+_fr     = _score_df["tx_faible_revenu_pct"] / _score_df["tx_faible_revenu_pct"].max()
+
+_score_df["score_priorite"] = (100 * (
+    _gap * 0.35 + _dens * 0.25 + _moto * 0.15 + _equite * 0.15 + _fr * 0.10
+)).round(1)
+
+priorite_df = _score_df[["nom", "pct_couverture", "nb_bornes", "score_priorite"]] \
+    .sort_values("score_priorite", ascending=False).reset_index(drop=True)
 
 # ── Bornes à 500 m pour chaque parc ────────────────────────────────────────
 print("⏳ Requête spatiale parcs ↔ bornes (500 m)…", flush=True)
@@ -339,9 +371,49 @@ app_ui = ui.page_navbar(
 
         ui.br(),
 
-        # G6 — Multi-facteurs
+        ui.layout_column_wrap(
+
+            # G3 — Score de priorité
+            ui.card(
+                ui.card_header("③ Score de priorité composite"),
+                ui.p(
+                    "Quel arrondissement traiter en premier ? Score 0–100 combinant gap de "
+                    "couverture (35%), densité (25%), motorisation (15%), équité de revenu (15%) "
+                    "et taux de faible revenu (10%) — 19 arrondissements avec données StatCan.",
+                    style="font-size:0.82rem; color:#555;",
+                ),
+                ui.input_action_button("g3_run", "▶ Calculer les scores",
+                                       class_="btn btn-primary btn-sm"),
+                ui.output_ui("g3_summary"),
+                ui.output_table("g3_table"),
+            ),
+
+            # G5 — Intermodalité STM
+            ui.card(
+                ui.card_header("⑤ Intermodalité STM — park-and-charge"),
+                ui.p(
+                    "Quelles stations de métro n'ont pas de borne à proximité pour le "
+                    "park-and-charge (NOT EXISTS + ST_DWithin, par ligne) ?",
+                    style="font-size:0.82rem; color:#555;",
+                ),
+                ui.layout_columns(
+                    ui.input_numeric("g5_rayon", "Rayon (m)", 500, min=100, max=2000, step=100),
+                    ui.input_action_button("g5_run", "▶ Analyser",
+                                           class_="btn btn-primary btn-sm"),
+                    col_widths=[7, 5],
+                ),
+                ui.output_table("g5_table"),
+                ui.output_table("g5_sans_table"),
+            ),
+
+            width=1 / 2,
+        ),
+
+        ui.br(),
+
+        # G4 — Multi-facteurs
         ui.card(
-            ui.card_header("⑥ Pourquoi cette distribution ? — Analyse multi-facteurs"),
+            ui.card_header("④ Pourquoi cette distribution ? — Analyse multi-facteurs"),
             ui.p(
                 "Est-ce lié au profil de la population ? à la proximité de zones de loisirs ? "
                 "à la présence de magasins ? — Corrélation Pearson sur 6 facteurs.",
@@ -363,12 +435,12 @@ app_ui = ui.page_navbar(
                 "conditionnées au profil de la population ?"
             ),
             ui.p(
-                "Scatter plot : couverture en bornes (%) vs revenu médian par arrondissement. "
-                "La droite de régression révèle une corrélation positive → les arrondissements "
-                "à revenu élevé sont mieux desservis.",
+                "Scatter plot : couverture en bornes (%) vs revenu médian par arrondissement, "
+                "avec droite de régression et coefficient de Pearson (r).",
                 style="font-size:0.82rem; color:#555;",
             ),
             ui.output_plot("equity_plot", height="480px"),
+            ui.output_ui("equity_interp"),
         ),
         ui.br(),
         ui.card(
@@ -475,17 +547,76 @@ def server(input, output, session):
         sans.columns = ["Épicerie", "Type", "Adresse"]
         return sans.reset_index(drop=True)
 
+    # ── G3 : SCORE DE PRIORITÉ ─────────────────────────────────────────────
+    @render.ui
+    @reactive.event(input.g3_run)
+    def g3_summary():
+        top = priorite_df.iloc[0]
+        return ui.div(
+            ui.strong(f"{top['nom']}"),
+            f" arrive en tête avec un score de {top['score_priorite']}/100 "
+            f"(couverture actuelle : {top['pct_couverture']}%).",
+            class_="alert alert-info",
+            style="font-size:0.88rem; padding:8px 12px; margin:8px 0;",
+        )
+
+    @render.table
+    @reactive.event(input.g3_run)
+    def g3_table():
+        df = priorite_df.head(10).copy()
+        df.columns = ["Arrondissement", "Couverture (%)", "Nb bornes", "Score priorité /100"]
+        return df
+
+    # ── G5 : INTERMODALITÉ STM ─────────────────────────────────────────────
+    @reactive.calc
+    @reactive.event(input.g5_run)
+    def _g5_result():
+        rayon = input.g5_rayon()
+        buf_union_r = bornes_p.geometry.buffer(rayon).unary_union
+        stations = stations_gdf.copy()
+        stations["a_borne"] = stations_p.geometry.within(buf_union_r)
+
+        rows = []
+        for ligne in ["Verte", "Orange", "Bleue", "Jaune"]:
+            sub = stations[stations["ligne"] == ligne]
+            total = len(sub)
+            avec = int(sub["a_borne"].sum())
+            rows.append({
+                "Ligne": ligne, "Stations": total, "Avec borne": avec,
+                "Sans borne": total - avec,
+                "Couverture (%)": round(100 * avec / total, 1) if total else 0.0,
+            })
+        total_all = len(stations)
+        avec_all  = int(stations["a_borne"].sum())
+        rows.append({
+            "Ligne": "Total", "Stations": total_all, "Avec borne": avec_all,
+            "Sans borne": total_all - avec_all,
+            "Couverture (%)": round(100 * avec_all / total_all, 1) if total_all else 0.0,
+        })
+        return pd.DataFrame(rows), stations[~stations["a_borne"]][["nom", "ligne"]]
+
+    @render.table
+    @reactive.event(input.g5_run)
+    def g5_table():
+        return _g5_result()[0]
+
+    @render.table
+    @reactive.event(input.g5_run)
+    def g5_sans_table():
+        df = _g5_result()[1].copy().reset_index(drop=True)
+        df.columns = ["Station sans borne à proximité", "Ligne"]
+        return df
+
     # ── G6 : MULTI-FACTEURS ────────────────────────────────────────────────
     @reactive.calc
     @reactive.event(input.g6_run)
     def _g6_cors():
-        df   = g6_df.dropna(subset=["pct_couverture"])
-        covs = df["pct_couverture"].tolist()
         cors = {}
         for var in VAR_LABELS_G6:
-            if var in df.columns:
-                vals = df[var].fillna(df[var].median()).tolist()
-                cors[var] = pearson(vals, covs)
+            if var not in g6_df.columns:
+                continue
+            sub = g6_df.dropna(subset=[var, "pct_couverture"])
+            cors[var] = pearson(sub[var].tolist(), sub["pct_couverture"].tolist())
         return sorted(
             [{"variable": k, "r": v,
               "label": VAR_LABELS_G6[k],
@@ -593,6 +724,26 @@ def server(input, output, session):
 
         plt.tight_layout(pad=1.5)
         return fig
+
+    @render.ui
+    def equity_interp():
+        df = arrond_gdf[["pct_couverture", "revenu_median_menage"]].dropna()
+        r = pearson(df["revenu_median_menage"].tolist(), df["pct_couverture"].tolist())
+        if r > 0.25:
+            txt = (f"r = {r} — inéquité détectée : les arrondissements à revenu élevé "
+                   "tendent à être mieux desservis en bornes.")
+            cls = "alert alert-warning"
+        elif r < -0.25:
+            txt = (f"r = {r} — pas d'inéquité en faveur des riches : à Montréal, la couverture "
+                   "est en fait légèrement plus faible dans les arrondissements à revenu élevé "
+                   "(souvent plus périphériques et moins denses). Le revenu n'est donc pas le "
+                   "facteur qui explique le mieux la distribution des bornes.")
+            cls = "alert alert-info"
+        else:
+            txt = (f"r = {r} — équité relative : pas de corrélation significative entre "
+                   "revenu médian et couverture en bornes.")
+            cls = "alert alert-secondary"
+        return ui.div(txt, class_=cls, style="font-size:0.88rem; margin:8px 0;")
 
     @render.table
     def equity_table():

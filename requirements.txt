@@ -1,5 +1,9 @@
-# GeoCharge Montréal — Dépendances Python
-# Installation : pip install -r requirements.txt
+# GeoCharge Montréal — Dépendances de l'ancien backend Django (conservé pour référence, non utilisé)
+#
+# ⚠ L'application qui tourne réellement est shiny_app/app.py (Shiny for Python).
+#   Pour l'installer : pip install -r shiny_app/requirements.txt
+#   Ce fichier-ci liste les dépendances du backend Django + PostGIS remplacé le 14 juillet 2026
+#   (voir shiny_app/app.py, docstring). Il n'est plus nécessaire pour faire tourner le projet.
 
 # === Géospatial ===
 geopandas==1.0.1
