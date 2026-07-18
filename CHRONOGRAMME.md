@@ -8,14 +8,14 @@
 
 ## Vue d'ensemble des phases
 
-| Phase | Description | Début | Fin | Durée | Statut |
-|---|---|---|---|---|---|
-| Phase 1 | Planification et choix des technologies | 1er juin 2026 | 23 juin 2026 | — | ✅ Complété |
-| Phase 2 | Acquisition des données ouvertes | 24 juin 2026 | 7 juillet 2026 | 14 jours | ✅ Complété |
-| Phase 3 | Prétraitement + import PostGIS | 7 juillet 2026 | 7 juillet 2026 | 1 jour | ✅ Complété |
-| Phase 4 | Analyse spatiale (buffer + gap analysis) | 7 juillet 2026 | 7 juillet 2026 | 1 jour | ✅ Complété |
-| Phase 5 | Application Django + Leaflet + API REST | 7 juillet 2026 | 8 juillet 2026 | 2 jours | ✅ Complété |
-| Phase 6 | Docker, GitHub, tests, rapport, déploiement | 8 juillet 2026 | 14 juillet 2026 | 6 jours | ✅ Complété |
+| Phase | Description | Statut |
+|---|---|---|
+| Phase 1 | Planification et choix du sujet | ✅ Complété |
+| Phase 2 | Acquisition des données ouvertes | ✅ Complété |
+| Phase 3 | Prototype Django + PostGIS + Docker | ⚠️ Abandonné (trop lourd pour une démo en classe) |
+| Phase 4 | Pivot vers Shiny for Python + GeoPandas | ✅ Complété (14 juillet 2026) |
+| Phase 5 | Analyse spatiale et outils de décision (G1–G5) | ✅ Complété |
+| Phase 6 | Documentation, rapport, présentation | ✅ Complété |
 
 ---
 
@@ -23,59 +23,49 @@
 
 ```mermaid
 gantt
-    title GeoCharge Montréal — Chronogramme Sprint (24 juin – 14 juillet 2026)
+    title GeoCharge Montréal — Chronogramme (24 juin – 14 juillet 2026)
     dateFormat  YYYY-MM-DD
     axisFormat  %d %b
 
     section Phase 1 — Planification
-    Recherche et choix technologies         :done, p1a, 2026-06-01, 2026-06-23
+    Recherche et choix du sujet             :done, p1a, 2026-06-01, 2026-06-23
     Pivot sujet bornes de recharge          :done, p1b, 2026-06-24, 2026-06-26
 
     section Phase 2 — Acquisition des données
     Bornes recharge Montréal (GeoJSON)      :done, p2a, 2026-06-24, 2026-06-25
-    Statistiques utilisation 2025 (CSV)     :done, p2b, 2026-06-25, 2026-06-26
     Arrondissements Montréal WGS84          :done, p2c, 2026-06-26, 2026-06-27
-    Tracés STM bus + métro (Shapefile)      :done, p2d, 2026-07-07, 2026-07-07
-    Documentation SOURCES.md               :done, p2e, 2026-07-07, 2026-07-07
+    Tracés STM (Shapefile)                  :done, p2d, 2026-07-07, 2026-07-07
+    Documentation SOURCES.md                :done, p2e, 2026-07-07, 2026-07-07
 
-    section Phase 3 — Prétraitement et PostGIS
-    Docker + PostgreSQL + PostGIS           :done, p3a, 2026-07-07, 2026-07-07
-    Création tables SQL (4 couches)         :done, p3b, 2026-07-07, 2026-07-07
-    import_postgis.py (2 412 bornes)        :done, p3c, 2026-07-07, 2026-07-07
-    Reprojection STM NAD83 → WGS84          :done, p3d, 2026-07-07, 2026-07-07
+    section Phase 3 — Prototype Django/PostGIS (abandonné)
+    Docker + PostgreSQL + PostGIS           :crit, done, p3a, 2026-07-07, 2026-07-07
+    Modèles Django + API REST               :crit, done, p3b, 2026-07-07, 2026-07-08
 
-    section Phase 4 — Analyse spatiale
-    buffer_analysis.py (zones 500 m)        :done, p4a, 2026-07-07, 2026-07-07
-    Couverture par arrondissement (%)       :done, p4b, 2026-07-07, 2026-07-07
-    gap_analysis.py (zones sous-desservies) :done, p4c, 2026-07-07, 2026-07-07
-    Export zones_sous_desservies.geojson    :done, p4d, 2026-07-07, 2026-07-07
+    section Phase 4 — Pivot Shiny
+    Migration calculs vers GeoPandas        :done, p4a, 2026-07-14, 2026-07-14
+    Application Shiny autonome              :done, p4b, 2026-07-14, 2026-07-14
 
-    section Phase 5 — Application Web
-    Modèles Django + API REST GeoJSON       :done, p5a, 2026-07-07, 2026-07-07
-    Dashboard Leaflet dark theme            :done, p5b, 2026-07-07, 2026-07-08
-    Mise à jour temps réel (APScheduler)    :done, p5c, 2026-07-08, 2026-07-08
-    PWA installable sur tablette            :done, p5d, 2026-07-08, 2026-07-08
+    section Phase 5 — Analyse spatiale
+    Couverture par arrondissement (%)       :done, p5a, 2026-07-14, 2026-07-15
+    Outils G1–G5 + onglet équité            :done, p5b, 2026-07-15, 2026-07-17
 
     section Phase 6 — Livraison
-    docker-compose.yml (PostGIS + Django)   :done, p6a, 2026-07-07, 2026-07-07
-    Publication GitHub (code + données)     :done, p6b, 2026-07-07, 2026-07-08
-    Rapport technique final                 :done, p6c, 2026-07-07, 2026-07-08
-    Présentation orale                      :done, p6d, 2026-07-07, 2026-07-08
-    Déploiement Railway (URL publique)      :done, p6e, 2026-07-08, 2026-07-08
+    Publication GitHub (code + données)     :done, p6a, 2026-07-17, 2026-07-18
+    Rapport technique final (7 sections)    :done, p6c, 2026-07-17, 2026-07-18
+    Présentation orale                      :done, p6d, 2026-07-17, 2026-07-18
     Remise du projet                        :milestone, 2026-07-14, 2026-07-14
 ```
 
 ---
 
-## Détail par phase — Réalisations concrètes
+## Détail par phase
 
 ### Phase 1 — Planification (juin 2026) ✅
 
-| Tâche | Outil | Livrable |
-|---|---|---|
-| Choix du sujet : accessibilité bornes recharge Montréal | Réflexion équipe | Problématique validée |
-| Choix des technologies : Django + PostGIS + Leaflet | Documentation | Stack technique |
-| Définition de la question de recherche | — | Où installer de nouvelles bornes ? |
+| Tâche | Livrable |
+|---|---|
+| Choix du sujet : accessibilité bornes recharge Montréal | Problématique validée |
+| Définition de la question de recherche | Où installer de nouvelles bornes ? |
 
 ---
 
@@ -84,59 +74,48 @@ gantt
 | Source | Format | Contenu | Licence |
 |---|---|---|---|
 | Ville de Montréal (Données Québec) | GeoJSON | 2 412 bornes de recharge publiques | CC-BY 4.0 |
-| Ville de Montréal (Données Québec) | CSV | Statistiques d'utilisation 2025 | CC-BY 4.0 |
 | Ville de Montréal (Données Québec) | GeoJSON | Arrondissements WGS84 (34 unités) | CC-BY 4.0 |
-| STM (Données Québec) | Shapefile | Stations de métro + lignes de bus | CC-BY 4.0 |
+| STM (Données Québec) | Shapefile | Stations de métro + lignes | CC-BY 4.0 |
+| Statistique Canada | — | Recensement 2021 (19 arrondissements) | CC-BY 4.0 |
 
 ---
 
-### Phase 3 — Prétraitement + PostGIS (7 juillet 2026) ✅
+### Phase 3 — Prototype Django/PostGIS (7 juillet 2026) ⚠️ Abandonné
 
-| Tâche | Script | Résultat |
-|---|---|---|
-| Lancement Docker (PostGIS 15-3.3) | docker-compose.yml | Base de données opérationnelle |
-| Création des 4 tables spatiales | sql/01_create_tables.sql | Schéma PostGIS prêt |
-| Import bornes (2 412 points) | import_postgis.py | Table `bornes_recharge` |
-| Import arrondissements (34 polygones) | import_postgis.py | Table `arrondissements` |
-| Import stations métro (68 points) | import_postgis.py | Table `stations_metro` |
-| Reprojection STM NAD83 → WGS84 | import_postgis.py | Données cohérentes EPSG:4326 |
+Une première version utilisait Django, PostgreSQL/PostGIS et Docker pour l'application web. Cette architecture, bien que réaliste pour une mise en production, s'est révélée lourde à faire fonctionner pour une simple démonstration en classe (base de données à démarrer, conteneur à configurer). Elle a été **remplacée** par l'approche décrite en Phase 4.
 
 ---
 
-### Phase 4 — Analyse spatiale (7 juillet 2026) ✅
+### Phase 4 — Pivot vers Shiny for Python (14 juillet 2026) ✅
 
-| Tâche | Script | Résultat |
-|---|---|---|
-| Buffers 500 m en EPSG:32188 (métrique) | buffer_analysis.py | Table `zones_couverture` (2 412 polygones) |
-| % couverture par arrondissement | buffer_analysis.py | Colonne `pct_couverture` mise à jour |
-| Zones sous-desservies (gap analysis) | gap_analysis.py | `zones_sous_desservies.geojson` |
-| Statistiques globales | buffer_analysis.py | 45.2% de couverture moyenne, 12 zones critiques |
-
----
-
-### Phase 5 — Application Web (7–8 juillet 2026) ✅
-
-| Tâche | Fichier | Résultat |
-|---|---|---|
-| Modèles Django (4 tables, managed=False) | risk_map/models.py | ORM PostGIS |
-| API REST GeoJSON (5 endpoints) | risk_map/views.py | DRF + djangorestframework-gis |
-| Dashboard dark theme Leaflet | templates/risk_map/map.html | CARTO Dark, choroplèthe, EN DIRECT |
-| Mise à jour hebdo automatique | risk_map/scheduler.py | APScheduler BackgroundScheduler |
-| Bouton refresh manuel + polling | views.py + map.html | API /api/refresh/ |
-| PWA installable tablette | manifest.json + sw.js | App installable sans App Store |
+| Tâche | Résultat |
+|---|---|
+| Remplacement de PostGIS par GeoPandas (calculs en mémoire) | Aucune base de données requise |
+| Remplacement de Django/API REST par Shiny for Python | Application réactive, un seul processus |
+| Carte Folium/Leaflet intégrée directement à l'app | `shiny_app/app.py` |
 
 ---
 
-### Phase 6 — Livraison (7–14 juillet 2026) ✅
+### Phase 5 — Analyse spatiale et outils de décision (Complété) ✅
+
+| Tâche | Résultat |
+|---|---|
+| Buffers 500 m (EPSG:32188) + couverture par arrondissement | 45,2 % de couverture moyenne |
+| G1 — Parcs sans borne à proximité | 1 413 / 1 541 parcs sous le seuil |
+| G2 — Épiceries sans borne à 300 m | 819 / 3 010 épiceries |
+| G3 — Score de priorité composite (5 critères pondérés) | Classement des 19 arrondissements |
+| G4 — Corrélation multi-facteurs | Densité (r = 0,875) domine, pas le revenu (r = −0,60) |
+| G5 — Intermodalité STM | 7 / 72 stations sans borne à 500 m |
+
+---
+
+### Phase 6 — Livraison ✅
 
 | Tâche | Fichier | Statut |
 |---|---|---|
-| Docker Compose multi-services | docker-compose.yml | ✅ PostGIS + pgAdmin + web |
-| Push GitHub complet (code + données) | GitHub | ✅ commits, branche master |
-| Rapport technique final | RAPPORT_FINAL.md | ✅ 9 sections, résultats réels |
-| Présentation orale | PRESENTATION_ORALE.md | ✅ 10 diapositives |
-| Déploiement Railway | railway.json + nixpacks.toml | ✅ Prêt à déployer |
-| PWA tablette (entreprises) | manifest.json + sw.js | ✅ Installable sur iPad/Android |
+| Push GitHub complet (code + données) | GitHub | ✅ |
+| Rapport technique final | RAPPORT_FINAL.md (remis séparément) | ✅ 7 sections |
+| Présentation orale | PRESENTATION_ORALE.md (remis séparément) | ✅ |
 
 ---
 
@@ -145,12 +124,11 @@ gantt
 | Date | Jalon | Statut |
 |---|---|---|
 | 24 juin 2026 | Démarrage du projet | ✅ |
-| 7 juillet 2026 | Pivot vers bornes de recharge + toutes données acquises | ✅ |
-| 7 juillet 2026 | Base PostGIS opérationnelle + 2 412 bornes importées | ✅ |
-| 7 juillet 2026 | Analyse buffer + gap analysis terminée | ✅ |
-| 7 juillet 2026 | Application Django fonctionnelle en local | ✅ |
-| 8 juillet 2026 | Dashboard dark theme + PWA + Railway prêt | ✅ |
-| **14 juillet 2026** | **Remise finale du projet** | 🎯 En attente |
+| 7 juillet 2026 | Toutes les données acquises | ✅ |
+| 7 juillet 2026 | Prototype Django/PostGIS abandonné (trop lourd pour la démo) | ⚠️ |
+| 14 juillet 2026 | Pivot vers Shiny for Python complété | ✅ |
+| 17–18 juillet 2026 | Analyse spatiale, outils G1–G5, documentation finalisés | ✅ |
+| **14 juillet 2026** | **Remise finale du projet** | ✅ |
 
 ---
 
@@ -158,13 +136,12 @@ gantt
 
 | Défi | Solution choisie |
 |---|---|
-| Données d'imagerie satellitaire difficiles à obtenir | Pivot vers données ouvertes Ville de Montréal (immédiatement disponibles, licence CC-BY 4.0) |
-| GeoServer complexe à configurer | Django REST Framework + djangorestframework-gis (plus simple, même résultat) |
-| Données de revenu StatCan au format IVT non exploitable | Intégration des valeurs StatCan Recensement 2021 (revenu médian) pour l'analyse d'équité socio-économique |
-| Mises à jour manuelles fastidieuses | APScheduler + API CKAN Données Québec (refresh hebdomadaire automatique) |
-| Application inaccessible hors local | Déploiement Railway + PWA installable sur tablette |
+| Données d'imagerie satellitaire difficiles à obtenir | Pivot vers données ouvertes Ville de Montréal (immédiatement disponibles, CC-BY 4.0) |
+| Architecture Django + PostGIS + Docker trop lourde pour une démo en classe | Pivot vers Shiny for Python + GeoPandas, calculs en mémoire, une seule commande à lancer |
+| API Overpass (OpenStreetMap) indisponible | Données de parcs/épiceries récupérées via Données Québec |
+| Données de revenu StatCan au format IVT non exploitable par programme | Extraction manuelle des variables clés (revenu médian, etc.) par arrondissement |
 
 ---
 
-*Chronogramme révisé le 8 juillet 2026 — Équipe : Modou Khabane Mbaye & Rahina Djelila Sarah Bagre*
+*Chronogramme révisé le 18 juillet 2026 — Équipe : Modou Khabane Mbaye & Rahina Djelila Sarah Bagre*
 *GMQ580 Géomatique Informatique 2 — Université de Sherbrooke — Été 2026*

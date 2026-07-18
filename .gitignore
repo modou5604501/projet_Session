@@ -22,9 +22,19 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Django
-src/web/db.sqlite3
-src/web/staticfiles/
+# Ancienne architecture Django + PostGIS + Docker (abandonnée le 14 juillet 2026 au
+# profit de shiny_app/app.py — voir RAPPORT_FINAL.md § Difficultés rencontrées).
+# Gardés localement pour l'historique, retirés du dépôt car non utilisés et trompeurs
+# (contredisaient le README qui décrit une application sans base de données ni conteneur).
+src/web/
+src/preprocessing/
+docker-compose.yml
+nixpacks.toml
+railway.json
+railway_start.sh
+sql/
+requirements.txt
+docs/images/dashboard.png
 
 # OS
 .DS_Store

@@ -12,11 +12,13 @@
 
 ## Documents du projet
 
+Le rapport technique final et le plan de présentation orale sont remis séparément au professeur (hors dépôt GitHub).
+
 | Document | Contenu |
 |---|---|
-| [RAPPORT_FINAL.md](RAPPORT_FINAL.md) | Rapport technique — méthodologie, algorithme, résultats |
-| [PRESENTATION_ORALE.md](PRESENTATION_ORALE.md) | Plan de la présentation orale (10 min + 2 min de questions) |
 | [data/SOURCES.md](data/SOURCES.md) | Métadonnées de chaque couche (citation, CRS, filtrage) |
+| [CHRONOGRAMME.md](CHRONOGRAMME.md) | Chronogramme du projet, incluant le pivot d'architecture |
+| [DEPLOIEMENT.md](DEPLOIEMENT.md) | Exécution locale de l'application |
 
 ---
 
@@ -54,9 +56,9 @@ Le dossier `data/` contient aussi d'autres fichiers récoltés en cours de route
 3. **Calcul de couverture** : un cercle (buffer) de 500 m — la distance de marche considérée accessible en urbanisme actif — est tracé autour de chaque borne. L'union de ces cercles, intersectée avec chaque arrondissement, donne le pourcentage de couverture.
 4. **Jointures spatiales** : pour chaque parc, épicerie et station de métro, on vérifie si une borne se trouve à proximité (500 m, 300 m ou un rayon ajustable selon l'outil).
 5. **Jointure démographique** : les 34 arrondissements sont associés au profil StatCan 2021 quand il existe (19 des 34 en disposent — les 15 autres sont des villes reconstituées sans profil publié par arrondissement).
-6. **Résultat** : une application Shiny avec une carte, cinq outils de décision et un onglet d'équité — détaillés dans [RAPPORT_FINAL.md](RAPPORT_FINAL.md).
+6. **Résultat** : une application Shiny avec une carte, cinq outils de décision et un onglet d'équité (détails dans le rapport technique, remis séparément).
 
-Un point trouvé en cours d'analyse, plutôt que supposé au départ : la couverture en bornes suit surtout la **densité de population** (r = 0,875) et beaucoup moins le revenu (r = −0,60, une corrélation négative). Détails en section Résultats de [RAPPORT_FINAL.md](RAPPORT_FINAL.md).
+Un point trouvé en cours d'analyse, plutôt que supposé au départ : la couverture en bornes suit surtout la **densité de population** (r = 0,875) et beaucoup moins le revenu (r = −0,60, une corrélation négative).
 
 ---
 

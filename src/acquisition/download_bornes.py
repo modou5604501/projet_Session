@@ -4,9 +4,8 @@ Source : Ville de Montréal via l'API CKAN de Données Québec
 Licence : CC-BY 4.0
 
 Ce script est autonome. Il télécharge le fichier GeoJSON le plus récent
-et le sauvegarde dans data/vectors/bornes_recharge_montreal.geojson.
-La même logique est intégrée dans src/preprocessing/refresh_data.py
-pour les mises à jour automatiques depuis le dashboard.
+et le sauvegarde dans data/vectors/bornes_recharge_montreal.geojson,
+utilisé directement par shiny_app/app.py.
 """
 
 import os
