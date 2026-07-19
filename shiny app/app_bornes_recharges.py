@@ -3,18 +3,25 @@ Application Shiny for Python - Tableau de bord Bornes de recharge électrique
 Accessibilité aux bornes de recharge à Montréal
 
 Dépendances :
-    pip install shiny geopandas folium pandas matplotlib
+    pip install shiny geopandas folium pandas matplotlib python-pptx
 """
 
 from __future__ import annotations
 
 import html
+import io
+from datetime import date
 from pathlib import Path
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
 import folium
+from matplotlib.backends.backend_pdf import PdfPages
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN
 
 from shiny import App, reactive, render, ui
 
@@ -350,6 +357,11 @@ app_ui = ui.page_fluid(
                     "Est-ce lié au profil de la population, à la présence de parcs ou "
                     "d'épiceries ? Trois questions concrètes, avec les données réelles.",
                     style="font-size:0.85rem; color:#555;",
+                ),
+                ui.div(
+                    ui.download_button("export_gestionnaire_pdf", "📄 Exporter en PDF", class_="btn-outline-secondary btn-sm"),
+                    ui.download_button("export_gestionnaire_pptx", "📊 Exporter en PowerPoint", class_="btn-outline-secondary btn-sm"),
+                    style="display:flex; gap:8px; margin-bottom:10px;",
                 ),
                 ui.layout_columns(
                     ui.card(
@@ -1023,6 +1035,209 @@ def server(input, output, session):
             texte = "Aucun facteur isolé n'explique clairement la distribution des bornes."
             classe = "alert alert-secondary"
         return ui.div(texte, class_=classe, style="font-size:0.85rem; padding:8px 12px;")
+
+    # ── Export des questions de gestionnaire : données communes ───────────────
+    def _gestionnaire_data():
+        seuil = input.g1_seuil()
+        parcs_sous_seuil = (
+            PARCS[PARCS["nb_bornes_500m"] < seuil][["nom", "superficie_ha", "nb_bornes_500m"]]
+            .sort_values("nb_bornes_500m")
+            .head(15)
+        )
+        epiceries_sans_borne = (
+            EPICERIES[~EPICERIES["has_borne_300m"]][["nom", "type", "adresse"]].head(15)
+        )
+        return {
+            "seuil": seuil,
+            "parcs_total": len(PARCS),
+            "parcs_sous_seuil_n": int((PARCS["nb_bornes_500m"] < seuil).sum()),
+            "parcs_table": parcs_sous_seuil,
+            "epiceries_total": len(EPICERIES),
+            "epiceries_sans_borne_n": int((~EPICERIES["has_borne_300m"]).sum()),
+            "epiceries_table": epiceries_sans_borne,
+            "correlations": _correlations(),
+        }
+
+    def _df_to_ax_table(ax, df: pd.DataFrame, col_labels: list[str]):
+        ax.axis("off")
+        tbl = ax.table(
+            cellText=df.values.tolist(),
+            colLabels=col_labels,
+            loc="center",
+            cellLoc="left",
+        )
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(7.5)
+        tbl.scale(1, 1.3)
+        tbl.auto_set_column_width(col=list(range(len(col_labels))))
+
+    # ── Export PDF ──────────────────────────────────────────────────────────
+    @render.download(filename=lambda: f"geocharge_gestionnaire_{date.today().isoformat()}.pdf")
+    def export_gestionnaire_pdf():
+        d = _gestionnaire_data()
+        buf = io.BytesIO()
+        with PdfPages(buf) as pdf:
+            # Page 1 — titre et synthese
+            fig, ax = plt.subplots(figsize=(8.27, 11.69))
+            ax.axis("off")
+            ax.text(0.5, 0.92, "GeoCharge Montréal", ha="center", fontsize=20, fontweight="bold")
+            ax.text(0.5, 0.87, "Questions des gestionnaires — rapport d'export", ha="center", fontsize=13)
+            ax.text(0.5, 0.82, f"Genere le {date.today().strftime('%d/%m/%Y')} — seuil parcs : {d['seuil']} bornes / 500 m",
+                     ha="center", fontsize=9, color="dimgrey")
+            lignes = [
+                f"① Parcs : {d['parcs_sous_seuil_n']} sur {d['parcs_total']} ont moins de {d['seuil']} bornes à 500 m.",
+                f"② Épiceries : {d['epiceries_sans_borne_n']} sur {d['epiceries_total']} n'ont aucune borne à 300 m.",
+            ]
+            if d["correlations"]:
+                top = d["correlations"][0]
+                lignes.append(f"③ Corrélation : facteur dominant « {top['label']} » (r = {top['r']}).")
+            for i, ligne in enumerate(lignes):
+                ax.text(0.08, 0.70 - i * 0.05, ligne, fontsize=10, wrap=True)
+            pdf.savefig(fig)
+            plt.close(fig)
+
+            # Page 2 — question 1 : parcs
+            fig, ax = plt.subplots(figsize=(8.27, 11.69))
+            ax.text(0.5, 0.96, "① Parcs — couverture en bornes", ha="center", fontsize=14, fontweight="bold", transform=ax.transAxes)
+            _df_to_ax_table(
+                ax,
+                d["parcs_table"].rename(columns={
+                    "nom": "Parc", "superficie_ha": "Superficie (ha)", "nb_bornes_500m": "Bornes a 500 m",
+                }),
+                ["Parc", "Superficie (ha)", "Bornes a 500 m"],
+            )
+            pdf.savefig(fig)
+            plt.close(fig)
+
+            # Page 3 — question 2 : epiceries
+            fig, ax = plt.subplots(figsize=(8.27, 11.69))
+            ax.text(0.5, 0.96, "② Épiceries — sans borne à 300 m", ha="center", fontsize=14, fontweight="bold", transform=ax.transAxes)
+            _df_to_ax_table(
+                ax,
+                d["epiceries_table"].rename(columns={"nom": "Épicerie", "type": "Type", "adresse": "Adresse"}),
+                ["Épicerie", "Type", "Adresse"],
+            )
+            pdf.savefig(fig)
+            plt.close(fig)
+
+            # Page 4 — question 3 : correlation
+            fig, ax = plt.subplots(figsize=(8.27, 11.69))
+            cors = d["correlations"]
+            labels = [c["label"] for c in cors][::-1]
+            values = [c["r"] for c in cors][::-1]
+            colors = ["#2e7d32" if v > 0 else "#c62828" for v in values]
+            ax.barh(labels, values, color=colors)
+            ax.axvline(0, color="grey", linewidth=0.8)
+            ax.set_xlim(-1, 1)
+            ax.set_title("③ Corrélation — couverture en bornes vs profil de population", fontsize=12)
+            ax.set_xlabel("Corrélation de Pearson (r)")
+            plt.tight_layout()
+            pdf.savefig(fig)
+            plt.close(fig)
+
+        yield buf.getvalue()
+
+    # ── Export PowerPoint ───────────────────────────────────────────────────
+    @render.download(filename=lambda: f"geocharge_gestionnaire_{date.today().isoformat()}.pptx")
+    def export_gestionnaire_pptx():
+        d = _gestionnaire_data()
+        INK = RGBColor(0x16, 0x28, 0x3D)
+        ACCENT = RGBColor(0x00, 0x72, 0x8C)
+        WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+
+        prs = Presentation()
+        prs.slide_width = Inches(13.333)
+        prs.slide_height = Inches(7.5)
+        blank = prs.slide_layouts[6]
+
+        def add_title(slide, kicker, titre):
+            tb = slide.shapes.add_textbox(Inches(0.6), Inches(0.35), Inches(12), Inches(0.4))
+            r = tb.text_frame.paragraphs[0].add_run()
+            r.text = kicker
+            r.font.size = Pt(13); r.font.bold = True; r.font.color.rgb = ACCENT
+            tb2 = slide.shapes.add_textbox(Inches(0.6), Inches(0.68), Inches(12), Inches(0.6))
+            r2 = tb2.text_frame.paragraphs[0].add_run()
+            r2.text = titre
+            r2.font.size = Pt(20); r2.font.bold = True; r2.font.color.rgb = INK
+
+        def add_table(slide, df: pd.DataFrame, headers: list[str], y=1.6):
+            rows, cols = len(df) + 1, len(headers)
+            tbl_shape = slide.shapes.add_table(rows, cols, Inches(0.6), Inches(y), Inches(12.1), Inches(5.2))
+            tbl = tbl_shape.table
+            for c, h in enumerate(headers):
+                cell = tbl.cell(0, c)
+                cell.text = h
+                cell.text_frame.paragraphs[0].font.bold = True
+                cell.text_frame.paragraphs[0].font.size = Pt(11)
+                cell.text_frame.paragraphs[0].font.color.rgb = WHITE
+                cell.fill.solid(); cell.fill.fore_color.rgb = ACCENT
+            for r_i, row in enumerate(df.itertuples(index=False), start=1):
+                for c_i, val in enumerate(row):
+                    cell = tbl.cell(r_i, c_i)
+                    cell.text = str(val)
+                    cell.text_frame.paragraphs[0].font.size = Pt(10)
+
+        # Slide 1 — titre
+        s = prs.slides.add_slide(blank)
+        tb = s.shapes.add_textbox(Inches(0.9), Inches(2.6), Inches(11.5), Inches(1))
+        r = tb.text_frame.paragraphs[0].add_run()
+        r.text = "GeoCharge Montréal"
+        r.font.size = Pt(36); r.font.bold = True; r.font.color.rgb = INK
+        tb = s.shapes.add_textbox(Inches(0.9), Inches(3.4), Inches(11.5), Inches(0.6))
+        r = tb.text_frame.paragraphs[0].add_run()
+        r.text = "Questions des gestionnaires — export"
+        r.font.size = Pt(18); r.font.color.rgb = ACCENT
+        tb = s.shapes.add_textbox(Inches(0.9), Inches(4.0), Inches(11.5), Inches(0.5))
+        r = tb.text_frame.paragraphs[0].add_run()
+        r.text = f"Généré le {date.today().strftime('%d/%m/%Y')} — seuil parcs : {d['seuil']} bornes / 500 m"
+        r.font.size = Pt(12); r.font.color.rgb = RGBColor(0x70, 0x70, 0x70)
+
+        # Slide 2 — parcs
+        s = prs.slides.add_slide(blank)
+        add_title(s, "① PARCS", f"{d['parcs_sous_seuil_n']} parcs sur {d['parcs_total']} ont moins de {d['seuil']} bornes à 500 m")
+        add_table(
+            s,
+            d["parcs_table"].rename(columns={"nom": "Parc", "superficie_ha": "Superficie (ha)", "nb_bornes_500m": "Bornes à 500 m"}),
+            ["Parc", "Superficie (ha)", "Bornes à 500 m"],
+        )
+
+        # Slide 3 — epiceries
+        s = prs.slides.add_slide(blank)
+        add_title(s, "② ÉPICERIES", f"{d['epiceries_sans_borne_n']} épiceries sur {d['epiceries_total']} n'ont aucune borne à 300 m")
+        add_table(
+            s,
+            d["epiceries_table"].rename(columns={"nom": "Épicerie", "type": "Type", "adresse": "Adresse"}),
+            ["Épicerie", "Type", "Adresse"],
+        )
+
+        # Slide 4 — correlation
+        s = prs.slides.add_slide(blank)
+        add_title(s, "③ CORRÉLATION", "Le profil de la population explique-t-il la distribution des bornes ?")
+        cors = d["correlations"]
+        labels = [c["label"] for c in cors][::-1]
+        values = [c["r"] for c in cors][::-1]
+        colors = ["#2e7d32" if v > 0 else "#c62828" for v in values]
+        fig, ax = plt.subplots(figsize=(9, 4.5))
+        ax.barh(labels, values, color=colors)
+        ax.axvline(0, color="grey", linewidth=0.8)
+        ax.set_xlim(-1, 1)
+        ax.set_xlabel("Corrélation de Pearson (r)")
+        plt.tight_layout()
+        img_buf = io.BytesIO()
+        fig.savefig(img_buf, format="png", dpi=150)
+        plt.close(fig)
+        img_buf.seek(0)
+        s.shapes.add_picture(img_buf, Inches(1.2), Inches(1.6), width=Inches(10.9))
+        if cors:
+            top = cors[0]
+            tb = s.shapes.add_textbox(Inches(0.9), Inches(6.6), Inches(11.5), Inches(0.6))
+            r = tb.text_frame.paragraphs[0].add_run()
+            r.text = f"Facteur dominant : « {top['label']} » (r = {top['r']})"
+            r.font.size = Pt(13); r.font.bold = True; r.font.color.rgb = INK
+
+        out = io.BytesIO()
+        prs.save(out)
+        yield out.getvalue()
 
     # ── Table : zones sous-desservies ─────────────────────────────────────────
     @output
