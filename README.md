@@ -6,7 +6,7 @@
 | Nom | Courriel |
 |---|---|
 | Modou Khabane Mbaye | modou.khabane.mbaye@usherbrooke.ca |
-| Rahina Djelila Sarah Bagre | rahina.bagre@usherbrooke.ca |
+| Rahina Djelila Sarah Bagre | Rahina.Djelila.Sarah.Bagre@USherbrooke.ca |
 
 ---
 
