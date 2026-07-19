@@ -115,6 +115,11 @@ def _build_priority_layer(arr_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 try:
     BORNES = gpd.read_file(BORNES_PATH)   # déjà WGS84
     ARR    = gpd.read_file(ARR_PATH)
+    # DATEMODIF est lu comme un Timestamp par geopandas ; Folium ne sait pas le
+    # sérialiser en JSON pour les tooltips (ARR.__geo_interface__ plus bas plante
+    # sinon avec "Object of type Timestamp is not JSON serializable").
+    if "DATEMODIF" in ARR.columns:
+        ARR["DATEMODIF"] = ARR["DATEMODIF"].astype(str)
     ZONES  = gpd.read_file(ZONES_PATH)
     STATS  = pd.read_csv(STATS_PATH)
     PRIORITES = _build_priority_layer(ARR)
