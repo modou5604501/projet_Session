@@ -1,64 +1,54 @@
-"""
-Analyse des zones sous-desservies (gap analysis).
-Identifie les zones de Montréal à plus de 500m de toute borne de recharge.
-"""
+"""Analyse des zones sous-desservies (locale, sans PostGIS)."""
 
-import os
+from pathlib import Path
+
 import geopandas as gpd
-from sqlalchemy import create_engine, text
-
-DB_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://georisk_user:georisk2019@localhost:5433/georisk"
-)
-
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "vectors")
 
 
-def run(engine):
-    # 1. Zones non couvertes = territoire Montréal MOINS les buffers 500m
-    sql_gaps = """
-    SELECT
-        a.nom AS arrondissement,
-        ST_Difference(
-            a.geom,
-            COALESCE(
-                (SELECT ST_Union(zc.geom)
-                 FROM zones_couverture zc
-                 WHERE ST_Intersects(zc.geom, a.geom)),
-                ST_GeomFromText('GEOMETRYCOLLECTION EMPTY', 4326)
-            )
-        ) AS geom_gap,
-        a.pct_couverture,
-        a.nb_bornes
-    FROM arrondissements a
-    WHERE a.pct_couverture < 100
-    ORDER BY a.pct_couverture ASC;
-    """
+ROOT_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = ROOT_DIR / "data" / "vectors"
 
-    gdf_gaps = gpd.read_postgis(sql_gaps, engine, geom_col="geom_gap")
-    gdf_gaps = gdf_gaps[~gdf_gaps.geometry.is_empty]
+ARR_ANALYSE = DATA_DIR / "arrondissements_analyse.geojson"
+COVERAGE = DATA_DIR / "zones_couverture.geojson"
+OUT_GAPS = DATA_DIR / "zones_sous_desservies.geojson"
 
-    output_path = os.path.join(OUTPUT_DIR, "zones_sous_desservies.geojson")
-    gdf_gaps.to_file(output_path, driver="GeoJSON")
-    print(f"Zones sous-desservies exportées : {output_path}")
-    print(f"Arrondissements avec gaps : {len(gdf_gaps)}")
 
-    # 2. Résumé par arrondissement
-    with engine.connect() as conn:
-        result = conn.execute(text("""
-            SELECT nom, nb_bornes, pct_couverture
-            FROM arrondissements
-            ORDER BY pct_couverture ASC
-            LIMIT 10
-        """))
-        print("\nArrondissements les moins couverts :")
-        print(f"{'Arrondissement':<35} {'Bornes':>6} {'Couverture':>10}")
-        print("-" * 55)
-        for r in result:
-            print(f"{r[0]:<35} {r[1]:>6} {r[2]:>9.1f}%")
+def run() -> dict:
+    if not ARR_ANALYSE.exists() or not COVERAGE.exists():
+        raise FileNotFoundError(
+            "Sorties de la phase buffer manquantes. Executez d'abord src/preprocessing/buffer_analysis.py"
+        )
+
+    arr = gpd.read_file(ARR_ANALYSE).to_crs(epsg=32188)
+    coverage = gpd.read_file(COVERAGE).to_crs(epsg=32188)
+
+    union_geom = coverage.geometry.union_all()
+    arr["geometry"] = arr.geometry.difference(union_geom)
+
+    gaps = arr[~arr.geometry.is_empty].copy()
+    gaps = gaps.to_crs(epsg=4326)
+    gaps.to_file(OUT_GAPS, driver="GeoJSON")
+
+    print(f"Zones sous-desservies exportees : {OUT_GAPS}")
+    print(f"Arrondissements avec gaps : {len(gaps)}")
+
+    top = (
+        arr[["nom", "nb_bornes", "pct_couverture"]]
+        .sort_values("pct_couverture", ascending=True)
+        .head(10)
+    )
+    print("\nArrondissements les moins couverts :")
+    print(f"{'Arrondissement':<35} {'Bornes':>6} {'Couverture':>10}")
+    print("-" * 55)
+    for _, row in top.iterrows():
+        print(f"{row['nom']:<35} {int(row['nb_bornes']):>6} {float(row['pct_couverture']):>9.1f}%")
+
+    return {
+        "status": "ok",
+        "zones_sous_desservies": str(OUT_GAPS),
+        "rows": int(len(gaps)),
+    }
 
 
 if __name__ == "__main__":
-    engine = create_engine(DB_URL)
-    run(engine)
+    print(run())

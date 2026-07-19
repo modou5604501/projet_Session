@@ -39,10 +39,11 @@ Le projet combine :
 
 - l'analyse spatiale (buffer 500 m, zones de couverture, gaps géographiques)
 - les données ouvertes de la Ville de Montréal et de la STM
-- une base de données spatiale PostGIS
+- des scripts Python exécutables localement dans VS Code (GeoPandas)
 - une carte web interactive mise à jour dynamiquement (Django + Leaflet)
+- une application Shiny for Python (tableau de bord interactif)
 
-L'environnement est entièrement conteneurisé avec Docker et le code est versionné sur GitHub.
+Le code est versionné sur GitHub.
 
 ---
 
@@ -126,8 +127,8 @@ Sans analyse spatiale rigoureuse, il est impossible de savoir :
 
 ### Notes techniques
 
-- Les données STM sont en **NAD83 / MTM zone 8** (EPSG:32188) → reprojetées en WGS84 lors de l'import PostGIS
-- Le script [`src/preprocessing/import_postgis.py`](src/preprocessing/import_postgis.py) gère l'import automatique de toutes les couches
+- Les données STM sont en **NAD83 / MTM zone 8** (EPSG:32188) puis reprojetées en WGS84 dans les scripts Python
+- La phase 3 s'exécute localement via [`src/preprocessing/buffer_analysis.py`](src/preprocessing/buffer_analysis.py) et [`src/preprocessing/gap_analysis.py`](src/preprocessing/gap_analysis.py)
 
 ### Citations obligatoires (CC-BY 4.0)
 
@@ -194,17 +195,13 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
     └── stm_traces_arrets.zip             → Données Québec (STM)
 
 [Phase 2 — Prétraitement]
-    ├── Reprojection STM : NAD83 MTM8 → WGS84 (EPSG:4326)
-    └── import_postgis.py
-          ├── bornes_recharge_montreal.geojson → table bornes_recharge
-          ├── arrondissements_montreal.geojson → table arrondissements
-          └── stations métro (STM SHP filtré)  → table stations_metro
+    └── Reprojection STM : NAD83 MTM8 → WGS84 (EPSG:4326)
 
-[Phase 3 — Analyse spatiale (PostGIS)]
-    ├── ST_Buffer(500m) → zones de couverture par borne
-    ├── ST_Union        → zone couverte totale par arrondissement
-    ├── ST_Difference   → zones NON couvertes (sous-desservies)
-    └── Calcul % couverture par arrondissement
+[Phase 3 — Analyse spatiale locale (VS Code, GeoPandas)]
+    ├── buffer_analysis.py : buffer 500m par borne + % couverture par arrondissement
+    ├── Production de zones_couverture.geojson et arrondissements_analyse.geojson
+    ├── gap_analysis.py : difference spatiale pour les zones sous-desservies
+    └── Export zones_sous_desservies.geojson
 
 [Phase 3b — Priorisation multicritère]
     ├── Données démographiques (RData local RMR_CT/Habkm2)
@@ -225,24 +222,6 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
     └── PWA installable sur tablette (manifest.json + service worker)
 ```
 
-### Architecture des services Docker
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    GEORISK SENTINEL                              │
-├──────────────────┬──────────────────┬──────────────────────────┤
-│  georisk_postgis │ georisk_pgadmin  │    georisk_web            │
-│  (port 5433)     │ (port 5050)      │    (port 8000)            │
-│                  │                  │                            │
-│  PostGIS 15.3    │ pgAdmin 4        │ Django 5.2 + GeoDjango    │
-│  ─────────────── │ ─────────────── │ ──────────────────────    │
-│  bornes_recharge │ Interface SQL    │ /api/bornes/              │
-│  zones_couverture│ graphique        │ /api/couverture/          │
-│  arrondissements │                  │ /api/arrondissements/     │
-│  stations_metro  │                  │ /  → carte Leaflet        │
-└──────────────────┴──────────────────┴──────────────────────────┘
-```
-
 ---
 
 ## 7. Bibliothèques principales (stack)
@@ -257,7 +236,6 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Analyse spatiale | GeoPandas | 0.14 | Import et traitement vecteur |
 | Analyse réseau routier | OSMnx + NetworkX | 2.x + 3.x | Distances sur réseau routier |
 | Coordonnées | PyProj | 3.7 | Reprojection CRS |
-| Conteneurisation | Docker + Compose | — | Déploiement reproductible |
 | Versionnement | Git + GitHub | — | Open source |
 
 ---
@@ -286,7 +264,6 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Scheduler hebdomadaire (APScheduler) | [`src/web/risk_map/scheduler.py`](src/web/risk_map/scheduler.py) | ✅ Écrit |
 | Dashboard dark theme Leaflet (PWA) | [`src/web/templates/risk_map/map.html`](src/web/templates/risk_map/map.html) | ✅ Écrit |
 | Capture d'écran du dashboard | [`docs/images/dashboard.png`](docs/images/dashboard.png) | ✅ Dans le repo |
-| Docker Compose (PostGIS + pgAdmin + Django) | [`docker-compose.yml`](docker-compose.yml) | ✅ Configuré |
 | Configuration déploiement Railway | [`railway.json`](railway.json) + [`nixpacks.toml`](nixpacks.toml) | ✅ Prêt |
 | Guide de déploiement Railway | [`DEPLOIEMENT.md`](DEPLOIEMENT.md) | ✅ Rédigé |
 | Rapport technique final | [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md) | ✅ Rédigé |
@@ -310,7 +287,6 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Phase 3 | Reprojection STM NAD83→WGS84 (dans import_postgis.py) | ✅ Script écrit | 7 juillet 2026 |
 | Phase 3 | Script import PostGIS — toutes les couches | ✅ Script écrit | 7 juillet 2026 |
 | Phase 3 | Création tables SQL (bornes, arrondissements, métro, couverture) | ✅ SQL écrit | 7 juillet 2026 |
-| Phase 3 | Démarrage Docker + import données réelles en BD | ✅ Complété | 7 juillet 2026 |
 | Phase 4 | Script analyse buffer 500m (PostGIS) | ✅ Complété | 7 juillet 2026 |
 | Phase 4 | Script zones sous-desservies (gap analysis + export GeoJSON) | ✅ Complété | 7 juillet 2026 |
 | Phase 4 | Exécution de l'analyse sur les données réelles | ✅ Complété | 7 juillet 2026 |
@@ -336,15 +312,12 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 | Django Admin pour les mises à jour | Permet d'ajouter une borne sans toucher au code → dashboard se met à jour automatiquement |
 | GeoJSON pour bornes + arrondissements | Format web natif, pas de conversion nécessaire |
 | STM SHP (pas QuickOSM) | Données officielles STM plus fiables que l'extraction OSM manuelle |
-| Port 5433 (pas 5432) | Conflit avec PostgreSQL local déjà installé |
-
 ---
 
 ## 11. Installation et démarrage
 
 ### Prérequis
 
-- Docker Desktop (Engine en cours d'exécution)
 - Python 3.10 avec venv
 - R (Rscript) pour générer la couche démographique
 - Git
@@ -356,25 +329,27 @@ Le projet utilise PostgreSQL 15 avec l'extension PostGIS 3.3.
 git clone https://github.com/modou5604501/projet_Session.git
 cd projet_Session
 
-# 2. Démarrer PostGIS + pgAdmin
-docker-compose up -d postgis pgadmin
-
-# 3. Installer les dépendances Python
+# 2. Installer les dépendances Python
 python -m venv venv
 venv\Scripts\python -m pip install -r requirements.txt
 
-# 4. Importer les données
-venv\Scripts\python src/preprocessing/import_postgis.py
+# 3. Exécuter l'analyse spatiale locale (phase 3)
+venv\Scripts\python src/preprocessing/buffer_analysis.py
+venv\Scripts\python src/preprocessing/gap_analysis.py
 
-# 5. Générer la démographie (source prioritaire: RData local)
+# 4. Générer la démographie (source prioritaire: RData local)
 Rscript src/acquisition/download_demographie_quebec.R
 
-# 6. Calculer les priorités
+# 5. Calculer les priorités
 venv\Scripts\python src/preprocessing/prioritization_analysis.py
 
-# 7. Lancer le serveur Django
+# 6. Lancer le serveur Django
 cd src/web
 ..\..\venv\Scripts\python manage.py runserver 0.0.0.0:8000
+
+# 7. Lancer le tableau de bord Shiny (port 8080)
+cd ../..
+venv\Scripts\python -m shiny run "shiny app/app_bornes_recharges.py" --host 0.0.0.0 --port 8080
 ```
 
 Si `Rscript` n'est pas dans le `PATH` sous Windows, utilisez son chemin complet, par exemple:
@@ -392,9 +367,8 @@ demarrer.bat
 
 | Service | Port | Description |
 |---|---|---|
-| PostGIS | 5433 | Base de données spatiale |
-| pgAdmin | 5050 | Interface d'administration BD |
 | Django | 8000 | Application web + API |
+| Shiny | 3120 | Tableau de bord interactif |
 
 ### Accès
 
@@ -404,8 +378,10 @@ API bornes :               http://localhost:8000/api/bornes/
 API zones couverture :     http://localhost:8000/api/couverture/
 API arrondissements :      http://localhost:8000/api/arrondissements/
 API priorites zones :      http://localhost:8000/api/priorites/
-pgAdmin :                  http://localhost:5050
+Tableau de bord Shiny :    http://127.0.0.1:3120
 ```
+
+Note : dans cet environnement, le port 8080 est deja utilise par un autre service. Lancez donc Shiny sur 127.0.0.1:3120.
 
 ### Priorisation des zones a developper
 

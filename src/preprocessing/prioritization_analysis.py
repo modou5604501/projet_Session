@@ -21,19 +21,16 @@ import geopandas as gpd
 import networkx as nx
 import osmnx as ox
 import pandas as pd
-from sqlalchemy import create_engine
-
-
-DB_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://georisk_user:georisk2019@localhost:5433/georisk",
-)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 OUT_DIR = ROOT_DIR / "data" / "vectors"
 OUT_CSV = OUT_DIR / "priorites_arrondissements.csv"
 OUT_GEOJSON = OUT_DIR / "priorites_arrondissements.geojson"
 DEMO_GEOJSON = OUT_DIR / "demographie_quebec.geojson"
+ARR_ANALYSE_GEOJSON = OUT_DIR / "arrondissements_analyse.geojson"
+ARR_GEOJSON = OUT_DIR / "arrondissements_montreal.geojson"
+BORNES_GEOJSON = OUT_DIR / "bornes_recharge_montreal.geojson"
+STM_SHP = OUT_DIR / "stm_sig" / "stm_arrets_sig.shp"
 
 
 def _minmax(series: pd.Series) -> pd.Series:
@@ -201,34 +198,83 @@ def _compute_road_distance_km(arr_gdf: gpd.GeoDataFrame, bornes_gdf: gpd.GeoData
     return pd.Series(values_km, index=arr_gdf.index, dtype="float64")
 
 
-def run() -> dict:
-    engine = create_engine(DB_URL)
+def _load_arrondissements() -> gpd.GeoDataFrame:
+    if ARR_ANALYSE_GEOJSON.exists():
+        gdf = gpd.read_file(ARR_ANALYSE_GEOJSON)
+    elif ARR_GEOJSON.exists():
+        gdf = gpd.read_file(ARR_GEOJSON)
+    else:
+        raise FileNotFoundError("Arrondissements introuvables dans data/vectors")
 
-    sql = """
-        SELECT
-            a.id,
-            a.nom,
-            COALESCE(a.nb_bornes, 0) AS nb_bornes,
-            COALESCE(a.pct_couverture, 0.0) AS pct_couverture,
-            COALESCE(m.metro_count, 0) AS metro_count,
-            a.geom
-        FROM arrondissements a
-        LEFT JOIN (
-            SELECT a2.id, COUNT(sm.id) AS metro_count
-            FROM arrondissements a2
-            LEFT JOIN stations_metro sm
-                ON ST_Within(sm.geom, a2.geom)
-            GROUP BY a2.id
-        ) m ON m.id = a.id
-        ORDER BY a.nom
-    """
-
-    gdf = gpd.read_postgis(sql, engine, geom_col="geom")
     if gdf.empty:
-        return {"status": "error", "message": "Aucun arrondissement trouve"}
+        raise ValueError("Aucun arrondissement trouve")
 
-    bornes_sql = "SELECT id, geom FROM bornes_recharge"
-    bornes_gdf = gpd.read_postgis(bornes_sql, engine, geom_col="geom")
+    if "nom" not in gdf.columns and "name" in gdf.columns:
+        gdf = gdf.rename(columns={"name": "nom"})
+
+    if "nom" not in gdf.columns:
+        raise ValueError("Colonne 'nom' manquante pour les arrondissements")
+
+    if "id" not in gdf.columns:
+        gdf["id"] = range(1, len(gdf) + 1)
+
+    if "nb_bornes" not in gdf.columns:
+        gdf["nb_bornes"] = 0
+
+    if "pct_couverture" not in gdf.columns:
+        raise ValueError(
+            "pct_couverture manquant. Executez d'abord src/preprocessing/buffer_analysis.py"
+        )
+
+    if "metro_count" not in gdf.columns:
+        gdf["metro_count"] = 0
+
+    return gdf[["id", "nom", "nb_bornes", "pct_couverture", "metro_count", "geometry"]].copy()
+
+
+def _compute_metro_counts(arr_gdf: gpd.GeoDataFrame) -> pd.Series:
+    if not STM_SHP.exists():
+        return pd.Series([0] * len(arr_gdf), index=arr_gdf.index, dtype="int64")
+
+    stm = gpd.read_file(STM_SHP).to_crs(epsg=4326)
+    if "stop_url" not in stm.columns or "loc_type" not in stm.columns:
+        return pd.Series([0] * len(arr_gdf), index=arr_gdf.index, dtype="int64")
+
+    metro_mask = (
+        stm["stop_url"].fillna("").str.contains("metro", case=False)
+        & (stm["loc_type"] == 0)
+    )
+    metro = stm.loc[metro_mask, ["geometry"]].copy()
+    if metro.empty:
+        return pd.Series([0] * len(arr_gdf), index=arr_gdf.index, dtype="int64")
+
+    arr_m = arr_gdf.to_crs(epsg=32188)
+    metro_m = metro.to_crs(epsg=32188)
+    joined = gpd.sjoin(metro_m, arr_m[["id", "geometry"]], how="left", predicate="within")
+    counts = joined.groupby("id").size()
+    return arr_gdf["id"].map(counts).fillna(0).astype(int)
+
+
+def _compute_nb_bornes(arr_gdf: gpd.GeoDataFrame, bornes_gdf: gpd.GeoDataFrame) -> pd.Series:
+    if bornes_gdf.empty:
+        return pd.Series([0] * len(arr_gdf), index=arr_gdf.index, dtype="int64")
+
+    arr_m = arr_gdf.to_crs(epsg=32188)
+    bornes_m = bornes_gdf.to_crs(epsg=32188)
+    joined = gpd.sjoin(bornes_m[["geometry"]], arr_m[["id", "geometry"]], how="left", predicate="within")
+    counts = joined.groupby("id").size()
+    return arr_gdf["id"].map(counts).fillna(0).astype(int)
+
+
+def run() -> dict:
+    gdf = _load_arrondissements()
+    bornes_gdf = gpd.read_file(BORNES_GEOJSON).to_crs(epsg=4326) if BORNES_GEOJSON.exists() else gpd.GeoDataFrame(geometry=[], crs="EPSG:4326")
+
+    if gdf["metro_count"].fillna(0).sum() == 0:
+        gdf["metro_count"] = _compute_metro_counts(gdf)
+
+    if gdf["nb_bornes"].fillna(0).sum() == 0:
+        gdf["nb_bornes"] = _compute_nb_bornes(gdf, bornes_gdf)
 
     try:
         gdf["distance_reseau_km"] = _compute_road_distance_km(gdf, bornes_gdf)
@@ -251,7 +297,11 @@ def run() -> dict:
 
     # Indicateurs bruts
     gdf["deficit_couverture"] = 100.0 - gdf["pct_couverture"].astype(float)
-    gdf["distance_reseau_km"] = gdf["distance_reseau_km"].fillna(gdf["distance_reseau_km"].max())
+    if gdf["distance_reseau_km"].notna().any():
+        max_dist = gdf["distance_reseau_km"].max()
+        gdf["distance_reseau_km"] = gdf["distance_reseau_km"].fillna(max_dist)
+    else:
+        gdf["distance_reseau_km"] = 0.0
     gdf["indice_demographie"] = demo_index
     gdf["pression_equipement"] = 1.0 / (gdf["nb_bornes"].astype(float) + 1.0)
     gdf["potentiel_demande"] = gdf["metro_count"].astype(float)
@@ -306,7 +356,6 @@ def run() -> dict:
             f"score={row['score_priorite']:.3f}  priorite={row['priorite']}"
         )
 
-    engine.dispose()
     return {
         "status": "ok",
         "csv": str(OUT_CSV),
