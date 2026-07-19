@@ -44,19 +44,7 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 
 ---
 
-## 4. Référentiel quartiers (StatCan Recensement 2021 — concordance)
-
-- **Fichier GitHub** : [`quartiers_reference_habitation.csv`](quartiers_reference_habitation.csv)
-- **URL source** : https://donnees.montreal.ca/dataset/recensement-2021-strategie-immobiliere
-- **Organisation** : Statistique Canada / Ville de Montréal — Service de la stratégie immobilière et de l'habitation
-- **Portail** : Données de Montréal (CC-BY 4.0)
-- **Format** : CSV — 91 quartiers avec numéro et nom d'arrondissement (concordance quartier → arrondissement)
-- **Date d'acquisition** : 8 juillet 2026
-- **Citation** : Ville de Montréal. *Commande personnalisée du recensement 2021 — Service de la stratégie immobilière et de l'habitation*, Données Québec. CC-BY 4.0.
-
----
-
-## 4b. Profil socio-démographique par arrondissement (StatCan Recensement 2021)
+## 4. Profil socio-démographique par arrondissement (StatCan Recensement 2021)
 
 - **Fichier GitHub** : [`demo_arrondissements.csv`](demo_arrondissements.csv)
 - **URL source** : https://donnees.montreal.ca/dataset/8e35e633-cec1-44c2-9a88-8aca9f41e3fd
