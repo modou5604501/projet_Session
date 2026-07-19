@@ -31,6 +31,21 @@ DEMO_PATH   = DATA_DIR / "demographie_quebec.geojson"
 PRIORITY_CSV_PATH = DATA_DIR / "priorites_arrondissements.csv"
 
 
+def _parse_fr_number(series: pd.Series) -> pd.Series:
+    """Nombres au format CSV Données Québec : guillemets littéraux autour de la valeur
+    et virgule décimale française (ex. '"79,65"' -> 79.65). Sans ce nettoyage,
+    pd.to_numeric() renvoie NaN pour la quasi-totalité des lignes (guillemets et
+    virgule non reconnus), et .mean() calcule silencieusement une moyenne biaisée
+    sur la poignée de valeurs qui passent par hasard (ex. entiers sans décimale)."""
+    cleaned = (
+        series.astype(str)
+        .str.replace('"', "", regex=False)
+        .str.replace("%", "", regex=False)
+        .str.replace(",", ".", regex=False)
+    )
+    return pd.to_numeric(cleaned, errors="coerce")
+
+
 def _minmax(series: pd.Series) -> pd.Series:
     values = pd.to_numeric(series, errors="coerce").fillna(0.0)
     minimum = float(values.min())
@@ -712,8 +727,8 @@ def server(input, output, session):
     @render.text
     def stat_kwh():
         try:
-            total = int(STATS["KWH total"].sum())
-            return f"{total:,}\u202fkWh".replace(",", "\u202f")
+            total = _parse_fr_number(STATS["KWH total"]).sum()
+            return f"{int(round(total)):,}\u202fkWh".replace(",", "\u202f")
         except Exception:
             return "N/D"
 
@@ -721,11 +736,7 @@ def server(input, output, session):
     @render.text
     def stat_taux():
         try:
-            col  = "Taux d'utilisation"
-            vals = pd.to_numeric(
-                STATS[col].astype(str).str.replace("%", "", regex=False),
-                errors="coerce",
-            )
+            vals = _parse_fr_number(STATS["Taux d'utilisation"])
             return f"{vals.mean():.1f}\u202f%"
         except Exception:
             return "N/D"
@@ -734,7 +745,7 @@ def server(input, output, session):
     @render.text
     def stat_users():
         try:
-            vals = pd.to_numeric(STATS["MOYENNE UTILISATEUR/ JOUR"], errors="coerce")
+            vals = _parse_fr_number(STATS["MOYENNE UTILISATEUR/ JOUR"])
             return f"{vals.mean():.2f}"
         except Exception:
             return "N/D"
