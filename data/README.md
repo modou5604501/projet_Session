@@ -12,7 +12,7 @@ Profil socio-démographique des **19 arrondissements** de la Ville de Montréal.
 
 **Source officielle :** [Profil des ménages et des logements 2021 — Données de Montréal](https://donnees.montreal.ca/dataset/profils-menages-logements) · Statistique Canada, Recensement 2021 · Licence CC-BY 4.0
 
-Les données ont été téléchargées automatiquement via le script [`src/preprocessing/download_demo_data.py`](../src/preprocessing/download_demo_data.py) qui lit les profils HTML de chaque arrondissement publiés sur le portail Données de Montréal.
+Les données ont été extraites des profils publiés par arrondissement sur le portail Données de Montréal.
 
 | Variable | Description | Unité |
 |---|---|---|
@@ -26,18 +26,9 @@ Les données ont été téléchargées automatiquement via le script [`src/prepr
 
 **Comment ces données sont utilisées dans le projet :**
 
-1. **Score de priorité composite** (`/api/priorite/`) — chaque arrondissement reçoit un score 0–100 combinant :
-   - Déficit de couverture borne (35 %)
-   - `densite_pop_km2` (25 %) — les zones denses ont plus d'usagers potentiels
-   - `tx_voiture_pct` (15 %) — proxy de la demande en véhicules électriques
-   - Équité de revenu (15 %) — les zones à faible revenu sont sous-pondérées dans l'offre actuelle
-   - `tx_faible_revenu_pct` (10 %) — vulnérabilité socio-économique
+1. **Score de priorité** (carte interactive) — chaque arrondissement reçoit un score combinant le déficit de couverture en bornes (60 %) et `densite_pop_km2` normalisée (40 %) : `score = 0,6 × déficit_couverture + 0,4 × densité_population`. Les arrondissements aux scores les plus élevés (Beaconsfield, Dollard-des-Ormeaux, Senneville) combinent une couverture faible et une densité relativement forte pour leur secteur.
 
-2. **Corrélation Pearson** (`/api/correlation/`) — mesure le lien entre taux de couverture et chaque variable socio-démographique → sur les 19 arrondissements, le facteur dominant est la **densité de population** (r = 0,875), pas le revenu (r = -0,60, négatif) : ce sont les zones peu denses et dépendantes de l'auto qui sont sous-desservies, pas les zones pauvres
-
-3. **Analyse d'équité** (`/api/equity/`) — scatter plot couverture vs revenu médian avec droite de régression
-
-> Exemple (valeurs réelles Données de Montréal 2021, calculé en direct par l'app) : Le Plateau-Mont-Royal (`revenu_median = 60 000 $`, `tx_voiture_pct = 58 %`, `tx_faible_revenu_pct = 33.6 %`, densité = 16 212 hab/km² — la plus forte de l'île) obtient un **score de priorité de 49,9/100** malgré une couverture déjà quasi complète (97,8 %). L'Île-Bizard (`revenu_median = 98 000 $`, densité 441 hab/km²) ne score qu'à peine plus haut (**52,1/100**) malgré une couverture géographique bien plus faible (8,9 %) — car l'impact social par borne y serait bien moindre (très faible densité, revenu élevé).
+2. **Corrélation Pearson** (onglet « ③ Corrélation ») — mesure le lien entre le taux de couverture en bornes et chaque variable socio-démographique, sur les 19 arrondissements disposant d'un profil complet. Le facteur dominant est la **densité de population** (r = 0,875), pas le revenu médian (r = -0,60, négatif) : ce sont les zones peu denses et dépendantes de l'auto qui sont sous-desservies, pas les zones pauvres.
 
 ---
 

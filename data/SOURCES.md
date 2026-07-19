@@ -12,7 +12,7 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 - **URL source** : https://donnees.montreal.ca/dataset/bornes-de-recharge-electrique
 - **Organisation** : Ville de Montréal
 - **Portail** : Données de Montréal (CKAN, CC-BY 4.0)
-- **Mise à jour** : Continue — re-téléchargement automatique hebdomadaire (`src/preprocessing/refresh_data.py`)
+- **Mise à jour** : Instantané statique, rechargé en mémoire à chaque démarrage de l'application (pas de re-téléchargement automatique)
 - **Projection** : WGS84 (CRS84 / EPSG:4326)
 - **Date d'acquisition** : 7 juillet 2026
 - **Citation** : Ville de Montréal. *Bornes de recharge publiques*, Données Québec. CC-BY 4.0. Consulté le 7 juillet 2026.
@@ -63,10 +63,9 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
   *(= Profil des ménages et des logements 2021 — Données de Montréal)*
 - **Organisation** : Statistique Canada — Recensement 2021
 - **Portail** : Données de Montréal (CC-BY 4.0)
-- **Script de téléchargement** : [`src/preprocessing/download_demo_data.py`](../src/preprocessing/download_demo_data.py)
 - **Contenu** : 19 arrondissements, 7 variables — revenu médian, densité, taux de propriété, taux de motorisation (proxy), taux de faible revenu
-- **Méthode d'extraction** : Les profils HTML par arrondissement sont téléchargés depuis Données de Montréal et les valeurs extraites des blocs JSON (`<script type="application/json">`) via BeautifulSoup. La population et la densité sont estimées à partir du nombre de ménages × 2,28 (taille moyenne des ménages au Québec, StatCan 2021) / superficie (GeoJSON).
-- **Utilisation** : Endpoints `/api/equity/`, `/api/correlation/`, `/api/priorite/`
+- **Méthode d'extraction** : Profils par arrondissement extraits depuis Données de Montréal. La population et la densité sont estimées à partir du nombre de ménages × 2,28 (taille moyenne des ménages au Québec, StatCan 2021) / superficie (GeoJSON).
+- **Utilisation** : Score de priorité (carte) et corrélation Pearson (onglet « ③ Corrélation »)
 - **Date d'acquisition** : 13–14 juillet 2026
 - **Citation** : Statistique Canada. *Recensement de la population 2021 — Profil des ménages et des logements*. Données de Montréal, CC-BY 4.0.
 
