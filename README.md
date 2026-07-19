@@ -61,7 +61,7 @@ Toutes proviennent de sources ouvertes (Ville de Montréal, Statistique Canada),
 | GeoPandas + Shapely | Analyse spatiale (buffers, jointures spatiales) |
 | Folium | Carte Leaflet interactive |
 | Matplotlib | Graphiques |
-| Pandas / NumPy | Traitement des données |
+| Pandas | Traitement des données |
 
 Aucune base de données ni conteneur : tout est chargé et calculé en mémoire au démarrage de l'application.
 

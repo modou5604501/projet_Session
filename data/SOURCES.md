@@ -87,21 +87,6 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 
 ---
 
-## 7. Réseau routier de Montréal (Géobase)
-
-- **Fichier GitHub** : [`vectors/reseau_routier_montreal.geojson`](vectors/reseau_routier_montreal.geojson)
-- **URL source** : https://donnees.montreal.ca/dataset/geobase-reseau-routier
-- **Organisation** : Ville de Montréal
-- **Portail** : Données de Montréal (CC-BY 4.0)
-- **Projection** : WGS84 (EPSG:4326)
-- **Mise à jour** : Périodique (dernier dépôt : 08 juillet 2026)
-- **Filtrage** : CLASSE ≥ 5 (collectrices, artères, autoroutes) → 17 540 tronçons sur 47 983 totaux
-- **Utilisation** : Couche visuelle toggleable — contexte des axes de circulation majeurs
-- **Date d'acquisition** : 13 juillet 2026
-- **Citation** : VILLE DE MONTRÉAL. *Géobase - réseau routier*, Données Québec, 2013, mis à jour 08 juillet 2026. CC-BY 4.0.
-
----
-
 ## Récapitulatif — Accès direct aux sources
 
 | Couche | Fichier dans ce dépôt | Lien source |
@@ -110,7 +95,6 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 | Arrondissements (34) | [`arrondissements_montreal.geojson`](vectors/arrondissements_montreal.geojson) | [donnees.montreal.ca/dataset/limites-administratives-agglomeration](https://donnees.montreal.ca/dataset/limites-administratives-agglomeration) |
 | Parcs (1 541) | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | [donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics](https://donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics) |
 | Épiceries (3 010) | [`epiceries_montreal.geojson`](vectors/epiceries_montreal.geojson) | [donnees.montreal.ca/dataset/etablissements-alimentaires](https://donnees.montreal.ca/dataset/etablissements-alimentaires) |
-| Réseau routier (17 540) | [`reseau_routier_montreal.geojson`](vectors/reseau_routier_montreal.geojson) | [donnees.montreal.ca/dataset/geobase-reseau-routier](https://donnees.montreal.ca/dataset/geobase-reseau-routier) |
 | Profil socio-démographique | [`demo_arrondissements.csv`](demo_arrondissements.csv) | [donnees.montreal.ca/dataset/…profils-menages-logements](https://donnees.montreal.ca/dataset/8e35e633-cec1-44c2-9a88-8aca9f41e3fd) |
 
 ---

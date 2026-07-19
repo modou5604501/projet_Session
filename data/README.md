@@ -40,7 +40,6 @@ Les données ont été extraites des profils publiés par arrondissement sur le 
 | [`arrondissements_montreal.geojson`](vectors/arrondissements_montreal.geojson) | Limites des arrondissements | 34 |
 | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | Parcs et espaces verts | 1 541 |
 | [`epiceries_montreal.geojson`](vectors/epiceries_montreal.geojson) | Établissements alimentaires | 3 010 |
-| [`reseau_routier_montreal.geojson`](vectors/reseau_routier_montreal.geojson) | Réseau routier Géobase (CLASSE ≥ 5) | 17 540 tronçons |
 | [`zones_sous_desservies.geojson`](vectors/zones_sous_desservies.geojson) | Zones sans couverture (résultat gap analysis) | variable |
 | [`chargeurs_statistiques_2025.csv`](vectors/chargeurs_statistiques_2025.csv) | Statistiques d'utilisation 2025 | — |
 

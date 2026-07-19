@@ -3,7 +3,7 @@ Application Shiny for Python - Tableau de bord Bornes de recharge électrique
 Accessibilité aux bornes de recharge à Montréal
 
 Dépendances :
-    pip install shiny shinyswatch geopandas folium branca pandas numpy matplotlib
+    pip install shiny geopandas folium pandas matplotlib
 """
 
 from __future__ import annotations
