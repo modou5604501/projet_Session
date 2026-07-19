@@ -29,6 +29,35 @@ ZONES_PATH  = DATA_DIR / "zones_sous_desservies.geojson"
 STATS_PATH  = DATA_DIR / "chargeurs_statistiques_2025.csv"
 DEMO_PATH   = DATA_DIR / "demographie_quebec.geojson"
 PRIORITY_CSV_PATH = DATA_DIR / "priorites_arrondissements.csv"
+PARCS_PATH      = DATA_DIR / "parcs_montreal.geojson"
+EPICERIES_PATH  = DATA_DIR / "epiceries_montreal.geojson"
+DEMO_ARR_PATH   = PROJECT_ROOT / "data" / "demo_arrondissements.csv"
+
+
+def pearson(xs: list[float], ys: list[float]) -> float:
+    n = len(xs)
+    if n < 3:
+        return 0.0
+    mx, my = sum(xs) / n, sum(ys) / n
+    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    dx = sum((x - mx) ** 2 for x in xs) ** 0.5
+    dy = sum((y - my) ** 2 for y in ys) ** 0.5
+    return round(num / (dx * dy + 1e-9), 3)
+
+
+def _bornes_a_proximite(sites_gdf: gpd.GeoDataFrame, bornes_gdf: gpd.GeoDataFrame, rayon_m: float) -> pd.Series:
+    """Nombre de bornes à moins de rayon_m mètres de chaque site (parc, épicerie...)."""
+    sites_m = sites_gdf.to_crs(32188).copy()
+    bornes_m = bornes_gdf.to_crs(32188)
+    sites_m["geometry"] = sites_m.geometry.buffer(rayon_m)
+    # how="inner" : un site sans aucune borne à proximité n'apparaît simplement pas dans
+    # le résultat (reindex plus bas lui donne alors 0). Avec how="left", sjoin produit une
+    # ligne "fantôme" (index_right = NaN) même pour les sites sans correspondance, et
+    # groupby(...).size() la compte comme une borne — d'où un bug qui donnait 0 site sans
+    # borne à proximité, peu importe le rayon.
+    joined = gpd.sjoin(sites_m[["geometry"]], bornes_m[["geometry"]], how="inner", predicate="intersects")
+    counts = joined.groupby(level=0).size()
+    return counts.reindex(sites_gdf.index, fill_value=0)
 
 
 def _parse_fr_number(series: pd.Series) -> pd.Series:
@@ -142,6 +171,39 @@ try:
     # Nettoyage colonnes vides du CSV
     STATS = STATS.loc[:, ~STATS.columns.str.startswith("Column")]
     STATS.columns = STATS.columns.str.strip()
+
+    # ── Questions gestionnaires : parcs, épiceries, profil socio-démographique ──
+    # (le prof a explicitement demandé ces analyses en commentaires : pourquoi
+    # certaines zones ont plus de bornes, lien avec le profil de la population,
+    # les parcs, les épiceries — sans ça la localisation seule n'est pas utile.)
+    PARCS = gpd.read_file(PARCS_PATH)
+    PARCS["nb_bornes_500m"] = _bornes_a_proximite(PARCS, BORNES, 500)
+
+    EPICERIES = gpd.read_file(EPICERIES_PATH)
+    EPICERIES["nb_bornes_300m"] = _bornes_a_proximite(EPICERIES, BORNES, 300)
+    EPICERIES["has_borne_300m"] = EPICERIES["nb_bornes_300m"] > 0
+
+    # Jointure démographique par arrondissement (revenu, motorisation, faible
+    # revenu) — le tiret cadratin (–) du CSV diffère du trait d'union simple (-)
+    # utilisé dans le GeoJSON des arrondissements, sinon la jointure échoue
+    # silencieusement sur les arrondissements à nom composé.
+    DEMO_ARR = pd.read_csv(DEMO_ARR_PATH)
+    DEMO_ARR["arrondissement"] = DEMO_ARR["arrondissement"].str.replace("–", "-", regex=False)
+    DEMO_ARR = DEMO_ARR.rename(columns={"arrondissement": "nom"})
+
+    _parcs_par_arr = gpd.sjoin(PARCS[["geometry"]], ARR[["NOM", "geometry"]], how="left", predicate="within")
+    _nb_parcs = _parcs_par_arr.groupby("NOM").size().rename("nb_parcs")
+
+    _epic_par_arr = gpd.sjoin(EPICERIES[["geometry"]], ARR[["NOM", "geometry"]], how="left", predicate="within")
+    _nb_epiceries = _epic_par_arr.groupby("NOM").size().rename("nb_epiceries")
+
+    CORR_DF = PRIORITES[["nom", "pct_couverture", "nb_bornes"]].merge(
+        DEMO_ARR, on="nom", how="inner"
+    ).merge(_nb_parcs, left_on="nom", right_index=True, how="left").merge(
+        _nb_epiceries, left_on="nom", right_index=True, how="left"
+    )
+    CORR_DF["nb_parcs"] = CORR_DF["nb_parcs"].fillna(0)
+    CORR_DF["nb_epiceries"] = CORR_DF["nb_epiceries"].fillna(0)
 
     # Listes de choix
     niveaux         = ["Tous"] + sorted(BORNES["NIVEAU_RECHARGE"].dropna().unique().tolist())
@@ -278,6 +340,36 @@ app_ui = ui.page_fluid(
             ui.card(
                 ui.card_header("Lecture automatique des priorites"),
                 ui.output_text_verbatim("priority_summary"),
+            ),
+
+            # ── Questions des gestionnaires ───────────────────────────────────
+            ui.card(
+                ui.card_header("🏛️ Questions des gestionnaires"),
+                ui.p(
+                    "Pourquoi certaines zones ont-elles plus de bornes que d'autres ? "
+                    "Est-ce lié au profil de la population, à la présence de parcs ou "
+                    "d'épiceries ? Trois questions concrètes, avec les données réelles.",
+                    style="font-size:0.85rem; color:#555;",
+                ),
+                ui.layout_columns(
+                    ui.card(
+                        ui.card_header("① Parcs — couverture en bornes"),
+                        ui.input_numeric("g1_seuil", "Seuil minimal de bornes à 500 m", 20, min=1, max=100),
+                        ui.output_ui("g1_resume"),
+                        ui.output_data_frame("g1_table"),
+                    ),
+                    ui.card(
+                        ui.card_header("② Épiceries — bornes à proximité (300 m)"),
+                        ui.output_ui("g2_resume"),
+                        ui.output_data_frame("g2_table"),
+                    ),
+                    col_widths=[6, 6],
+                ),
+                ui.card(
+                    ui.card_header("③ Corrélation — le profil de la population explique-t-il la distribution des bornes ?"),
+                    ui.output_plot("g3_correlation_plot"),
+                    ui.output_ui("g3_interpretation"),
+                ),
             ),
 
             # ── Statistiques d'utilisation 2025 ─────────────────────────────
@@ -820,6 +912,117 @@ def server(input, output, session):
             lines.append(f"{filtered_count} zones depassent actuellement le seuil de {input.priority_threshold()}% sur la carte.")
 
         return "\n".join(lines)
+
+    # ── Question ① : parcs sous le seuil de bornes à 500 m ────────────────────
+    @output
+    @render.ui
+    def g1_resume():
+        seuil = input.g1_seuil()
+        insuffisants = PARCS[PARCS["nb_bornes_500m"] < seuil]
+        total = len(PARCS)
+        count = len(insuffisants)
+        pct_ok = round(100 * (total - count) / max(total, 1), 1)
+        couleur = "success" if pct_ok >= 80 else "warning" if pct_ok >= 50 else "danger"
+        return ui.div(
+            ui.strong(f"{count}"),
+            f" parcs sur {total} ont moins de {seuil} bornes à 500 m.",
+            class_=f"alert alert-{couleur}",
+            style="font-size:0.85rem; padding:8px 12px;",
+        )
+
+    @output
+    @render.data_frame
+    def g1_table():
+        seuil = input.g1_seuil()
+        df = (
+            PARCS[PARCS["nb_bornes_500m"] < seuil][["nom", "superficie_ha", "nb_bornes_500m"]]
+            .sort_values("nb_bornes_500m")
+            .head(25)
+            .rename(columns={"nom": "Parc", "superficie_ha": "Superficie (ha)", "nb_bornes_500m": f"Bornes à 500 m (< {seuil})"})
+        )
+        return render.DataGrid(df.reset_index(drop=True), filters=True)
+
+    # ── Question ② : épiceries sans borne à 300 m ─────────────────────────────
+    @output
+    @render.ui
+    def g2_resume():
+        sans = EPICERIES[~EPICERIES["has_borne_300m"]]
+        total = len(EPICERIES)
+        count = len(sans)
+        pct_ok = round(100 * (total - count) / max(total, 1), 1)
+        couleur = "success" if pct_ok >= 80 else "warning" if pct_ok >= 50 else "danger"
+        return ui.div(
+            ui.strong(f"{count}"),
+            f" épiceries sur {total} n'ont aucune borne à 300 m.",
+            class_=f"alert alert-{couleur}",
+            style="font-size:0.85rem; padding:8px 12px;",
+        )
+
+    @output
+    @render.data_frame
+    def g2_table():
+        df = (
+            EPICERIES[~EPICERIES["has_borne_300m"]][["nom", "type", "adresse"]]
+            .head(25)
+            .rename(columns={"nom": "Épicerie", "type": "Type", "adresse": "Adresse"})
+        )
+        return render.DataGrid(df.reset_index(drop=True), filters=True)
+
+    # ── Question ③ : corrélation couverture ↔ profil socio-démographique ─────
+    @reactive.calc
+    def _correlations():
+        facteurs = {
+            "densite_pop_km2": "Densité de population",
+            "revenu_median_menage": "Revenu médian des ménages",
+            "tx_voiture_pct": "Taux de motorisation",
+            "tx_faible_revenu_pct": "Taux de faible revenu",
+            "nb_parcs": "Zones de loisirs (parcs)",
+            "nb_epiceries": "Commerces alimentaires (épiceries)",
+        }
+        resultats = []
+        for col, label in facteurs.items():
+            sub = CORR_DF.dropna(subset=[col, "pct_couverture"])
+            r = pearson(sub[col].tolist(), sub["pct_couverture"].tolist())
+            resultats.append({"variable": col, "label": label, "r": r})
+        return sorted(resultats, key=lambda x: -abs(x["r"]))
+
+    @output
+    @render.plot
+    def g3_correlation_plot():
+        cors = _correlations()
+        labels = [c["label"] for c in cors][::-1]
+        values = [c["r"] for c in cors][::-1]
+        colors = ["#2e7d32" if v > 0 else "#c62828" for v in values]
+        fig, ax = plt.subplots(figsize=(7, 4))
+        ax.barh(labels, values, color=colors)
+        ax.axvline(0, color="grey", linewidth=0.8)
+        ax.set_xlim(-1, 1)
+        ax.set_xlabel("Corrélation de Pearson (r) avec la couverture en bornes")
+        plt.tight_layout()
+        return fig
+
+    @output
+    @render.ui
+    def g3_interpretation():
+        cors = _correlations()
+        if not cors:
+            return ui.p("Données insuffisantes.")
+        top = cors[0]
+        absR = abs(top["r"])
+        if absR >= 0.4:
+            direction = "positive" if top["r"] > 0 else "négative"
+            texte = (
+                f"Facteur dominant : « {top['label']} » (r = {top['r']}) — corrélation "
+                f"{direction} forte avec la couverture en bornes."
+            )
+            classe = "alert alert-info"
+        elif absR >= 0.2:
+            texte = f"Facteur le plus lié : « {top['label']} » (r = {top['r']}) — corrélation modérée."
+            classe = "alert alert-warning"
+        else:
+            texte = "Aucun facteur isolé n'explique clairement la distribution des bornes."
+            classe = "alert alert-secondary"
+        return ui.div(texte, class_=classe, style="font-size:0.85rem; padding:8px 12px;")
 
     # ── Table : zones sous-desservies ─────────────────────────────────────────
     @output
