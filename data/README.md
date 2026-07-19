@@ -41,7 +41,7 @@ Les données ont été extraites des profils publiés par arrondissement sur le 
 | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | Parcs et espaces verts | 1 541 |
 | [`epiceries_montreal.geojson`](vectors/epiceries_montreal.geojson) | Établissements alimentaires | 3 010 |
 | [`zones_sous_desservies.geojson`](vectors/zones_sous_desservies.geojson) | Zones sans couverture (résultat gap analysis) | variable |
-| [`chargeurs_statistiques_2025.csv`](vectors/chargeurs_statistiques_2025.csv) | Statistiques d'utilisation 2025 | — |
+| [`chargeurs_statistiques_2025.csv`](vectors/chargeurs_statistiques_2025.csv) | Statistiques d'utilisation 2025 (par borne, par mois) | 8 774 |
 
 ---
 
