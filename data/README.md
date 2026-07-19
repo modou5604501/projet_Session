@@ -47,7 +47,6 @@ Les données ont été téléchargées automatiquement via le script [`src/prepr
 |---|---|---|
 | [`bornes_recharge_montreal.geojson`](vectors/bornes_recharge_montreal.geojson) | Bornes de recharge publiques | 2 412 |
 | [`arrondissements_montreal.geojson`](vectors/arrondissements_montreal.geojson) | Limites des arrondissements | 34 |
-| [`stations_metro_stm.geojson`](vectors/stations_metro_stm.geojson) | Stations de métro STM (4 lignes) | 72 |
 | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | Parcs et espaces verts | 1 541 |
 | [`epiceries_montreal.geojson`](vectors/epiceries_montreal.geojson) | Établissements alimentaires | 3 010 |
 | [`reseau_routier_montreal.geojson`](vectors/reseau_routier_montreal.geojson) | Réseau routier Géobase (CLASSE ≥ 5) | 17 540 tronçons |

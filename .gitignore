@@ -23,7 +23,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Ancienne architecture Django + PostGIS + Docker (abandonnée le 14 juillet 2026 au
-# profit de shiny_app/app.py — voir RAPPORT_FINAL.md § Difficultés rencontrées).
+# profit de shiny app/app_bornes_recharges.py — voir RAPPORT_FINAL.md § Difficultés rencontrées).
 # Gardés localement pour l'historique, retirés du dépôt car non utilisés et trompeurs
 # (contredisaient le README qui décrit une application sans base de données ni conteneur).
 src/web/
@@ -50,3 +50,6 @@ Thumbs.db
 RAPPORT_FINAL.md
 PRESENTATION_ORALE.md
 PRESENTATION_ORALE.pptx
+GUIDE_PRESENTATION.md
+docs/GUIDE_PRESENTATION.pdf
+docs/RAPPORT_FINAL.pdf

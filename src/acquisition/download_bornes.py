@@ -5,7 +5,7 @@ Licence : CC-BY 4.0
 
 Ce script est autonome. Il télécharge le fichier GeoJSON le plus récent
 et le sauvegarde dans data/vectors/bornes_recharge_montreal.geojson,
-utilisé directement par shiny_app/app.py.
+utilisé directement par shiny app/app_bornes_recharges.py.
 """
 
 import os

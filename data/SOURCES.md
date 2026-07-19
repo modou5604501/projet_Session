@@ -115,27 +115,12 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 
 ---
 
-## 8. Tracés des lignes de bus et de métro (STM)
-
-- **Fichiers GitHub** : [`vectors/stm_sig/`](vectors/stm_sig/) (Shapefile) + [`vectors/stations_metro_stm.geojson`](vectors/stations_metro_stm.geojson)
-- **URL source** : https://www.donneesquebec.ca/recherche/dataset/gtfs-stm
-- **Organisation** : Société de transport de Montréal (STM)
-- **Portail** : Données Québec (CC-BY 4.0)
-- **Projection source** : NAD83 / MTM zone 8 (EPSG:32188) → **reprojetée en WGS84 lors de l'import**
-- **Filtrage** : 72 stations de métro uniquement (lignes Verte, Orange, Bleue, Jaune), issues du fichier GTFS complet
-- **Utilisation** : Requête intermodalité `NOT EXISTS + ST_DWithin` (stations sans borne à 500 m)
-- **Date d'acquisition** : 7 juillet 2026
-- **Citation** : SOCIÉTÉ DE TRANSPORT DE MONTRÉAL. *Tracés des lignes de bus et de métro*, Données Québec, mis à jour le 06 juillet 2026. CC-BY 4.0.
-
----
-
 ## Récapitulatif — Accès direct aux sources
 
 | Couche | Fichier dans ce dépôt | Lien source |
 |---|---|---|
 | Bornes de recharge (2 412) | [`bornes_recharge_montreal.geojson`](vectors/bornes_recharge_montreal.geojson) | [donnees.montreal.ca/dataset/bornes-de-recharge-electrique](https://donnees.montreal.ca/dataset/bornes-de-recharge-electrique) |
 | Arrondissements (34) | [`arrondissements_montreal.geojson`](vectors/arrondissements_montreal.geojson) | [donnees.montreal.ca/dataset/limites-administratives-agglomeration](https://donnees.montreal.ca/dataset/limites-administratives-agglomeration) |
-| Stations de métro STM (72) | [`stations_metro_stm.geojson`](vectors/stations_metro_stm.geojson) | [donneesquebec.ca/recherche/dataset/gtfs-stm](https://www.donneesquebec.ca/recherche/dataset/gtfs-stm) |
 | Parcs (1 541) | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | [donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics](https://donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics) |
 | Épiceries (3 010) | [`epiceries_montreal.geojson`](vectors/epiceries_montreal.geojson) | [donnees.montreal.ca/dataset/etablissements-alimentaires](https://donnees.montreal.ca/dataset/etablissements-alimentaires) |
 | Réseau routier (17 540) | [`reseau_routier_montreal.geojson`](vectors/reseau_routier_montreal.geojson) | [donnees.montreal.ca/dataset/geobase-reseau-routier](https://donnees.montreal.ca/dataset/geobase-reseau-routier) |
