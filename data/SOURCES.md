@@ -9,7 +9,7 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 ## 1. Bornes de recharge publiques
 
 - **Fichier GitHub** : [`vectors/bornes_recharge_montreal.geojson`](vectors/bornes_recharge_montreal.geojson)
-- **URL source** : https://donnees.montreal.ca/dataset/bornes-de-recharge-electrique
+- **URL source** : https://donnees.montreal.ca/dataset/bornes-recharge-publiques
 - **Organisation** : Ville de Montréal
 - **Portail** : Données de Montréal (CKAN, CC-BY 4.0)
 - **Mise à jour** : Instantané statique, rechargé en mémoire à chaque démarrage de l'application (pas de re-téléchargement automatique)
@@ -22,7 +22,7 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 ## 2. Statistiques d'utilisation des bornes 2025
 
 - **Fichier GitHub** : [`vectors/chargeurs_statistiques_2025.csv`](vectors/chargeurs_statistiques_2025.csv)
-- **URL source** : https://donnees.montreal.ca/dataset/bornes-de-recharge-electrique
+- **URL source** : https://donnees.montreal.ca/dataset/bornes-recharge-publiques
 - **Organisation** : Ville de Montréal
 - **Portail** : Données de Montréal (CC-BY 4.0)
 - **Format** : CSV — recharges, kWh, taux d'utilisation (~79-80%), usagers/jour par borne
@@ -62,7 +62,7 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 ## 5. Parcs et espaces verts de Montréal
 
 - **Fichier GitHub** : [`vectors/parcs_montreal.geojson`](vectors/parcs_montreal.geojson)
-- **URL source** : https://donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics
+- **URL source** : https://donnees.montreal.ca/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics
 - **Organisation** : Ville de Montréal — Direction des grands parcs et de la nature en ville
 - **Portail** : Données de Montréal (CC-BY 4.0)
 - **Projection** : WGS84 (EPSG:4326) — centroïdes des polygones sources
@@ -91,9 +91,9 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 
 | Couche | Fichier dans ce dépôt | Lien source |
 |---|---|---|
-| Bornes de recharge (2 412) | [`bornes_recharge_montreal.geojson`](vectors/bornes_recharge_montreal.geojson) | [donnees.montreal.ca/dataset/bornes-de-recharge-electrique](https://donnees.montreal.ca/dataset/bornes-de-recharge-electrique) |
+| Bornes de recharge (2 412) | [`bornes_recharge_montreal.geojson`](vectors/bornes_recharge_montreal.geojson) | [donnees.montreal.ca/dataset/bornes-recharge-publiques](https://donnees.montreal.ca/dataset/bornes-recharge-publiques) |
 | Arrondissements (34) | [`arrondissements_montreal.geojson`](vectors/arrondissements_montreal.geojson) | [donnees.montreal.ca/dataset/limites-administratives-agglomeration](https://donnees.montreal.ca/dataset/limites-administratives-agglomeration) |
-| Parcs (1 541) | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | [donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics](https://donnees.montreal.ca/dataset/grands-parcs-parcs-arrondissements-espaces-publics) |
+| Parcs (1 541) | [`parcs_montreal.geojson`](vectors/parcs_montreal.geojson) | [donnees.montreal.ca/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics](https://donnees.montreal.ca/dataset/grands-parcs-parcs-d-arrondissements-et-espaces-publics) |
 | Épiceries (3 010) | [`epiceries_montreal.geojson`](vectors/epiceries_montreal.geojson) | [donnees.montreal.ca/dataset/etablissements-alimentaires](https://donnees.montreal.ca/dataset/etablissements-alimentaires) |
 | Profil socio-démographique | [`demo_arrondissements.csv`](demo_arrondissements.csv) | [donnees.montreal.ca/dataset/…profils-menages-logements](https://donnees.montreal.ca/dataset/8e35e633-cec1-44c2-9a88-8aca9f41e3fd) |
 
@@ -107,8 +107,6 @@ Les fichiers sont dans le dossier [`data/`](.) de ce dépôt GitHub.
 | Arrondissements | WGS84 | WGS84 (EPSG:4326) | Aucune |
 | Parcs (centroïdes) | WGS84 | WGS84 (EPSG:4326) | Centroïde calculé depuis polygone source |
 | Épiceries | WGS84 | WGS84 (EPSG:4326) | Aucune |
-| STM arrêts/lignes | NAD83 MTM8 (EPSG:32188) | WGS84 (EPSG:4326) | Via `gdf.to_crs(epsg=4326)` |
-| Réseau routier | WGS84 | WGS84 (EPSG:4326) | Aucune (déjà en WGS84) |
 | Buffers 500m | — | WGS84 (EPSG:4326) | Calcul en EPSG:32188, retour WGS84 |
 
 **Calcul des buffers** : Les zones de couverture de 500 m sont calculées en EPSG:32188 (projection métrique NAD83/MTM zone 8) pour garantir la précision des distances, puis reprojetées en WGS84 pour le stockage et l'affichage.
