@@ -4,3 +4,4 @@ folium>=0.17.0
 pandas>=2.0.0
 matplotlib>=3.8.0
 python-pptx>=1.0.0
+python-docx>=1.1.0

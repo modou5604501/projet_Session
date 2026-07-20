@@ -3,7 +3,7 @@ Application Shiny for Python - Tableau de bord Bornes de recharge électrique
 Accessibilité aux bornes de recharge à Montréal
 
 Dépendances :
-    pip install shiny geopandas folium pandas matplotlib python-pptx
+    pip install shiny geopandas folium pandas matplotlib python-pptx python-docx
 """
 
 from __future__ import annotations
@@ -22,6 +22,10 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
+import docx
+from docx.shared import Pt as DocxPt, Cm as DocxCm
+from docx.shared import RGBColor as DocxRGB
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from shiny import App, reactive, render, ui
 
@@ -359,9 +363,11 @@ app_ui = ui.page_fluid(
                     style="font-size:0.85rem; color:#555;",
                 ),
                 ui.div(
+                    ui.download_button("export_gestionnaire_csv", "⬇ CSV", class_="btn-outline-secondary btn-sm"),
+                    ui.download_button("export_gestionnaire_word", "⬇ Word (.docx)", class_="btn-outline-secondary btn-sm"),
                     ui.download_button("export_gestionnaire_pdf", "📄 Exporter en PDF", class_="btn-outline-secondary btn-sm"),
                     ui.download_button("export_gestionnaire_pptx", "📊 Exporter en PowerPoint", class_="btn-outline-secondary btn-sm"),
-                    style="display:flex; gap:8px; margin-bottom:10px;",
+                    style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;",
                 ),
                 ui.layout_columns(
                     ui.card(
@@ -1070,6 +1076,100 @@ def server(input, output, session):
         tbl.set_fontsize(7.5)
         tbl.scale(1, 1.3)
         tbl.auto_set_column_width(col=list(range(len(col_labels))))
+
+    # ── Export CSV ──────────────────────────────────────────────────────────
+    @render.download(filename=lambda: f"geocharge_gestionnaire_{date.today().isoformat()}.csv")
+    def export_gestionnaire_csv():
+        d = _gestionnaire_data()
+        parcs = d["parcs_table"].rename(
+            columns={"nom": "Nom", "superficie_ha": "Detail_1", "nb_bornes_500m": "Valeur"}
+        ).assign(Question="① Parcs", Detail_2="")[["Question", "Nom", "Detail_1", "Detail_2", "Valeur"]]
+        epiceries = d["epiceries_table"].rename(
+            columns={"nom": "Nom", "type": "Detail_1", "adresse": "Detail_2"}
+        ).assign(Question="② Épiceries", Valeur="")[["Question", "Nom", "Detail_1", "Detail_2", "Valeur"]]
+        correlation = pd.DataFrame(
+            [{"Question": "③ Corrélation", "Nom": c["label"], "Detail_1": "", "Detail_2": "", "Valeur": c["r"]} for c in d["correlations"]]
+        )
+        out = pd.concat([parcs, epiceries, correlation], ignore_index=True)
+        yield out.to_csv(index=False)
+
+    # ── Export Word ─────────────────────────────────────────────────────────
+    @render.download(filename=lambda: f"geocharge_gestionnaire_{date.today().isoformat()}.docx")
+    def export_gestionnaire_word():
+        d = _gestionnaire_data()
+        doc = docx.Document()
+
+        titre = doc.add_paragraph()
+        r = titre.add_run("GeoCharge Montréal — Questions des gestionnaires")
+        r.font.size = DocxPt(20); r.font.bold = True; r.font.color.rgb = DocxRGB(0x00, 0x72, 0x8C)
+
+        sous_titre = doc.add_paragraph()
+        r = sous_titre.add_run(
+            f"Généré le {date.today().strftime('%d/%m/%Y')} — seuil parcs : {d['seuil']} bornes / 500 m"
+        )
+        r.font.size = DocxPt(10); r.font.italic = True; r.font.color.rgb = DocxRGB(0x60, 0x60, 0x60)
+        doc.add_paragraph()
+
+        # ① Parcs
+        h1 = doc.add_paragraph(); r = h1.add_run("① Parcs — couverture en bornes")
+        r.font.size = DocxPt(14); r.font.bold = True
+        doc.add_paragraph(f"{d['parcs_sous_seuil_n']} parcs sur {d['parcs_total']} ont moins de {d['seuil']} bornes à 500 m.")
+        table = doc.add_table(rows=1, cols=3)
+        table.style = "Light Grid Accent 1"
+        for i, col in enumerate(["Parc", "Superficie (ha)", "Bornes à 500 m"]):
+            table.rows[0].cells[i].text = col
+            table.rows[0].cells[i].paragraphs[0].runs[0].font.bold = True
+        for _, row in d["parcs_table"].iterrows():
+            cells = table.add_row().cells
+            cells[0].text = str(row["nom"]); cells[1].text = str(row["superficie_ha"]); cells[2].text = str(row["nb_bornes_500m"])
+        doc.add_paragraph()
+
+        # ② Épiceries
+        h2 = doc.add_paragraph(); r = h2.add_run("② Épiceries — sans borne à 300 m")
+        r.font.size = DocxPt(14); r.font.bold = True
+        doc.add_paragraph(f"{d['epiceries_sans_borne_n']} épiceries sur {d['epiceries_total']} n'ont aucune borne à 300 m.")
+        table = doc.add_table(rows=1, cols=3)
+        table.style = "Light Grid Accent 1"
+        for i, col in enumerate(["Épicerie", "Type", "Adresse"]):
+            table.rows[0].cells[i].text = col
+            table.rows[0].cells[i].paragraphs[0].runs[0].font.bold = True
+        for _, row in d["epiceries_table"].iterrows():
+            cells = table.add_row().cells
+            cells[0].text = str(row["nom"]); cells[1].text = str(row["type"]); cells[2].text = str(row["adresse"])
+        doc.add_paragraph()
+
+        # ③ Corrélation
+        h3 = doc.add_paragraph(); r = h3.add_run("③ Corrélation — profil de population et couverture en bornes")
+        r.font.size = DocxPt(14); r.font.bold = True
+        cors = d["correlations"]
+        labels = [c["label"] for c in cors][::-1]
+        values = [c["r"] for c in cors][::-1]
+        colors = ["#2e7d32" if v > 0 else "#c62828" for v in values]
+        fig, ax = plt.subplots(figsize=(7, 3.5))
+        ax.barh(labels, values, color=colors)
+        ax.axvline(0, color="grey", linewidth=0.8)
+        ax.set_xlim(-1, 1)
+        ax.set_xlabel("Corrélation de Pearson (r)")
+        plt.tight_layout()
+        img_buf = io.BytesIO()
+        fig.savefig(img_buf, format="png", dpi=150)
+        plt.close(fig)
+        img_buf.seek(0)
+        p_chart = doc.add_paragraph()
+        p_chart.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_chart.add_run().add_picture(img_buf, width=DocxCm(15))
+        if cors:
+            top = cors[0]
+            doc.add_paragraph(f"Facteur dominant : « {top['label']} » (r = {top['r']}).")
+
+        doc.add_paragraph()
+        pied = doc.add_paragraph()
+        r = pied.add_run("GMQ580 — Géomatique Informatique 2 — Été 2026 — Université de Sherbrooke")
+        r.font.size = DocxPt(8); r.font.color.rgb = DocxRGB(0x90, 0x90, 0x90)
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        yield buf.getvalue()
 
     # ── Export PDF ──────────────────────────────────────────────────────────
     @render.download(filename=lambda: f"geocharge_gestionnaire_{date.today().isoformat()}.pdf")

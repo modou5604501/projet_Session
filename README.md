@@ -46,7 +46,7 @@ Toutes proviennent de sources ouvertes (Ville de Montréal, Statistique Canada),
 - **③ Corrélation** — quel facteur (densité, revenu, motorisation, parcs, épiceries) explique le mieux la répartition des bornes
 - **Statistiques d'utilisation 2025** — recharges totales, kWh consommés, taux d'utilisation, usagers par jour
 - **Tableaux** — synthèse par arrondissement, zones prioritaires, zones sous-desservies, données complètes
-- **Export des questions de gestionnaire** — bouton PDF et PowerPoint dans la section « Questions des gestionnaires », avec les résultats réels selon le seuil choisi
+- **Export des questions de gestionnaire** — boutons CSV, Word, PDF et PowerPoint dans la section « Questions des gestionnaires », avec les résultats réels selon le seuil choisi
 - **Signalement citoyen** — formulaire pour signaler une borne manquante ou hors service
 
 **Résultat principal :** la couverture en bornes suit surtout la **densité de population** (r = 0,875), beaucoup plus que le revenu médian (r = −0,60, une corrélation négative). Le manque de bornes touche surtout les parcs (1 413 sur 1 541 sous le seuil de 20 bornes à 500 m) et, dans une moindre mesure, les épiceries (819 sur 3 010 sans borne à 300 m).
@@ -63,7 +63,7 @@ Toutes proviennent de sources ouvertes (Ville de Montréal, Statistique Canada),
 | Folium | Carte Leaflet interactive |
 | Matplotlib | Graphiques |
 | Pandas | Traitement des données |
-| python-pptx | Export PowerPoint des questions de gestionnaire |
+| python-pptx / python-docx | Export PowerPoint et Word des questions de gestionnaire |
 
 Aucune base de données ni conteneur : tout est chargé et calculé en mémoire au démarrage de l'application.
 
