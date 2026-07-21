@@ -8,7 +8,7 @@ données ni conteneur Docker n'est requis. Toutes les couches (`data/vectors/*.g
 
 ---
 
-## Exécution locale (recommandé pour la soutenance)
+## Exécution locale (recommandé pour la présentation orale)
 
 ### Prérequis
 - Python 3.10+
@@ -52,7 +52,7 @@ pip install rsconnect-python
 rsconnect deploy shiny "shiny app/" --name <compte> --title geocharge-montreal
 ```
 
-Cette étape est optionnelle : pour la soutenance orale, l'exécution locale (ci-dessus) suffit et évite
+Cette étape est optionnelle : pour la présentation orale, l'exécution locale (ci-dessus) suffit et évite
 toute dépendance à un service externe le jour J.
 
 ---
